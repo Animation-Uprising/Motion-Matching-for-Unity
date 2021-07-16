@@ -25,7 +25,18 @@ namespace MxM
         private int m_curBlendSpaceChannel; //The id of the motion matching mixer input slot that the current blend space is using
         private Vector2 m_blendSpacePosition; //Current position in the current blend space
         private List<float> m_blendSpaceWeightings; //A list of blend space weightings for all clips in the blend space
+        private List<float> m_blendSpaceClipLengths; //A list of all the clip lengths within the blend space.
         private Vector2 m_desiredBlendSpacePosition; //The desired blend space position (the actual position is smoothly interpolated towards this value)
+        private bool m_normalizeBlendSpaceTime; //If true the time / speed of the blend space clips will be normalized.
+        private float m_normalizedBlendSpaceLength = 0f; //The length of the blendspace when normalized by weightings and varying clip lengths.
+        
+        public Vector2 DesiredBlendSpacePosition { get { return m_desiredBlendSpacePosition; } }
+        public float DesiredBlendSpacePositionX { get { return m_desiredBlendSpacePosition.x; } }
+        public float DesiredBlendSpacePositionY { get { return m_desiredBlendSpacePosition.y; } }
+        
+        public Vector2 BlendSpacePosition { get { return m_blendSpacePosition; } }
+        public float BlendSpacePositionX { get { return m_blendSpacePosition.x; } }
+        public float BlendSpacePositionY { get { return m_blendSpacePosition.y; } }
 
         //=============================================================================================
         /**
@@ -91,6 +102,15 @@ namespace MxM
         {
             CalculateBlendSpaceWeightings(a_blendSpace.Positions);
 
+            if (m_normalizeBlendSpaceTime)
+            {
+                m_normalizedBlendSpaceLength = 0f;
+                for (int i = 0; i < m_blendSpaceClipLengths.Count; ++i)
+                {
+                    m_normalizedBlendSpaceLength += m_blendSpaceClipLengths[i] * m_blendSpaceWeightings[i];
+                }
+            }
+
             var blendSpacePlayable = m_animationMixer.GetInput(a_blendChannel);
 
             if (blendSpacePlayable.IsValid())
@@ -99,6 +119,13 @@ namespace MxM
                 for (int i = 0; i < inputCount; ++i)
                 {
                     blendSpacePlayable.SetInputWeight(i, m_blendSpaceWeightings[i]);
+    
+                    //Blendspace time sync / normalization
+                    if (m_normalizeBlendSpaceTime)
+                    {
+                        var clipPlayable = (AnimationClipPlayable)blendSpacePlayable.GetInput(i);
+                        clipPlayable.SetSpeed(m_playbackSpeed * (m_blendSpaceClipLengths[i] / m_normalizedBlendSpaceLength)); //Todo: Custom Blendspace speed support
+                    }
                 }
             }
         }
@@ -131,6 +158,16 @@ namespace MxM
                     {
                         bestCost = thisPoseCost;
                         bestPoseId = poseId;
+                    }
+                }
+                
+                m_normalizeBlendSpaceTime = blendSpaceData.NormalizeTime;
+                if (m_normalizeBlendSpaceTime)
+                {
+                    m_blendSpaceClipLengths.Clear();
+                    for (int i = 0; i < blendSpaceData.ClipIds.Length; ++i)
+                    {
+                        m_blendSpaceClipLengths.Add(CurrentAnimData.Clips[blendSpaceData.ClipIds[i]].length);
                     }
                 }
 
@@ -403,7 +440,7 @@ namespace MxM
             }
 
             AnimationMixerPlayable Mixer = AnimationMixerPlayable.Create(MxMPlayableGraph, a_blendSpace.Clips.Count, true);
-
+            
             float firstClipLength = a_blendSpace.Clips[0].length;
 
             for (int i = 0; i < a_blendSpace.Clips.Count; ++i)
@@ -414,9 +451,7 @@ namespace MxM
                     continue;
 
                 AnimationClipPlayable clipPlayable = AnimationClipPlayable.Create(MxMPlayableGraph, clip);
-
-
-
+                
                 if (clipPlayable.IsValid())
                 {
                     Mixer.ConnectInput(i, clipPlayable, 0);
@@ -425,7 +460,9 @@ namespace MxM
                     float clipSpeed = m_playbackSpeed;
 
                     if (a_blendSpace.NormalizeTime)
+                    {
                         clipSpeed *= clip.length / firstClipLength;
+                    }
 
                     clipPlayable.SetSpeed(clipSpeed);
                 }

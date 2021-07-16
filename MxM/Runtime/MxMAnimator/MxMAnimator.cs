@@ -721,6 +721,7 @@ namespace MxM
             DesiredPlaybackSpeed = m_playbackSpeed;
 
             m_blendSpaceWeightings = new List<float>(5);
+            m_blendSpaceClipLengths = new List<float>(5);
 
             //Setup Layers
             m_layers = new Dictionary<int, MxMLayer>(3);

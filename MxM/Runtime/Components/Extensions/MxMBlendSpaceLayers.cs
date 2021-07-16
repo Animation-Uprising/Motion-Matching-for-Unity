@@ -86,6 +86,10 @@ namespace MxM
             }
 
             m_blendSpaceStates.Add(a_blendSpace, new MxMBlendSpaceState(a_blendSpace, ref BSMixer));
+            MxMBlendSpaceState bsState = m_blendSpaceStates[a_blendSpace];
+            bsState.SetPosition(Vector2.zero);
+            bsState.CalculateWeightings();
+            bsState.ApplyWeightings();
         }
 
         public void SetBlendSpace(MxMBlendSpace a_blendSpace, float a_time = 0f)
@@ -94,16 +98,19 @@ namespace MxM
                 return;
 
             MxMBlendSpaceState bsState;
-
             if(m_blendSpaceStates.TryGetValue(a_blendSpace, out bsState))
             {
                 CurrentBlendSpace = a_blendSpace;
 
                 Playable bsMixer = m_mxmAnimator.CreateBlendSpacePlayable(a_blendSpace);
-                bsMixer.SetTime(a_time);
+                
+                //bsMixer.SetTime(a_time);
 
                 bsState.Mixer = (AnimationMixerPlayable)bsMixer;
+
+                bsState.CalculateWeightings();
                 bsState.ApplyWeightings();
+                bsState.SetTime(a_time);
                 m_mxmAnimator.SetLayerPlayable(LayerId, ref bsMixer, m_mask, 1.0f, m_applyFootIk);
             }
             else
@@ -137,7 +144,9 @@ namespace MxM
                 Playable bsMixer = m_mxmAnimator.CreateBlendSpacePlayable(a_blendSpace);
 
                 bsState.Mixer = (AnimationMixerPlayable)bsMixer;
+                bsState.CalculateWeightings();
                 bsState.ApplyWeightings();
+                bsState.SetTime(a_time);
                 m_mxmAnimator.TransitionLayerPlayable(LayerId, ref bsMixer, a_fadeRate, a_time);
             }
             else
@@ -159,29 +168,28 @@ namespace MxM
 
         public void UpdatePhase1()
         {
-            MxMBlendSpaceState bsState;
+            if (CurrentBlendSpace == null)
+                return;
 
-            if (CurrentBlendSpace != null)
+            MxMBlendSpaceState bsState;
+            if (m_blendSpaceStates.TryGetValue(CurrentBlendSpace, out bsState))
             {
-                if(m_blendSpaceStates.TryGetValue(CurrentBlendSpace, out bsState))
-                {
-                    bsState.Update(m_mxmAnimator.CurrentDeltaTime, m_mxmAnimator.PlaybackSpeed);
-                }
+                bsState.Update(m_mxmAnimator.CurrentDeltaTime, m_mxmAnimator.PlaybackSpeed);
             }
         }
 
         public void SetBlendSpacePosition(Vector2 a_position)
         {
+            if (CurrentBlendSpace == null)
+                return;
+            
             MxMBlendSpaceState bsState;
-
-            if(CurrentBlendSpace != null)
+            if (m_blendSpaceStates.TryGetValue(CurrentBlendSpace, out bsState))
             {
-                if(m_blendSpaceStates.TryGetValue(CurrentBlendSpace, out bsState))
-                {
-                    a_position /= CurrentBlendSpace.Magnitude;
-                    bsState.SetPosition(a_position);
-                }
+                a_position /= CurrentBlendSpace.Magnitude;
+                bsState.SetPosition(a_position);
             }
+
         }
 
         public void SetBlendSpacePosition(Vector2 a_position, MxMBlendSpace a_blendSpace)
@@ -190,7 +198,6 @@ namespace MxM
                 return;
 
             MxMBlendSpaceState bsState;
-
             if(m_blendSpaceStates.TryGetValue(a_blendSpace, out bsState))
             {
                 a_position /= a_blendSpace.Magnitude;
@@ -200,15 +207,14 @@ namespace MxM
 
         public void SetBlendSpacePositionX(float a_positionX)
         {
+            if (CurrentBlendSpace == null)
+                return;
+                
             MxMBlendSpaceState bsState;
-
-            if (CurrentBlendSpace != null)
+            if (m_blendSpaceStates.TryGetValue(CurrentBlendSpace, out bsState))
             {
-                if (m_blendSpaceStates.TryGetValue(CurrentBlendSpace, out bsState))
-                {
-                    a_positionX /= CurrentBlendSpace.Magnitude.x;
-                    bsState.SetPositionX(a_positionX);
-                }
+                a_positionX /= CurrentBlendSpace.Magnitude.x;
+                bsState.SetPositionX(a_positionX);
             }
         }
 
@@ -228,15 +234,16 @@ namespace MxM
 
         public void SetBlendSpacePositionY(float a_positionY)
         {
-            MxMBlendSpaceState bsState;
+            
 
-            if (CurrentBlendSpace != null)
+            if (CurrentBlendSpace == null)
+                return;
+            
+            MxMBlendSpaceState bsState;
+            if (m_blendSpaceStates.TryGetValue(CurrentBlendSpace, out bsState))
             {
-                if (m_blendSpaceStates.TryGetValue(CurrentBlendSpace, out bsState))
-                {
-                    a_positionY /= CurrentBlendSpace.Magnitude.y;
-                    bsState.SetPositionY(a_positionY);
-                }
+                a_positionY /= CurrentBlendSpace.Magnitude.y;
+                bsState.SetPositionY(a_positionY);
             }
         }
 
@@ -260,13 +267,13 @@ namespace MxM
             {
                 return m_blendSpaceStates[CurrentBlendSpace].Position * CurrentBlendSpace.Magnitude;
             }
+            
             return Vector2.zero;
         }
 
         public Vector2 GetPosition(MxMBlendSpace a_blendSpace)
         {
             MxMBlendSpaceState bsState;
-            
             if(m_blendSpaceStates.TryGetValue(a_blendSpace, out bsState))
             {
                 return bsState.Position * a_blendSpace.Magnitude;
@@ -277,18 +284,15 @@ namespace MxM
 
         public float GetPositionX()
         {
-            if(CurrentBlendSpace != null)
-            {
-                return m_blendSpaceStates[CurrentBlendSpace].Position.x * CurrentBlendSpace.Magnitude.x;
-            }
-
-            return 0f;
+            if (CurrentBlendSpace == null)
+                return 0f;
+            
+            return m_blendSpaceStates[CurrentBlendSpace].Position.x * CurrentBlendSpace.Magnitude.x;
         }
 
         public float GetPositionX(MxMBlendSpace a_blendSpace)
         {
             MxMBlendSpaceState bsState;
-
             if (m_blendSpaceStates.TryGetValue(a_blendSpace, out bsState))
             {
                 return bsState.Position.x * a_blendSpace.Magnitude.x;

@@ -19,6 +19,7 @@ namespace MxM
 
         public float Time { get; set; }
         public float PlayRate { get; set; }
+        public float NormalizedLength { get; set; }
         public AnimationMixerPlayable Mixer { get; set; }
 
         public Vector2 Position
@@ -29,16 +30,16 @@ namespace MxM
 
         public MxMBlendSpaceState()
         {
-            PlayRate = 1.0f;
-            DesiredPosition = m_position = Vector2.zero;
+            m_weightings = new NativeArray<float>(4, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+            
+            BlendSpace = null;
             Smoothing = EBlendSpaceSmoothing.None;
             SmoothRate = new Vector2(5f, 5f);
+            DesiredPosition = m_position = Vector2.zero;
             Time = 0f;
-            BlendSpace = null;
-
-            // m_weightings = new List<float>(4);
-
-            m_weightings = new NativeArray<float>(4, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+            PlayRate = 1.0f;
+            NormalizedLength = 0f;
+            
         }
         public MxMBlendSpaceState(MxMBlendSpace blendSpace, ref AnimationMixerPlayable a_mixer)
         {
@@ -48,6 +49,7 @@ namespace MxM
             Mixer = a_mixer;
             Smoothing = EBlendSpaceSmoothing.None;
             Time = 0f;
+            
 
             m_clipPositions = new NativeArray<float2>(blendSpace.Positions.Count, Allocator.Persistent, NativeArrayOptions.ClearMemory);
 
@@ -188,10 +190,42 @@ namespace MxM
                 {
                     Mixer.SetInputWeight(i, m_weightings[i]);
                 }
+
+                //Modify clip speeds to normalize the blendspace length
+                if (BlendSpace.NormalizeTime)
+                {
+                    for (int i = 0; i < inputCount; ++i)
+                    {
+                        var clipPlayable = (AnimationClipPlayable)Mixer.GetInput(i);
+                        
+                        clipPlayable.SetSpeed(PlayRate * (BlendSpace.Clips[i].length / NormalizedLength));
+                    }
+                }
             }
         }
 
-        private void CalculateWeightings()
+        public void SetTime(float a_time)
+        {
+            if (Mixer.IsValid())
+            {
+                int inputCount = Mixer.GetInputCount();
+                float baseClipTime = a_time * PlayRate;
+                for (int i = 0; i < inputCount; ++i)
+                {
+                    var clipPlayable = (AnimationClipPlayable) Mixer.GetInput(i);
+
+                    float clipTime = baseClipTime;
+                    if (BlendSpace.NormalizeTime)
+                    {
+                        clipTime *= (BlendSpace.Clips[i].length / NormalizedLength);
+                    }
+                    
+                    clipPlayable.SetTime(clipTime);
+                }
+            }
+        }
+
+        public void CalculateWeightings()
         {
             var bsJob = new CalculateBlendSpaceWeightingsJob()
             {
@@ -200,7 +234,19 @@ namespace MxM
                 ClipWeights = m_weightings
             };
 
-            bsJob.Run(); 
+            bsJob.Run();
+            
+            if(BlendSpace.NormalizeTime)
+                CalculateNormalizedLength();
+        }
+
+        private void CalculateNormalizedLength()
+        {
+            NormalizedLength = 0f;
+            for (int i = 0; i < BlendSpace.Clips.Count; ++i)
+            {
+                NormalizedLength += BlendSpace.Clips[i].length * m_weightings[i];
+            }
         }
 
     }//End of class: MxMBlendSpaceState

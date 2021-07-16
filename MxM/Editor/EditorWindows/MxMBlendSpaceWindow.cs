@@ -49,6 +49,8 @@ namespace MxMEditor
         private static Vector2 m_previewPos;
         private static bool m_draggingPreview;
         private static bool m_showClipNames = true;
+        private static float m_previewProgress = 0f;
+        private static float m_normalizedClipLength = 0f;
 
         private int m_queueDeleteIndex = -1;
 
@@ -566,7 +568,13 @@ namespace MxMEditor
 
                     if(m_previewActive && MxMPreviewScene.IsSceneLoaded)
                     {
-                        float size = 9f + 5f * m_blendWeights[i]; 
+                        float blendWeight = 1f;
+                        if (m_blendWeights.Count > i)
+                        {
+                            blendWeight = m_blendWeights[i];
+                        }
+
+                        float size = 9f + 5f * blendWeight;
                         animDrawRect.size = new Vector2(size, size);
                     }
                     else
@@ -659,6 +667,8 @@ namespace MxMEditor
                                     CalculateBlendWeights();
                                     ApplyBlendWeights();
 
+                                    if (m_spNormalizeTime.boolValue)
+                                        UpdateNormalizedClipSpeeds();
 
                                     m_draggingPreview = true;
                                 }
@@ -796,8 +806,8 @@ namespace MxMEditor
 
             if(m_previewBlendSpace != m_data)
             {
-                SetupPreviewGraph();
                 m_previewBlendSpace = m_data;
+                SetupPreviewGraph();
             }
 
             //Calculate and Set blending weights here
@@ -896,9 +906,14 @@ namespace MxMEditor
 
             AnimationMixerPlayable mixer = MxMPreviewScene.Mixer;
             mixer.SetInputCount(clips.Count);
-
-            float blendSpaceLength = clips[0].length;
-            float normalizedClipSpeed = 1f;
+            
+            for (int i = 0; i < clips.Count; ++i)
+            {
+                m_blendWeights.Add(0f);
+            }
+            
+            m_previewPos = Vector2.zero;
+            CalculateBlendWeights();
 
             for (int i = 0; i < clips.Count; ++i)
             {
@@ -909,9 +924,10 @@ namespace MxMEditor
 
                 if (clipPlayable.IsValid())
                 {
+                    float normalizedClipSpeed = 1f;
                     if(m_spNormalizeTime.boolValue)
                     {
-                        normalizedClipSpeed = clip.length / blendSpaceLength;
+                        normalizedClipSpeed = clip.length / m_normalizedClipLength;
                     }
 
                     clipPlayable.SetTime(0.0);
@@ -925,21 +941,10 @@ namespace MxMEditor
                     }
 
                     mixer.ConnectInput(i, clipPlayable, 0);
-
-                    if (i > 0)
-                    {
-                        mixer.SetInputWeight(i, 0f);
-                        m_blendWeights.Add(0f);
-                    }
-                    else
-                    {
-                        mixer.SetInputWeight(i, 1f);
-                        m_blendWeights.Add(1f);
-                    }
+                    mixer.SetInputWeight(i, m_blendWeights[i]);
                 }
             }
-
-            CalculateBlendWeights();
+            
             ApplyBlendWeights();
 
             m_lastPlayIncTime = (float)EditorApplication.timeSinceStartup;
@@ -989,6 +994,36 @@ namespace MxMEditor
                 {
                     m_blendWeights[i] = m_blendWeights[i] / totalWeight;
                 }
+                
+                CalculateNormalizedClipLength();
+            }
+        }
+        
+        //===========================================================================================
+        /**
+        *  @brief
+        *         
+        *********************************************************************************************/
+        private void CalculateNormalizedClipLength()
+        {
+            m_normalizedClipLength = 0f;
+            for (int i = 0; i < m_previewBlendSpace.Clips.Count; ++i)
+            {
+                m_normalizedClipLength += m_previewBlendSpace.Clips[i].length * m_blendWeights[i];
+            }
+        }
+        
+        //===========================================================================================
+        /**
+        *  @brief
+        *         
+        *********************************************************************************************/
+        private void UpdateNormalizedClipSpeeds()
+        {
+            for (int i = 0; i < m_previewBlendSpace.Clips.Count; ++i)
+            {
+                var clipPlayable = (AnimationClipPlayable)MxMPreviewScene.Mixer.GetInput(i);
+                clipPlayable.SetSpeed(m_previewBlendSpace.Clips[i].length / m_normalizedClipLength);
             }
         }
 
@@ -1031,18 +1066,26 @@ namespace MxMEditor
                 clipPlayable.SetApplyFootIK(true);
 
                 mixer.ConnectInput(inputId, clipPlayable, 0);
-
+                
+                CalculateBlendWeights();
+                
                 for(int i = 0; i < mixer.GetInputCount(); ++i)
                 {
                     var playable = mixer.GetInput(i);
 
                     if(playable.IsValid())
                     {
+                        float normalizedClipSpeed = 1.0f;
+                        if (m_spNormalizeTime.boolValue)
+                        {
+                            normalizedClipSpeed *= m_previewBlendSpace.Clips[i].length / m_normalizedClipLength;
+                        }
+
                         playable.SetTime(0f);
+                        playable.SetSpeed(normalizedClipSpeed);
                     }
                 }
-
-                CalculateBlendWeights();
+                
                 ApplyBlendWeights();
             }
         }
@@ -1147,6 +1190,9 @@ namespace MxMEditor
             float snapY = Mathf.Round(m_previewPos.y / m_snapInterval);
 
             m_previewPos = new Vector2(snapX * m_snapInterval, snapY * m_snapInterval);
+
+            if(m_spNormalizeTime.boolValue)
+                UpdateNormalizedClipSpeeds();
         }
 
         //===========================================================================================

@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Animations;
 using MxM;
+using UnityEngine.Serialization;
 
 namespace MxMEditor
 {
@@ -16,10 +17,13 @@ namespace MxMEditor
 
         public float RuntimePlaybackSpeed = 1f;
 
+        public float NormalizedLength = 0f;
+
         [System.NonSerialized]
         public List<PoseData> PoseList = new List<PoseData>();
 
         public List<AnimationClip> FinalClips { get { return SourceBlendSpace.FinalClips; } }
+
         public MxMBlendClip(MxMBlendSpace a_sourceBlendSpace, Vector2 a_position)
         {
             SourceBlendSpace = a_sourceBlendSpace;
@@ -28,6 +32,14 @@ namespace MxMEditor
             RuntimePlaybackSpeed = SourceBlendSpace.RuntimePlaybackSpeed;
 
             Weightings = SourceBlendSpace.CalculateWeightings(Position);
+            
+            List<AnimationClip> clips = SourceBlendSpace.FinalClips;
+            
+            NormalizedLength = 0f;
+            for (int i = 0; i < Weightings.Length; ++i)
+            {
+                NormalizedLength += clips[i].length * Weightings[i];
+            }
         }
 
         public void SetTrackId(int a_trackId) { }
@@ -42,18 +54,21 @@ namespace MxMEditor
             List<AnimationClip> clips = SourceBlendSpace.FinalClips;
 
             a_mixer.SetInputCount(clips.Count);
-
-            float blendSpaceLength = clips[0].length;
-            float normalizedClipSpeed = 1f;
+            
             for (int i = 0; i < clips.Count; ++i)
             {
                 AnimationClip clip = clips[i];
                 var clipPlayable = AnimationClipPlayable.Create(a_playableGraph, clip);
                 clipPlayable.SetApplyFootIK(true);
 
+                float normalizedClipSpeed;
                 if (SourceBlendSpace.NormalizeTime)
                 {
-                    normalizedClipSpeed = clip.length / blendSpaceLength;
+                    normalizedClipSpeed = clip.length / NormalizedLength;
+                }
+                else
+                {
+                    normalizedClipSpeed = 1f;
                 }
 
                 clipPlayable.SetTime(a_startTime * normalizedClipSpeed);
@@ -78,7 +93,7 @@ namespace MxMEditor
         public List<AnimationClip> AnimBeforeClips { get { return null; } }
         public List<AnimationClip> AnimAfterClips { get { return null; } }
         public MotionModifyData AnimMotionModifier { get { return null; } }
-        public float AnimLength { get { return SourceBlendSpace.AnimLength; } }
+        public float AnimLength { get { return SourceBlendSpace.NormalizeTime ? NormalizedLength : SourceBlendSpace.AnimLength; } }
         public bool IsLooping { get { return true; } }
         public bool UseIgnoreEdges { get { return false; } }
         public bool UseExtrapolateTrajectory { get { return false; } }

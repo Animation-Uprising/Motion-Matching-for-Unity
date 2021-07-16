@@ -461,8 +461,7 @@ namespace MxM
                 //The blend clip has multiple clips so a mixer is required
                 playableState.TargetPlayable = AnimationMixerPlayable.Create(
                     MxMPlayableGraph, blendClip.ClipIds.Length);
-
-                float blendSpaceLength = CurrentAnimData.Clips[blendClip.ClipIds[0]].length;
+                
                 float normalizedClipSpeed = 1f;
 
                 float unNormalizedPlaybackSpeed = m_playbackSpeed * a_speedMod * blendClip.PlaybackSpeed;
@@ -472,7 +471,7 @@ namespace MxM
 
                     if (blendClip.NormalizeTime)
                     {
-                        normalizedClipSpeed = clip.length / blendSpaceLength;
+                        normalizedClipSpeed = clip.length / blendClip.Length;
                     }
 
                     var blendClipPlayable = AnimationClipPlayable.Create(MxMPlayableGraph, clip);

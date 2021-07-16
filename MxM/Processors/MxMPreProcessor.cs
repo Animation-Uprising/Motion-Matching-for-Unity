@@ -442,6 +442,7 @@ namespace MxMEditor
                     {
                         MxMBlendClip blendClip = curMxMAnim as MxMBlendClip;
                         blendClip.SetupPlayables(ref m_playableGraph, ref m_animationMixer, thisClipStartTime);
+                        thisClipEndTime = blendClip.NormalizedLength;
                     }
                     else
                     {
@@ -1705,7 +1706,6 @@ namespace MxMEditor
 
             List<AnimationClip> blendClips = blendClip.FinalClips;
             int[] clipIds = new int[blendClips.Count];
-            float blendClipLength = blendClips[0].length;
             for(int i = 0; i < blendClips.Count; ++i)
             {
                 AnimationClip clip = blendClips[i];
@@ -1726,9 +1726,9 @@ namespace MxMEditor
                     clipIds[i] = m_clips.Count - 1;
                 }
             }
-
+            
             BlendClipData blendClipData = new BlendClipData(startPoseId, endPoseId, blendClip.NormalizeTime, clipIds, 
-                blendClip.Weightings, blendClipLength, blendClip.PlaybackSpeed);
+                blendClip.Weightings, blendClip.NormalizedLength, blendClip.PlaybackSpeed);
 
             //Pre-proces curves for this blend clip Data
             List<AnimationCurve> animCurves = new List<AnimationCurve>(blendClip.CurveTracks.Count + 1);
