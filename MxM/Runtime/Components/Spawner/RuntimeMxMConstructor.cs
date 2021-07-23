@@ -3,7 +3,9 @@ using UnityEngine;
 using MxM;
 using MxMEditor;
 using MxMGameplay;
+#if UNITY_EDITOR
 using UnityEditor.SceneManagement;
+#endif
 
 public class RuntimeMxMConstructor : MonoBehaviour
 {
