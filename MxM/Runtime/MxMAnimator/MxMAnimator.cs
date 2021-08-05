@@ -483,6 +483,9 @@ namespace MxM
         *********************************************************************************************/
         protected virtual void OnDestroy()
         {
+            if (p_animator == null) //Early Out: Do not destroy if the MxMAnimator has never been initialized in the first place
+                return;
+            
             if (!p_DIYPlayableGraph)//Don't destroy the playable graph if this is not a DIY graph. The graph doesn't belong to MxM in this ase
             {
                 if (MxMPlayableGraph.IsValid())
@@ -514,8 +517,6 @@ namespace MxM
 
             if (m_inertialBlendModule != null)
                 m_inertialBlendModule.DisposeNativeData();
-
-            
         }
 
         //============================================================================================
