@@ -542,11 +542,25 @@ namespace MxM
                     EventFrameData lookupData;
                     FetchEventLookupData(out lookupData);
 
-                    if((int)WarpType > (int)EEventWarpType.Snap)
+                    if ((int) WarpType > (int) EEventWarpType.Snap)
+                    {
                         UpdateEventWarping(out warp, ref lookupData);
+                        PosWarpThisFrame = warp;
+                    }
+                    else
+                    {
+                        PosWarpThisFrame = Vector3.zero;
+                    }
 
-                    if ((int)RotWarpType > (int)EEventWarpType.Snap)
+                    if ((int) RotWarpType > (int) EEventWarpType.Snap)
+                    {
                         UpdateEventRotWarping(out warpRot, ref lookupData);
+                        RotWarpThisFrame = warpRot.eulerAngles.z;
+                    }
+                    else
+                    {
+                        RotWarpThisFrame = 0;
+                    }
                 }
                 else
                 {
@@ -720,6 +734,9 @@ namespace MxM
 
             UserPlaybackSpeedMultiplier = 1f;
             DesiredPlaybackSpeed = m_playbackSpeed;
+
+            PosWarpThisFrame = Vector3.zero;
+            RotWarpThisFrame = 0f;
 
             m_blendSpaceWeightings = new List<float>(5);
             m_blendSpaceClipLengths = new List<float>(5);

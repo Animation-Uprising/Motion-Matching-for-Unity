@@ -37,7 +37,7 @@ namespace MxM
         public bool RotationOnly { get => m_rotationOnly; set => m_rotationOnly = value; }
         public Transform RootTransform { get => m_rootTransform; set => m_rootTransform = value; }
         public GenericControllerWrapper ControllerWrapper { get => m_charController; set => m_charController = value; }
-
+        
         //===========================================================================================
         /**
         *  @brief Monobehaviour awake function. Ensures all references are setup before updating

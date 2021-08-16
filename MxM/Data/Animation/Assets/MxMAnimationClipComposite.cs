@@ -134,7 +134,7 @@ namespace MxMEditor
             {
                 FavourTagTracks.Add(new TagTrack(track));
             }
-
+            
             UserBoolTracks = new List<TagTrackBase>(a_copy.UserBoolTracks.Count + 1);
             foreach(TagTrackBase track in a_copy.UserBoolTracks)
             {
@@ -177,6 +177,12 @@ namespace MxMEditor
         {
             bool modified = false;
 
+            if (BeforeClips == null)
+                BeforeClips = new List<AnimationClip>();
+
+            if (AfterClips == null)
+                AfterClips = new List<AnimationClip>();
+
             if (MotionModifier == null)
                 MotionModifier = new MotionModifyData();
 
@@ -189,6 +195,9 @@ namespace MxMEditor
             if (FavourTagTracks == null)
                 FavourTagTracks = new List<TagTrack>();
 
+            if (UserBoolTracks == null)
+                UserBoolTracks = new List<TagTrackBase>();
+            
             if (GeneratedEvents == null)
                 GeneratedEvents = new List<EventMarker>();
 

@@ -55,6 +55,10 @@ namespace MxM
         public EEventWarpType TimeWarpType { get; set; }//The type / method of time warping to use
         public float EventStartTimeOffset { get { return m_eventStartTimeOffset; } } //Returns the chosen start time offset within the Windup phase (i.e. the time from the start of the windup phase to the point that was chosen to start)
 
+        /** Allows user to extract animation warping information */
+        public Vector3 PosWarpThisFrame { get; private set; }
+        public float RotWarpThisFrame { get; private set; }
+
         //Returns true if the current event is complete. Basically if no in the event state.
         public bool IsEventComplete
         {

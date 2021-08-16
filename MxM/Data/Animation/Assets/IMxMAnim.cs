@@ -65,6 +65,6 @@ namespace MxMEditor
 
         int GetTrackId();
         void SetTrackId(int a_trackId);
-
+        
     }//End of interface IMxMAnim
 }//End of namespace: MxMEditor

@@ -11,6 +11,10 @@ using Unity.Mathematics;
 using Unity.Collections;
 using Unity.Jobs;
 
+#if UNITY_2019_1_OR_NEWER && ENABLE_INPUT_SYSTEM      
+using UnityEngine.InputSystem;
+#endif
+
 namespace MxM
 {
     //===========================================================================================
@@ -431,7 +435,10 @@ namespace MxM
 
         //===========================================================================================
         /**
-        *  @brief 
+        *  @brief Changes all the settings on the trajectory generator to match that of the passed
+        *  module
+        *
+        * @param [TrajectoryGeneratorModule] a_trajGenModule - The module to use.
         *         
         *********************************************************************************************/
         public void SetTrajectoryModule(TrajectoryGeneratorModule a_trajGenModule)
@@ -449,7 +456,22 @@ namespace MxM
             m_mxmInputProfile = a_trajGenModule.InputProfile;
             p_flattenTrajectory = a_trajGenModule.FlattenTrajectory;
         }
-
+        
+        //===========================================================================================
+        /**
+        *  @brief Allows for setting the input vector via Unity's new input system. This function
+        * should be linked up to an input callback on your PlayerInput component
+        *
+        * @param [InputAction.CallbackContext] a_input - the input data from the input system
+        *         
+        *********************************************************************************************/
+#if UNITY_2019_1_OR_NEWER && ENABLE_INPUT_SYSTEM
+        public void OnMoveInputCallback(InputAction.CallbackContext a_input)
+        {
+            Vector2 input = a_input.ReadValue<Vector2>();
+            InputVector = new Vector3(input.x, 0f, input.y);
+        }
+#endif
 
     }//End of class: MxMTrajectoryGenerator
 }//End of namespace: MxM

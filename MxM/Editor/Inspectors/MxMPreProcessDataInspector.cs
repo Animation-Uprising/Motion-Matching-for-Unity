@@ -1855,6 +1855,7 @@ namespace MxMEditor
                     break;
             }
         }
+        
 
         //===========================================================================================
         /**
@@ -2571,6 +2572,12 @@ namespace MxMEditor
                    {
                        CreateNewAnimationComposite(id);
                    };
+
+                // compositeReorderableList.onSelectCallback =
+                //     (ReorderableList a_list) =>
+                //     {
+                //         PingSelectedAnimation(id);
+                //     };
 
                 compositeReorderableList.onRemoveCallback =
                 (ReorderableList a_list) =>
