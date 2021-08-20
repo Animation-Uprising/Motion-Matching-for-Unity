@@ -1804,6 +1804,7 @@ namespace MxMEditor
 
             GUIStyle tagTextStyle = new GUIStyle(GUI.skin.label);
             tagTextStyle.normal.textColor = Color.black;
+            tagTextStyle.focused.textColor = Color.black;
 
 #if UNITY_2019_3_OR_NEWER
             Rect trackRect = new Rect(0f, 3f, a_areaRect.width, 40f);
