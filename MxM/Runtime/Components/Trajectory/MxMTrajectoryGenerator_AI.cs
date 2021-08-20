@@ -204,10 +204,10 @@ namespace MxM
                         desiredOrientation = Vector3.SignedAngle(Vector3.forward, displacementVector, Vector3.up);
                     }
 
-                    if (Vector3.SqrMagnitude(to - from) > 0.1f)
+                    if (Vector3.SqrMagnitude(to - from) > 0.05f)
                     {
                         float facingAngle = Mathf.LerpAngle(p_trajFacingAngles[i], desiredOrientation,
-                            1f - math.exp(-m_turnRate * percentage * Time.deltaTime));
+                            1f - math.exp(-m_turnRate * percentage));
 
                         p_trajFacingAngles[i] = facingAngle;
                     }

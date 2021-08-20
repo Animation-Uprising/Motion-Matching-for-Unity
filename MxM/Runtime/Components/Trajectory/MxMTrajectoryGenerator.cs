@@ -9,11 +9,12 @@
 using UnityEngine;
 using Unity.Mathematics;
 using Unity.Collections;
+using UnityEngine.AI;
 using Unity.Jobs;
 
-#if UNITY_2019_1_OR_NEWER && ENABLE_INPUT_SYSTEM      
-using UnityEngine.InputSystem;
-#endif
+// #if UNITY_2019_1_OR_NEWER && ENABLE_INPUT_SYSTEM      
+// using UnityEngine.InputSystem;
+// #endif
 
 namespace MxM
 {
@@ -51,16 +52,22 @@ namespace MxM
         [SerializeField] private float m_posBias = 15f; //The positional responsivity of the trajectory (can be modified at runtime)
         [SerializeField] private float m_dirBias = 10f; //The rotational responsivity of the trajectory (can be modified at runtime)
         [SerializeField] private ETrajectoryMoveMode m_trajectoryMode = ETrajectoryMoveMode.Normal; //If the trajectory should behave like strafing or not.
+        [SerializeField] private ETrajectoryControlMode m_controlMode = ETrajectoryControlMode.UserInput; // how the trajectory is to be controlled
         
         [Header("Input")]
         [SerializeField] private bool m_customInput = false; //Whether to use custom input or not (InputVector must be set every frame if false)
         [SerializeField] private bool m_resetDirectionOnOnInput = true;
 
+        [Header("AI")]
+        [SerializeField] private float m_stoppingDistance = 1f;
+        [SerializeField] private bool m_applyRootSpeedToNavAgent = true;
+        [SerializeField] private bool m_faceDirectionOnIdle = false;
+
         [Header("Other")]
         [SerializeField] private Transform m_camTransform = null; //A reference to the camera transform
         [SerializeField] private MxMInputProfile m_mxmInputProfile = null; //A reference to the Input profile asset used to shape the trajectory
         [SerializeField] private TrajectoryGeneratorModule m_trajectoryGeneratorModule = null; //The trajectory generator module to use
-
+        
         private bool m_hasInputThisFrame; //A bool to cache whether there has been movement input in the current frame.
         private NativeArray<float3> m_newTrajPositions; //A native array buffer for storing the new trajectory points calculated for the current frame.
 
@@ -70,7 +77,14 @@ namespace MxM
 
         private const string k_horizontalAxis = "Horizontal";   //Constant string for getting the horizontal axis without allocating garbage memory at runtime
         private const string k_verticalAxis = "Vertical";       //Constant string for getting the vertical axis without allocating garbage memory at runtime
+
+        /** AI */
+        private NavMeshAgent m_navAgent;
+        private Vector3[] m_path;
         
+        public bool FaceDirectionOnIdle { get { return m_faceDirectionOnIdle; } set { m_faceDirectionOnIdle = value; } }
+        public float StoppingDistance { get { return m_stoppingDistance;} set { m_stoppingDistance = value; }}
+        public bool ApplyRootSpeedToNavAgent { get { return m_applyRootSpeedToNavAgent; }set { m_applyRootSpeedToNavAgent = value; }}
 
         public Vector3 StrafeDirection { get; set; }
 
@@ -95,6 +109,19 @@ namespace MxM
                     m_trajectoryMode = ETrajectoryMoveMode.Climb;
                 else
                     m_trajectoryMode = ETrajectoryMoveMode.Normal;
+            }
+        }
+        
+        public ETrajectoryControlMode ControlMode
+        {
+            get { return m_controlMode; }
+            set
+            {
+                if (value == ETrajectoryControlMode.UserInput
+                    || m_navAgent != null)
+                {
+                    m_controlMode = value;
+                }
             }
         }
 
@@ -122,9 +149,20 @@ namespace MxM
         *********************************************************************************************/
         protected virtual void Start()
         {
+            m_navAgent = GetComponentInChildren<NavMeshAgent>();
+            m_path = new Vector3[5];
+
+            if (m_controlMode > ETrajectoryControlMode.UserInput
+                && m_navAgent == null)
+            {
+                m_controlMode = ETrajectoryControlMode.UserInput;
+                Debug.Log("Trajectory generator was set to an AI control mode but a NavAgent could not be found." +
+                          "The trajectory has been reverted to user control mode.");
+            }
+            
             StrafeDirection = Vector3.forward;
             m_lastDesiredOrientation = transform.rotation.eulerAngles.y;
-
+            
             if(m_trajectoryGeneratorModule != null)
             {
                 SetTrajectoryModule(m_trajectoryGeneratorModule);
@@ -163,6 +201,42 @@ namespace MxM
 
         //===========================================================================================
         /**
+        *  @brief Monobehaviour Late Update function which is called every frame that the object is 
+        *  active but only after the animation update. This function projects root motion onto the 
+        *  navmesh agent's speed to help prevent foot sliding but also ensure that the character 
+        *  still stays perfectly on the navmesh path.
+        *         
+        *********************************************************************************************/
+        public void LateUpdate()
+        {
+            if (m_controlMode == ETrajectoryControlMode.UserInput
+                || !m_applyRootSpeedToNavAgent
+                || p_animator == null)
+            {
+                return;
+            }
+
+            Vector3 v = m_navAgent.velocity * Time.deltaTime;
+            Vector3 animatorDelta = p_animator.deltaPosition;
+
+            float rootSpeed = 0f;
+            if (Vector3.Angle(animatorDelta, v) < 180f)
+            {
+                float vMag = v.magnitude;
+
+                Vector3 projectedDelta = (Vector3.Dot(animatorDelta, v) / (vMag * vMag)) * v;
+                rootSpeed = projectedDelta.magnitude / Time.deltaTime;
+            }
+
+            if (!float.IsNaN(rootSpeed))
+            {
+                m_navAgent.speed = Mathf.Max(rootSpeed, 0.5f);
+            }
+            
+        }
+
+        //===========================================================================================
+        /**
         *  @brief This is the core function of a motion matching controller. It is responsible for 
         *  updating the trajectory prediction for movement. This movement model can differ between 
         *  controllers but this controller takes a deceivingly simplistic approach. 
@@ -176,15 +250,33 @@ namespace MxM
         protected override void UpdatePrediction()
         {
             //Desired linear velocity is calculated based on user input
-            Vector3 desiredLinearVelocity = CalculateDesiredLinearVelocity();
+            Vector3 desiredLinearVelocity = Vector3.zero;
+            switch (m_controlMode)
+            {
+                case ETrajectoryControlMode.UserInput:
+                {
+                    desiredLinearVelocity = CalculateDesiredLinearVelocity(); 
+                } break;
+                case ETrajectoryControlMode.AI_Basic:
+                {
+                    desiredLinearVelocity = CalculateDesiredLinearVelocity_AI(); 
+                    
+                } break;
+                case ETrajectoryControlMode.AI_Complex:
+                {
+                    UpdatePrediction_ComplexAI();
+                    return;
+                }
+            }
 
             //Calculate the desired linear displacement over a single iteration
             Vector3 desiredLinearDisplacement = desiredLinearVelocity / p_sampleRate;
 
             float desiredOrientation = 0f;
-            if (m_trajectoryMode != ETrajectoryMoveMode.Normal)
+            if (m_trajectoryMode != ETrajectoryMoveMode.Normal
+                || (!m_hasInputThisFrame && m_faceDirectionOnIdle))
             {
-                if (m_camTransform == null)
+                if (m_controlMode > ETrajectoryControlMode.UserInput || m_camTransform == null)
                 {
                     desiredOrientation = Vector3.SignedAngle(Vector3.forward, StrafeDirection, Vector3.up);
                 }
@@ -226,6 +318,138 @@ namespace MxM
             };
 
             p_trajectoryGenerateJobHandle = trajectoryGenerateJob.Schedule();
+        }
+
+        //===========================================================================================
+        /**
+        *  @brief This update function is used for the ComplexAI control option. This kind of prediction
+        * takes the AI path and tries to place trajectory points along it whilst sill doing it in a
+        * smooth manner.
+        *         
+        *********************************************************************************************/
+        void UpdatePrediction_ComplexAI()
+        {
+            if (m_path == null)
+                m_path = new Vector3[6];
+
+           Vector3 charPosition = transform.position;
+
+            m_newTrajPositions[0] = float3.zero;
+            p_trajFacingAngles[0] = 0f;
+            int iterations = m_newTrajPositions.Length;
+
+            if (m_navAgent.remainingDistance < m_stoppingDistance)
+            {
+                for (int i = 1; i < iterations; ++i)
+                {
+                    float percentage = (float)i / (float)(iterations - 1);
+
+                    m_newTrajPositions[i] = math.lerp(p_trajPositions[i], float3.zero,
+                        1f - math.exp(-m_posBias * percentage * Time.deltaTime));
+                }
+
+                m_hasInputThisFrame = false;
+            }
+            else
+            {
+                int pathPointCount = m_navAgent.path.GetCornersNonAlloc(m_path);
+
+                int pathIndex = 1;
+                float pathCumDisplacement = 0f;
+
+                float3 from;
+                float3 to;
+                //float largestFacingAngle = 0f;
+                float desiredOrientation = 0f;
+                for (int i = 1; i < iterations; ++i)
+                {
+                    float percentage = (float)i / (float)(iterations - 1);
+                    float desiredDisplacement = m_maxSpeed * percentage;
+
+                    //find the desired point along the path.
+                    float3 lastPoint = float3.zero;
+                    float3 desiredPos = float3.zero;
+                    desiredOrientation = 0f;
+                    to = m_path[pathIndex - 1] - charPosition;
+                    for (int k = pathIndex; k < pathPointCount; ++k)
+                    {
+                        from = to;
+                        to = m_path[k] - charPosition;
+
+                        float displacement = math.length(to - from);
+
+                        if (pathCumDisplacement + displacement > desiredDisplacement)
+                        {
+                            float lerp = (desiredDisplacement - pathCumDisplacement) / displacement;
+                            desiredPos = math.lerp(from, to, lerp);
+
+                            break;
+                        }
+
+                        if (k == pathPointCount - 1)
+                        {
+
+                            desiredPos = to;
+                            desiredOrientation = transform.rotation.eulerAngles.y;
+                            break;
+                        }
+
+                        pathCumDisplacement += displacement;
+                        ++pathIndex;
+                    }
+
+                    float3 lastPosition = p_trajPositions[i - 1];
+
+                    float3 adjustedTrajectoryDisplacement = math.lerp(p_trajPositions[i] - lastPosition, desiredPos - lastPosition,
+                        1f - math.exp(-m_posBias * percentage * Time.deltaTime));
+
+                    m_newTrajPositions[i] = m_newTrajPositions[i - 1] + adjustedTrajectoryDisplacement;
+                }
+
+                if(Strafing || (m_faceDirectionOnIdle && !m_hasInputThisFrame))
+                    desiredOrientation = (Mathf.Atan2(StrafeDirection.x, StrafeDirection.z) * Mathf.Rad2Deg);
+
+                //Rotation iteration
+                to = m_newTrajPositions[0];
+                for (int i = 1; i < m_newTrajPositions.Length; ++i)
+                {
+                    float percentage = (float)i / (float)(iterations - 1);
+
+                    from = to;
+                    to = m_newTrajPositions[i];
+                    float3 next = to + (to - from);
+
+                    if (i < m_newTrajPositions.Length - 1)
+                        next = m_newTrajPositions[i + 1];
+
+                    if (!Strafing)
+                    {
+                        //var displacementVector = Vector3.Lerp(to - from, next - to, 0.5f);
+                        //var displacementVector = to - from;
+                        var displacementVector = next - to;
+                        desiredOrientation = Vector3.SignedAngle(Vector3.forward, displacementVector, Vector3.up);
+                    }
+
+                    if (Vector3.SqrMagnitude(to - from) > 0.05f)
+                    {
+                        // float facingAngle = Mathf.LerpAngle(p_trajFacingAngles[i], desiredOrientation,
+                        //     1f - math.exp(-m_dirBias * percentage * Time.deltaTime));
+
+                        float facingAngle = math.degrees(Mathf.LerpAngle(math.radians(p_trajFacingAngles[i]),
+                            math.radians(desiredOrientation), 1f - math.exp(-m_posBias * percentage)));
+                        
+                        p_trajFacingAngles[i] = facingAngle;
+                      
+                    }
+                }
+
+                m_hasInputThisFrame = true;
+            }
+
+            for(int i = 0; i < iterations; ++i)
+            {
+                p_trajPositions[i] = m_newTrajPositions[i];
+            }       
         }
 
         //===========================================================================================
@@ -328,6 +552,46 @@ namespace MxM
                     //Return our desired velocity by multiplying our input by our max speed
                     return LinearInputVector * m_maxSpeed;
                 }
+            }
+            else
+            {
+                m_hasInputThisFrame = false;
+            }
+
+            //No input so just return zero
+            return Vector3.zero;
+        }
+        
+        //===========================================================================================
+        /**
+        *  @brief This function calculates the desired linear velocity based on AI Input.
+        *  
+        *  @return Vector3 - the desired linear velocity of the character.
+        *         
+        *********************************************************************************************/
+        private Vector3 CalculateDesiredLinearVelocity_AI()
+        {
+            m_posBiasMultiplier = 1f;
+            m_dirBiasMultiplier = 1f;
+            
+            float destSqr = (m_navAgent.destination - transform.position).sqrMagnitude;
+
+            if(destSqr < m_stoppingDistance)
+            {
+                InputVector = Vector3.zero;
+                m_hasInputThisFrame = false;
+                return Vector3.zero;
+            }
+
+            InputVector = (m_navAgent.steeringTarget - transform.position);
+
+            if (InputVector.sqrMagnitude > 0.001f)
+            {
+                InputVector = InputVector.normalized;
+                m_hasInputThisFrame = true;
+                float maxSpeed = Mathf.Min(Mathf.Sqrt(destSqr), m_maxSpeed);
+
+                return InputVector * maxSpeed;
             }
             else
             {
@@ -449,12 +713,17 @@ namespace MxM
             m_maxSpeed = a_trajGenModule.MaxSpeed;
             m_posBias = a_trajGenModule.PosBias;
             m_dirBias = a_trajGenModule.DirBias;
+            m_controlMode = a_trajGenModule.ControlMode;
             m_trajectoryMode = a_trajGenModule.TrajectoryMode;
+            p_flattenTrajectory = a_trajGenModule.FlattenTrajectory;
             m_customInput = a_trajGenModule.CustomInput;
             m_resetDirectionOnOnInput = a_trajGenModule.ResetDirectionOnNoInput;
+            m_stoppingDistance = a_trajGenModule.StoppingDistance;
+            m_applyRootSpeedToNavAgent = a_trajGenModule.ApplyRootSpeedToNavAgent;
+            m_faceDirectionOnIdle = a_trajGenModule.FaceDirectionOnIdle;
             m_camTransform = a_trajGenModule.CamTransform;
             m_mxmInputProfile = a_trajGenModule.InputProfile;
-            p_flattenTrajectory = a_trajGenModule.FlattenTrajectory;
+            
         }
         
         //===========================================================================================
@@ -465,13 +734,13 @@ namespace MxM
         * @param [InputAction.CallbackContext] a_input - the input data from the input system
         *         
         *********************************************************************************************/
-#if UNITY_2019_1_OR_NEWER && ENABLE_INPUT_SYSTEM
-        public void OnMoveInputCallback(InputAction.CallbackContext a_input)
-        {
-            Vector2 input = a_input.ReadValue<Vector2>();
-            InputVector = new Vector3(input.x, 0f, input.y);
-        }
-#endif
+// #if UNITY_2019_1_OR_NEWER && ENABLE_INPUT_SYSTEM
+//         public void OnMoveInputCallback(InputAction.CallbackContext a_input)
+//         {
+//             Vector2 input = a_input.ReadValue<Vector2>();
+//             InputVector = new Vector3(input.x, 0f, input.y);
+//         }
+// #endif
 
     }//End of class: MxMTrajectoryGenerator
 }//End of namespace: MxM

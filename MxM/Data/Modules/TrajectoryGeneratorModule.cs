@@ -18,6 +18,9 @@ namespace MxM
         [Tooltip("How responsive the trajectory direction is. Higher numbers make the trajectory direction rotate faster")]
         public float DirBias = 9f;
 
+        [Tooltip("The control mode for the trajectory. i.e. is it controlled by user input or AI")]
+        public ETrajectoryControlMode ControlMode = ETrajectoryControlMode.UserInput;
+
         [Tooltip("The mode that the trajectory is in. Changes the behaviour of the trajectory")]
         public ETrajectoryMoveMode TrajectoryMode = ETrajectoryMoveMode.Normal;
 
@@ -32,6 +35,14 @@ namespace MxM
         [Tooltip("If checked, the trajectory direction will be reset to the character facing direction when there is no input." +
             "This helps stop strange stopping behavior.")]
         public bool ResetDirectionOnNoInput;
+        
+        [Header("AI")]
+        [Tooltip("The expected stopping distance of the AI nav agent")]
+        public float StoppingDistance = 1f;
+        [Tooltip("If true, the animation root speed will be applied to the nav agent to reduce foot sliding.")]
+        public bool ApplyRootSpeedToNavAgent = true;
+        [Tooltip("If true, the AI trajectory will face the strafe direction when it becomes idle.")]
+        public bool FaceDirectionOnIdle = false;
 
         [Header("Other")]
         [Tooltip("The camera that this trajectory is being generated relative to.")]

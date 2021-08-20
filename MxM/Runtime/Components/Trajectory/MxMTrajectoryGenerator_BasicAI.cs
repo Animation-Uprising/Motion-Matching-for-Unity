@@ -83,7 +83,7 @@ namespace MxM
             {
                 desiredOrientation = Vector3.SignedAngle(Vector3.forward, StrafeDirection, Vector3.up);
             }
-            else if (desiredLinearDisplacement.sqrMagnitude > 0.0001f)
+            else if (desiredLinearDisplacement.sqrMagnitude > 0.05f)
             {
                 desiredOrientation = Mathf.Atan2(desiredLinearDisplacement.x,
                     desiredLinearDisplacement.z) * Mathf.Rad2Deg;
@@ -185,13 +185,7 @@ namespace MxM
 
         //===========================================================================================
         /**
-        *  @brief This function calculates the desired linear velocity based on input. This is the
-        *  input multiplied by the maximum speed and modified by an input profile.
-        *  
-        *  In order to ensure that the generator never produces a trajectory that there is no animation
-        *  for, it needs to be extended or shortened based on an input profile. The input profile 
-        *  basically remaps ranges of input magnitude to a viable input magnitude. The input vector
-        *  is then modified by this value as well as the responsiveness depending on the input profile.
+        *  @brief This function calculates the desired linear velocity based on AI Input.
         *  
         *  @return Vector3 - the desired linear velocity of the character.
         *         
@@ -212,9 +206,7 @@ namespace MxM
             if (InputVector.sqrMagnitude > 0.001f)
             {
                 InputVector = InputVector.normalized;
-
                 m_hasInputThisFrame = true;
-
                 float maxSpeed = Mathf.Min(Mathf.Sqrt(destSqr), m_maxSpeed);
 
                 return InputVector * maxSpeed;
