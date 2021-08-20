@@ -3363,7 +3363,7 @@ namespace MxMEditor
                         //Begin Context menu
                         GenericMenu menu = new GenericMenu();
 
-                        menu.AddItem(new GUIContent("Delete"), false, a_mxmAnim.OnDeleteEventMarker, this);
+                        menu.AddItem(new GUIContent("Delete"), false, a_mxmAnim.OnDeleteEventMarker, a_eventMarker);
                         menu.ShowAsContext();
                     }
                 }
