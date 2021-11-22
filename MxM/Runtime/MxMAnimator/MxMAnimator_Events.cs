@@ -471,14 +471,13 @@ namespace MxM
         private Quaternion ComputeLinearEventRotationWarping(float a_remainingWarpTime)
         {
             float error = Mathf.DeltaAngle(m_currentEventRootWorld.RotationY, m_desiredEventRootWorld.RotationY);
-
             float warpRotY = 0f;
 
             if (a_remainingWarpTime > Mathf.Epsilon)
             {
                 m_linearWarpRotRate = error / a_remainingWarpTime;
-
-                float remainingWarp = m_desiredEventRootWorld.RotationY - m_currentEventRootWorld.RotationY;
+                
+                float remainingWarp = Mathf.DeltaAngle(m_currentEventRootWorld.RotationY, m_desiredEventRootWorld.RotationY);
 
                 //This stops the warp from overshooting the target
                 if (Mathf.Abs(m_linearWarpRotRate * p_currentDeltaTime) > Mathf.Abs(remainingWarp))
@@ -497,7 +496,7 @@ namespace MxM
             }
 
             m_currentEventRootWorld.RotationY += warpRotY;
-            return Quaternion.AngleAxis(m_linearWarpRotRate * p_currentDeltaTime, Vector3.up);
+            return Quaternion.AngleAxis(warpRotY, Vector3.up);
         }
 
         //============================================================================================

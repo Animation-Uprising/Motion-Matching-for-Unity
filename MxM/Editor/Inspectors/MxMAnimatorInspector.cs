@@ -57,6 +57,8 @@ namespace MxMEditor
         private SerializedProperty m_spFavourTagMethod;
         private SerializedProperty m_spPastTrajectoryMode;
         private SerializedProperty m_spApplyHumanoidFootIK;
+        private SerializedProperty m_spMinFootstepInterval;
+        
         private SerializedProperty m_spAngularErrorWarpRate;
         private SerializedProperty m_spAngularErrorWarpThreshold;
         private SerializedProperty m_spAngularErrorWarpAngleThreshold;
@@ -67,6 +69,7 @@ namespace MxMEditor
         private SerializedProperty m_spFavourCurrentPose;
         private SerializedProperty m_spTransformGoal;
         private SerializedProperty m_spPoseFavourFactor;
+        private SerializedProperty m_spTagBlendMethod;
         private SerializedProperty m_spBlendSpaceSmoothing;
         private SerializedProperty m_spBlendSpaceSmoothRate;
         private SerializedProperty m_spAnimatorControllerMask;
@@ -75,7 +78,7 @@ namespace MxMEditor
         private SerializedProperty m_spNextPoseToleranceDist;
         private SerializedProperty m_spNextPoseToleranceAngle;
         private SerializedProperty m_spBlendOutEarly;
-
+        
         private SerializedProperty m_spOnSetupCompleteCallback;
         private SerializedProperty m_spOnIdleTriggeredCallback;
         private SerializedProperty m_spOnLeftFootStepStartCallback;
@@ -142,6 +145,8 @@ namespace MxMEditor
             m_spFavourTagMethod = serializedObject.FindProperty("m_favourTagMethod");
             m_spPastTrajectoryMode = serializedObject.FindProperty("m_pastTrajectoryMode");
             m_spApplyHumanoidFootIK = serializedObject.FindProperty("m_applyHumanoidFootIK");
+            m_spMinFootstepInterval = serializedObject.FindProperty("m_minFootstepInterval");
+            
             m_spAngularErrorWarpRate = serializedObject.FindProperty("m_angularErrorWarpRate");
             m_spAngularErrorWarpThreshold = serializedObject.FindProperty("m_angularErrorWarpThreshold");
             m_spAngularErrorWarpAngleThreshold = serializedObject.FindProperty("m_angularErrorWarpAngleThreshold");
@@ -151,13 +156,13 @@ namespace MxMEditor
             m_spFavourCurrentPose = serializedObject.FindProperty("m_favourCurrentPose");
             m_spTransformGoal = serializedObject.FindProperty("m_transformGoal");
             m_spPoseFavourFactor = serializedObject.FindProperty("m_currentPoseFavour");
+            m_spTagBlendMethod = serializedObject.FindProperty("m_tagBlendMethod");
             m_spBlendSpaceSmoothing = serializedObject.FindProperty("m_blendSpaceSmoothing");
             m_spBlendSpaceSmoothRate = serializedObject.FindProperty("m_blendSpaceSmoothRate");
             m_spNextPoseToleranceTest = serializedObject.FindProperty("m_nextPoseToleranceTest");
             m_spNextPoseToleranceDist = serializedObject.FindProperty("m_nextPoseToleranceDist");
             m_spNextPoseToleranceAngle = serializedObject.FindProperty("m_nextPoseToleranceAngle");
             
-
             m_spOnSetupCompleteCallback = serializedObject.FindProperty("m_onSetupComplete");
             m_spOnIdleTriggeredCallback = serializedObject.FindProperty("m_onIdleTriggered");
             m_spOnLeftFootStepStartCallback = serializedObject.FindProperty("m_onLeftFootStepStart");
@@ -520,6 +525,10 @@ namespace MxMEditor
                         "however, if root motion isn't being used or the speed is being warped, this should be set to 'Copy From Current Pose'.", MessageType.Info);
                 }
 
+                m_spTagBlendMethod.enumValueIndex = (int)(ETagBlendMethod)EditorGUILayout.EnumPopup(
+                    new GUIContent("Tag Blend Method", "How tags should be decided during pose interpolation"),
+                    (ETagBlendMethod) m_spTagBlendMethod.enumValueIndex);
+
                 m_spBlendSpaceSmoothing.enumValueIndex = (int)(EBlendSpaceSmoothing)EditorGUILayout.EnumPopup(
                     new GUIContent("Blend Space Smoothing", "How blend space smoothing should operate"),
                     (EBlendSpaceSmoothing)m_spBlendSpaceSmoothing.enumValueIndex);
@@ -736,6 +745,10 @@ namespace MxMEditor
                 m_spApplyHumanoidFootIK.boolValue = EditorGUILayout.Toggle(new GUIContent("Apply Humanoid Foot IK",
                     "Turns on/off Unity's humanoid foot IK for runtime fixing the feet on a humanoid pose."), m_spApplyHumanoidFootIK.boolValue);
 
+                m_spMinFootstepInterval.floatValue = EditorGUILayout.FloatField(new GUIContent("Min Footstep Interval",
+                        "The minimum time interval between footstep triggers of the same foot."),
+                    m_spMinFootstepInterval.floatValue);
+
                 if (MxMSettings.HelpActive)
                 {
                     EditorGUILayout.HelpBox("Check this box if you would like Unity's built in humanoid foot IK to be active for MxM animations. For " +
@@ -743,7 +756,7 @@ namespace MxMEditor
                 }
 
                 GUILayout.Space(5f);
-                curHeight += 18f * 15f + 5f;
+                curHeight += 18f * 17f + 5f;
             }
 
             curHeight += 30f;

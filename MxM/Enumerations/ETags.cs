@@ -59,6 +59,14 @@ namespace MxM
 
     }//End of enum: ETags
 
+    public enum ETagBlendMethod
+    {
+        HighestWeight,
+        Combine,
+        AlwaysFormer,
+        AlwaysLater
+    }
+
     //============================================================================================
     /**
     *  @brief Static class used to easily manage ETag flags in an easily readable way.
@@ -87,5 +95,7 @@ namespace MxM
         }
 
     }//End of static class: Tags
+    
+    
 
 }//End of namespace: MxM

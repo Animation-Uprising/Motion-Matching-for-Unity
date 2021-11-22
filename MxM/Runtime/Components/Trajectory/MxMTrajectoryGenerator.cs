@@ -128,7 +128,7 @@ namespace MxM
         public ETrajectoryMoveMode TrajectoryMode { get { return m_trajectoryMode; } set { m_trajectoryMode = value; } }
         public Vector3 InputVector { get; set; } //The raw input vector
         public Vector2 InputVector2D { get { return new Vector2(InputVector.x, InputVector.z); } set { InputVector = new Vector3(value.x, 0f, value.y); } }
-        public Vector3 LinearInputVector { get; private set; } //The transformed input vector relative to camera
+        public Vector3 LinearInputVector { get; set; } //The transformed input vector relative to camera
         public float MaxSpeed { get { return m_maxSpeed; } set { m_maxSpeed = value; } } //The maximum speed of the trajectory generator
         public float PositionBias { get { return m_posBias; } set { m_posBias = value; } } //The positional responsiveness of the trajectory generator
         public float DirectionBias { get { return m_dirBias; } set { m_dirBias = value; } } //The rotational responsiveness of the trajectory generator

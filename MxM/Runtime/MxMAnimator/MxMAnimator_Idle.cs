@@ -56,7 +56,7 @@ namespace MxM
         *  The idle chosen is dependent on the currently required tags in the MxMAnimator.
         *         
         *********************************************************************************************/
-        private bool BeginIdle()
+        public bool BeginIdle()
         {
             if (m_fsm.CurrentStateId == (uint)EMxMStates.Event)
                 return false;

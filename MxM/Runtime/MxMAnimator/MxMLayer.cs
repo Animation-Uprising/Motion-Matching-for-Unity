@@ -27,6 +27,8 @@ namespace MxM
         private PlayableGraph m_playableGraph;
         private AnimationLayerMixerPlayable m_layerMixer;
 
+        private float m_playbackSpeed;
+
         public int Id { get; private set; }
         public AnimationClip PrimaryClip { get; private set; }
         public int MaxClips { get; private set; }
@@ -35,6 +37,25 @@ namespace MxM
         public float TransitionRate { get; set; }
         public float[] SubLayerWeights { get; private set; }
         public bool ApplyHumanoidFootIK { get; set; }
+        
+        public float PlaybackSpeed
+        {
+            get => m_playbackSpeed;
+            set
+            {
+                m_playbackSpeed = value;
+
+                if (Mixer.IsValid())
+                {
+                    Mixer.SetSpeed(m_playbackSpeed);
+                }
+                else
+                {
+                    var playable = m_layerMixer.GetInput(Id);
+                    playable.SetSpeed(m_playbackSpeed);
+                }
+            }
+        }
         
         public bool IsDone
         {
@@ -57,6 +78,7 @@ namespace MxM
                 return true;
             }
         }
+        
         public float TimeRemaining
         {
             get
@@ -71,7 +93,7 @@ namespace MxM
                 
                 if(clipPlayable.IsValid())
                 {
-                    return Mathf.Clamp(PrimaryClip.length - (float)clipPlayable.GetTime(), 0, PrimaryClip.length);
+                    return Mathf.Clamp(PrimaryClip.length - (float)clipPlayable.GetTime(), 0, PrimaryClip.length) * m_playbackSpeed;
                 }
 
                 return -1f;
@@ -85,7 +107,7 @@ namespace MxM
                 if (PrimaryClip == null)
                     return 0f;
 
-                return PrimaryClip.length;
+                return PrimaryClip.length * m_playbackSpeed;
             }
         }
         
@@ -141,11 +163,12 @@ namespace MxM
         *  @param [AvatarMask] a_mask - the mask to use with this player (Default null)
         *  @param [float] a_weight - the starting weight of this layer (Default 0)
         *  @param [bool] a_additive - whether the layer is additive or not (Default false)
+        *  @param [float] a_playbackSpeed - a playback speed multiplier for the layer
         *         
         *********************************************************************************************/
         public MxMLayer(int a_id, int a_maxClips, ref AnimationLayerMixerPlayable a_layerMixer,
             AnimationClip a_clip, AvatarMask a_mask = null, float a_weight = 0f, bool a_additive = false,
-            bool a_applyFootIk = true)
+            bool a_applyFootIk = true, float a_playbackSpeed = 1f)
         {
             Assert.IsNotNull(a_clip, "Error: Attempting to create an MxMLayer with null AnimationClip");
 
@@ -161,10 +184,11 @@ namespace MxM
             MaxClips = a_maxClips;
 
             PrimaryInputId = 0;
-
             ApplyHumanoidFootIK = a_applyFootIk;
+            PlaybackSpeed = a_playbackSpeed;
 
             Mixer = AnimationMixerPlayable.Create(m_playableGraph, a_maxClips, true);
+            
             var clipPlayable = AnimationClipPlayable.Create(m_playableGraph, PrimaryClip);
             clipPlayable.SetApplyFootIK(ApplyHumanoidFootIK);
 
@@ -172,6 +196,7 @@ namespace MxM
 
             Mixer.ConnectInput(0, clipPlayable, 0);
             Mixer.SetInputWeight(0, 1f);
+            Mixer.SetSpeed(a_playbackSpeed);
 
             Mask = a_mask;
 
@@ -194,11 +219,12 @@ namespace MxM
         *  @param [AvatarMask] a_mask - the mask to use with this player (Default null)
         *  @param [float] a_weight - the starting weight of this layer (Default 0)
         *  @param [bool] a_additive - whether the layer is additive or not (Default false)
+        *  @param [float] a_playbackSpeed - a playback speed multiplier for the layer
         *         
         *********************************************************************************************/
         public MxMLayer(int a_id, int a_maxClips, ref AnimationLayerMixerPlayable a_layerMixer,
            Playable a_playable, AvatarMask a_mask = null, float a_weight = 0f, bool a_additive = false,
-           bool a_applyFootIk = true)
+           bool a_applyFootIk = true, float a_playbackSpeed = 1f)
         {
             if(!a_playable.IsValid())
                 Debug.LogError("Error: Attempting to create an MxMLayer with an invalid playable");
@@ -208,13 +234,12 @@ namespace MxM
 
             m_layerMixer = a_layerMixer;
             m_playableGraph = m_layerMixer.GetGraph();
-
             
-
             Id = a_id;
             MaxClips = a_maxClips;
             PrimaryInputId = 0;
             ApplyHumanoidFootIK = a_applyFootIk;
+            PlaybackSpeed = a_playbackSpeed;
 
             Mixer = AnimationMixerPlayable.Create(m_playableGraph, a_maxClips, true);
 
@@ -222,6 +247,7 @@ namespace MxM
 
             Mixer.ConnectInput(0, a_playable, 0);
             Mixer.SetInputWeight(0, 1f);
+            Mixer.SetSpeed(a_playbackSpeed);
 
             Mask = a_mask;
 
@@ -244,11 +270,12 @@ namespace MxM
         *  @param [AvatarMask] a_mask - the mask to use with this player (Default null)
         *  @param [float] a_weight - the starting weight of this layer (Default 0)
         *  @param [bool] a_additive - whether the layer is additive or not (Default false)
+        *  @param [float] a_playbackSpeed - a playback speed multiplier for the layer 
         *         
         *********************************************************************************************/
         public MxMLayer(int a_id, ref AnimationLayerMixerPlayable a_layerMixer,
            Playable a_playable, AvatarMask a_mask = null, float a_weight = 0f, bool a_additive = false,
-            bool a_applyFootIK = true)
+            bool a_applyFootIK = true, float a_playbackSpeed = 1f)
         {
             if (!a_playable.IsValid())
                 Debug.LogError("Error: Attempting to create an MxMLayer with an invalid playable");
@@ -263,8 +290,10 @@ namespace MxM
             PrimaryInputId = 0;
             MaxClips = 1;
             ApplyHumanoidFootIK = a_applyFootIK;
+            PlaybackSpeed = a_playbackSpeed;
 
             m_layerMixer.ConnectInput(Id, a_playable, 0);
+            a_playable.SetSpeed(a_playbackSpeed);
 
             Mask = a_mask;
 
@@ -415,6 +444,7 @@ namespace MxM
             
             Mixer.ConnectInput(0, clipPlayable, 0);
             Mixer.SetInputWeight(0, 1f);
+            Mixer.SetSpeed(m_playbackSpeed);
             clipPlayable.SetTime(a_time);
             clipPlayable.SetTime(a_time);
         }
@@ -437,6 +467,7 @@ namespace MxM
 
             Mixer.ConnectInput(0, a_playable, 0);
             Mixer.SetInputWeight(0, 1f);
+            Mixer.SetSpeed(m_playbackSpeed);
         }
 
         //============================================================================================
@@ -461,6 +492,7 @@ namespace MxM
             clipPlayable.SetApplyFootIK(ApplyHumanoidFootIK);
             Mixer.ConnectInput(slotToUse, clipPlayable, 0);
             Mixer.SetInputWeight(slotToUse, 0f);
+            Mixer.SetSpeed(m_playbackSpeed);
             clipPlayable.SetTime(a_time);
             clipPlayable.SetTime(a_time);
 
@@ -488,6 +520,7 @@ namespace MxM
 
             Mixer.ConnectInput(slotToUse, a_playable, 0);
             Mixer.SetInputWeight(slotToUse, 0f);
+            Mixer.SetSpeed(m_playbackSpeed);
             a_playable.SetTime(a_time);
             a_playable.SetTime(a_time);
 
@@ -505,7 +538,6 @@ namespace MxM
         *********************************************************************************************/
         private int FindAvailableSlot()
         {
-            int slotToUse = -1;
             int lowestWeightSlot = 0;
             float lowestWeight = float.MaxValue;
             for(int i=0; i < MaxClips; ++i)
@@ -523,8 +555,7 @@ namespace MxM
                 }
                 else
                 {
-                    slotToUse = i;
-                    return slotToUse;
+                    return i;
                 }
             }
 

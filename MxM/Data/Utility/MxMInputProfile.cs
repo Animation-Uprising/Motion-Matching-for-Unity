@@ -65,7 +65,7 @@ namespace MxM
             {
                 ref readonly InputRemapSet inputSet = ref m_viableInputs[i];
 
-                if(inputMag > inputSet.minInput && inputMag < inputSet.maxInput)
+                if(inputMag > inputSet.minInput && inputMag <= inputSet.maxInput)
                 {
                     return (inputSet.viableInput / inputMag, inputSet.posBias, inputSet.dirBias);
                 }

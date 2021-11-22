@@ -582,6 +582,8 @@ namespace MxMEditor
                 newComposite.TargetPreProcess = null;
                 newComposite.TargetPrefab = m_data.Prefab;
                 newComposite.CategoryId = a_categoryId;
+                
+                newComposite.ValidateBaseData();
 
                 EditorUtility.SetDirty(newComposite);
             }
@@ -642,6 +644,8 @@ namespace MxMEditor
                     newComposite.TargetAnimModule = m_data;
                     newComposite.TargetPrefab = m_data.Prefab;
                     newComposite.CategoryId = a_categoryId;
+                    
+                    newComposite.ValidateBaseData();
 
                     EditorUtility.SetDirty(newComposite);
 
@@ -692,7 +696,7 @@ namespace MxMEditor
                 SerializedProperty spComposite = spCompositeList.GetArrayElementAtIndex(spCompositeList.arraySize - 1);
                 spComposite.objectReferenceValue = newComposite;
 
-
+                newComposite.ValidateBaseData();
 
                 EditorUtility.SetDirty(newComposite);
 
@@ -864,6 +868,8 @@ namespace MxMEditor
                 newBlendSpace.Smoothing = defaultSettings.BlendSpaceSmoothing;
                 newBlendSpace.GlobalTags = defaultSettings.RequireTags;
                 newBlendSpace.GlobalFavourTags = defaultSettings.FavourTags;
+                
+                newBlendSpace.ValidateBaseData();
             }
         }
 
@@ -910,6 +916,8 @@ namespace MxMEditor
                     newBlendSpace.Smoothing = defaultSettings.BlendSpaceSmoothing;
                     newBlendSpace.GlobalTags = defaultSettings.RequireTags;
                     newBlendSpace.GlobalFavourTags = defaultSettings.FavourTags;
+                    
+                    newBlendSpace.ValidateBaseData();
 
                     success = true;
                 }
@@ -958,6 +966,8 @@ namespace MxMEditor
                 newBlendSpace.Smoothing = defaultSettings.BlendSpaceSmoothing;
                 newBlendSpace.GlobalTags = defaultSettings.RequireTags;
                 newBlendSpace.GlobalFavourTags = defaultSettings.FavourTags;
+                
+                newBlendSpace.ValidateBaseData();
 
                 success = true;
             }
@@ -1180,7 +1190,19 @@ namespace MxMEditor
 
                         EditorGUI.BeginDisabledGroup(true);
 
-                        EditorGUI.LabelField(new Rect(a_rect.x, a_rect.y, 100f, EditorGUIUtility.singleLineHeight), "Anim " + (a_index + 1).ToString());
+                        string elementName = "Anim " + (a_index + 1).ToString();
+
+                        if (element.objectReferenceValue != null)
+                        {
+                            string testName = ((MxMAnimationClipComposite) element.objectReferenceValue).CompositeName;
+                            if (testName != "")
+                            {
+                                elementName = testName;
+                            }
+                        }
+                        
+                        EditorGUI.LabelField(new Rect(a_rect.x, a_rect.y, 100f, EditorGUIUtility.singleLineHeight), elementName);
+                        
                         EditorGUI.ObjectField(new Rect(a_rect.x + 100f, a_rect.y, EditorGUIUtility.currentViewWidth - 170f,
                             EditorGUIUtility.singleLineHeight), element, new GUIContent(""));
 
@@ -1317,9 +1339,20 @@ namespace MxMEditor
                     var element = m_blendSpaceReorderableList.serializedProperty.GetArrayElementAtIndex(a_index);
 
                     EditorGUI.BeginDisabledGroup(true);
-
-                    EditorGUI.LabelField(new Rect(a_rect.x, a_rect.y, 100f, EditorGUIUtility.singleLineHeight), "Blend Space " + (a_index + 1).ToString());
-                    EditorGUI.ObjectField(new Rect(a_rect.x + 100f, a_rect.y, EditorGUIUtility.currentViewWidth - 170f,
+                    
+                    MxMBlendSpace blendSpace = null;
+                    
+                    if (m_data.BlendSpaces.Count > a_index)
+                    {
+                        blendSpace = m_data.BlendSpaces[a_index];
+                        EditorGUI.LabelField(new Rect(a_rect.x, a_rect.y, 150f, EditorGUIUtility.singleLineHeight), m_data.BlendSpaces[a_index].BlendSpaceName);
+                    }
+                    else
+                    {
+                        EditorGUI.LabelField(new Rect(a_rect.x, a_rect.y, 150f, EditorGUIUtility.singleLineHeight), "Blend Space " + (a_index + 1).ToString());
+                    }
+                    
+                    EditorGUI.ObjectField(new Rect(a_rect.x + 150f, a_rect.y, EditorGUIUtility.currentViewWidth - 170f,
                         EditorGUIUtility.singleLineHeight), element, new GUIContent(""));
 
                     EditorGUI.EndDisabledGroup();

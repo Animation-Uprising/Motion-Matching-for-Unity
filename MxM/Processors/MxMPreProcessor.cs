@@ -139,7 +139,7 @@ namespace MxMEditor
 
             m_processedData.MatchBones = new HumanBodyBones[m_data.PoseJoints.Count];
             m_processedData.MatchBonesGeneric = new string[m_data.PoseJoints.Count];
-            m_processedData.IdleTraits = new string[m_combinedIdleTraits.Count];
+            m_processedData.IdleTraits = m_combinedIdleTraits.ToArray();   //new string[m_combinedIdleTraits.Count];
 
             for (int i = 0; i < m_data.PoseJoints.Count; ++i)
             {

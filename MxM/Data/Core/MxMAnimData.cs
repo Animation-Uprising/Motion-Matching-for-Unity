@@ -30,6 +30,7 @@ namespace MxM
         public PoseData[] Poses;
         public EventData[] Events;
         public CalibrationData[] CalibrationSets;
+        public Dictionary<ETags, CalibrationData> NormalizingCalibration;
 
         //MxMAnims Anim Data
         public IdleSetData[] IdleSets;

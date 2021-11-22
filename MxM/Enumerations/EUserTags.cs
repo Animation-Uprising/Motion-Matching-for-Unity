@@ -37,5 +37,15 @@
         UserTag31 = 1 << 30,
         UserTag32 = 1 << 31
 
-    }//End of enum: EGenericTags
+    }//End of enum: EUserTags
+    
+    public enum EUserTagQueryMethod
+    {
+        /** User tags will be queried from the dominant pose. I.e. the pose with the most animation weighting*/
+        DominantPose,
+    
+        /** User tags will be queried from the chosen pose. I.e. the pose that was last 'chosen' by the animation system*/
+        ChosenPose,
+
+    }//End of enum: EUserTagQueryMethod
 }//End of namespace: MxM

@@ -24,7 +24,7 @@ namespace MxMEditor
         public int SelectId { get; set; }
         public TagSelectType SelectType { get; set; }
         public List<Vector2> Tags { get { return m_tags; } }
-        public float ClipLength { get { return m_clipLength; } }
+        public float ClipLength { get { return m_clipLength; } set { m_clipLength = value; } }
 
         public bool DraggingSelected { get; set; }
 
@@ -265,6 +265,11 @@ namespace MxMEditor
         *********************************************************************************************/
         public void VerifyData(AnimationClip a_clip)
         {
+            if (!a_clip)
+                return;
+
+            m_clipLength = a_clip.length;
+            
             for(int i=0; i < m_tags.Count; ++i)
             {
                 Vector2 tag = m_tags[i];

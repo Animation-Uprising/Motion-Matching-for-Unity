@@ -82,7 +82,7 @@ namespace MxM
         private List<Quaternion> m_rootRotLookupTable;
         private List<float> m_rootSpeedLookupTable;
 
-        public string BlendSpaceName { get { return m_blendSpaceName; } }
+        public string BlendSpaceName { get { return m_blendSpaceName; } set { m_blendSpaceName = value ;} }
         public Vector2 Magnitude { get { return m_magnitude; } set { m_magnitude = value; } }
         public Vector2 Smoothing { get { return m_smoothing; } set { m_smoothing = value; } }
         public List<AnimationClip> Clips { get { return m_clips; } }

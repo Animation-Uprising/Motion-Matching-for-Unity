@@ -64,7 +64,7 @@ namespace MxM
         [SerializeField] private ETransitionMethod m_transitionMethod = ETransitionMethod.Blend;        //The method of blending to use to transition between animations
         [SerializeField] private EPastTrajectoryMode m_pastTrajectoryMode = EPastTrajectoryMode.ActualHistory; //The method for obtaining past trajectory points
         [SerializeField] private bool m_applyHumanoidFootIK = true;          //If false, humanoid foot Ik retargetting will be turned off
-        [SerializeField] private EFavourTagMethod m_favourTagMethod = EFavourTagMethod.Exclusive;
+        [SerializeField] private EFavourTagMethod m_favourTagMethod = EFavourTagMethod.Exclusive; //The method for handling favour tags, do they need to match exactly? partially? or does each matching tag contribute to the favour?
         [SerializeField] private bool m_applyTrajectoryBlending = false;     //If true the desired trajectory will be blended with the current animation with a linear falloff over prediction time                                 
         [SerializeField] private float m_trajectoryBlendingWeight = 0.5f;    //A weighting for 'Trajectory Blending'. Keep between 0-1. Impacts how strong the trajectory blending is.
         [SerializeField] private bool m_favourCurrentPose = false;           //If true the current pose will have a favour multiplier in the cost equation
@@ -74,6 +74,9 @@ namespace MxM
         [SerializeField] private float m_nextPoseToleranceDist = 0.2f;       //The tolerance threshold for trajectory positions in m/s
         [SerializeField] private float m_nextPoseToleranceAngle = 2f;        //The tolerance threshold for trajectory facing angles in degrees/s
         [SerializeField] private bool m_blendOutEarly = false;               //Whether to exit an animation clip early before it ends or not.
+        
+        //Advanced Options
+        [SerializeField] private ETagBlendMethod m_tagBlendMethod = ETagBlendMethod.HighestWeight; //How tags should be blended between digital poses. Highest weight? or combined?
 
         //Trajectory Error Warping
         [SerializeField] private WarpModule m_overrideWarpSettings = null;                                                  //A settings module which overrides all warp settings
@@ -97,6 +100,10 @@ namespace MxM
         [SerializeField] protected bool p_manualInitialize = false;                 //If true, the initialize function must be called manually on the MxMAnimator. This is called for runtime setups.
         [SerializeField] private bool m_autoCreateAnimatorController = false;       //If true, a mecanim controller will automatically be created and added to layer 1 (second layer) of the system. Provided there is a controller sloted in the animator.
 
+        //Footstep Tracking
+        [SerializeField] private float m_minFootstepInterval = 0.2f; //The minimum time interval allowable between triggered footsteps
+        
+        
         //MxM Extensions
         [SerializeField] private List<IMxMExtension> m_phase1Extensions;
         [SerializeField] private List<IMxMExtension> m_phase2Extensions;
@@ -163,10 +170,12 @@ namespace MxM
         private PoseData m_chosenPose;                  //The current chosen pose in the blended stack (i.e. the last pose to be added)
         private PoseData m_dominantPose;                //The dominant pose in the blended stack (i.e. the pose with the most weight)
         private CalibrationData m_curCalibData;         //The calibration data being used for the cost calculations
-        protected float p_currentDeltaTime;               //The current delta time (dependent on animator physics mode)
+        protected float p_currentDeltaTime;             //The current delta time (dependent on animator physics mode)
         private bool m_enforcePoseSearch;               //If the clip must be forceably changed this frame (used when a cut clip nears it's end)
         private int m_startFutureTrajIndex = 0;         //The index of the first trajectory point which is in the future
-       // private float m_timeDialation = 0f;             //The difference in time between the actual update interval and the desired update interval
+       // private float m_timeDialation = 0f;           //The difference in time between the actual update interval and the desired update interval
+       private float m_timeSinceLastLeftFootstep = 0f;  //The time that has passed since the last left footstep was triggered
+       private float m_timeSinceLastRightFootstep = 0f; //The time that has passed since the last right footstep was triggered
         
         //Trajectory Error Warping
         private ILongitudinalWarper m_longErrorWarper;  //Reference to a custom longitudinal error warper
@@ -249,6 +258,12 @@ namespace MxM
         public ref PoseData DominantPose { get => ref m_dominantPose; }                     //Returns the pose data with the most weight
         public ref PoseData CurrentInterpolatedPose { get => ref m_curInterpolatedPose; }   //Returns the current interpolated pose calculated at runtime
         public MxMPlayableState[] AnimationState { get => m_animationStates; }              //Returns the animation state layer stack for motion matching
+        
+        public float MinFootstepInterval
+        {
+            get => m_minFootstepInterval;
+            set => m_minFootstepInterval = value;
+        }
 
         //Used to modify the update interval (i.e. the frequency of database searches) from without the MxMAnimator
         public float UpdateInterval
@@ -1907,6 +1922,8 @@ namespace MxM
             {
                 m_poseInterpolationValue = (timePassed / CurrentAnimData.PoseInterval) - (float)numPosesPassed;
             }
+            
+            DebugGraph.Log("PoseInterpolationValue", m_poseInterpolationValue);
 
             if (m_poseInterpolationValue >= 0.5f)
             {
@@ -1927,7 +1944,29 @@ namespace MxM
                 m_curInterpolatedPose.PrimaryClipId = beforePose.PrimaryClipId;
                 m_curInterpolatedPose.Tags = beforePose.Tags;
                 m_curInterpolatedPose.UserTags = beforePose.UserTags;
+                m_curInterpolatedPose.Tags = afterPose.Tags;
+                m_curInterpolatedPose.UserTags = afterPose.UserTags;
             }
+
+            switch (m_tagBlendMethod)
+            {
+                case ETagBlendMethod.Combine:
+                {
+                    m_curInterpolatedPose.Tags = beforePose.Tags | afterPose.Tags;
+                    m_curInterpolatedPose.UserTags = beforePose.UserTags | afterPose.UserTags;
+                } break;
+                case ETagBlendMethod.AlwaysFormer:
+                {
+                    m_curInterpolatedPose.Tags = beforePose.Tags;
+                    m_curInterpolatedPose.UserTags = beforePose.UserTags;
+                } break;
+                case ETagBlendMethod.AlwaysLater:
+                {
+                    m_curInterpolatedPose.Tags = afterPose.Tags;
+                    m_curInterpolatedPose.UserTags = afterPose.UserTags;
+                } break;
+            }
+            
 
             m_curInterpolatedPose.NextPoseId = afterPose.PoseId;
             m_curInterpolatedPose.LastPoseId = beforePose.PoseId;

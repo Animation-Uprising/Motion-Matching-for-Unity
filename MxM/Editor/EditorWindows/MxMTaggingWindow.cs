@@ -2798,14 +2798,14 @@ namespace MxMEditor
                 m_sectionSelected = false;
                 m_eventSelected = false;
                 m_targetMxMAnim = a_targetMxMAnim;
-
+                
                 UpdateAutoZoom();
                 m_targetMxMAnim.VerifyData();
 
                 Repaint();
             }
         }
-
+        
         //===========================================================================================
         /**
         *  @brief
@@ -3751,8 +3751,6 @@ namespace MxMEditor
                             {
                                 if (evt.button == 0)
                                     a_tagTrack.DraggingSelected = false;
-
-
                             }
                             break;
                         case EventType.MouseDrag:

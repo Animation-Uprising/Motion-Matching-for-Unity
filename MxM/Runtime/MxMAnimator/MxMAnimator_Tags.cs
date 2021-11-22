@@ -60,6 +60,9 @@ namespace MxM
         *********************************************************************************************/
         private void UpdateFootSteps()
         {
+            m_timeSinceLastLeftFootstep += Time.deltaTime;
+            m_timeSinceLastRightFootstep += Time.deltaTime;
+            
             int trackId = m_dominantPose.TracksId;
 
             if (trackId < 0)
@@ -68,31 +71,43 @@ namespace MxM
             if (CurrentAnimData.LeftFootSteps.Length <= trackId || CurrentAnimData.RightFootSteps.Length <= trackId)
                 return;
 
-            var leftFootStepTrack = CurrentAnimData.LeftFootSteps[trackId];
-            var rightFootStepTrack = CurrentAnimData.RightFootSteps[trackId];
-
             ref MxMPlayableState dominantPlayableState = ref m_animationStates[m_dominantBlendChannel];
-
             float animTime = m_dominantPose.Time + dominantPlayableState.Age;
             AnimationClip clip = CurrentAnimData.Clips[m_dominantPose.PrimaryClipId];
-
-            if(clip.isLooping)
-                animTime = animTime % clip.length;
-
+            
             Vector2 range = new Vector2(animTime - (p_currentDeltaTime * m_playbackSpeed), animTime);
+            
+            if (clip.isLooping && animTime > clip.length)
+                animTime = (animTime % clip.length) * clip.length;
 
-            int stepId = leftFootStepTrack.GetStepStart(range);
 
-            if (stepId > -1)
+            //Trigger Left Footstep?
+            if (m_timeSinceLastLeftFootstep >= m_minFootstepInterval)
             {
-                m_onLeftFootStepStart.Invoke(leftFootStepTrack.FootSteps[stepId]);
+                var leftFootStepTrack = CurrentAnimData.LeftFootSteps[trackId];
+
+                int stepId = leftFootStepTrack.GetStepStart(range);
+
+                if (stepId > -1)
+                {
+                    m_onLeftFootStepStart.Invoke(leftFootStepTrack.FootSteps[stepId]);
+                    m_timeSinceLastLeftFootstep = 0f;
+                }
             }
 
-            stepId = rightFootStepTrack.GetStepStart(range);
-
-            if (stepId > -1)
+            //Trigger Right Footstep?
+            if (m_timeSinceLastRightFootstep >= m_minFootstepInterval)
             {
-                m_onRightFootStepStart.Invoke(rightFootStepTrack.FootSteps[stepId]);
+
+                var rightFootStepTrack = CurrentAnimData.RightFootSteps[trackId];
+
+                int stepId = rightFootStepTrack.GetStepStart(range);
+
+                if (stepId > -1)
+                {
+                    m_onRightFootStepStart.Invoke(rightFootStepTrack.FootSteps[stepId]);
+                    m_timeSinceLastRightFootstep = 0f;
+                }
             }
         }
 
@@ -511,7 +526,9 @@ namespace MxM
         public bool QueryUserTags(EUserTags a_queryTags)
         {
             if ((m_curInterpolatedPose.UserTags & a_queryTags) == a_queryTags)
+            {
                 return true;
+            }
 
             return false;
         }

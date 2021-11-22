@@ -18,7 +18,7 @@ namespace MxMEditor
         public List<Vector2> TagPositions { get { return m_tagPositions; } }
         public int TagCount { get { return m_tagPositions.Count; } }
         public bool DraggingSelected { get; set; }
-        public float ClipLength { get { return m_clipLength; } }
+        public float ClipLength { get { return m_clipLength; } set { m_clipLength = value; } }
 
         //============================================================================================
         /**
@@ -283,6 +283,11 @@ namespace MxMEditor
         *********************************************************************************************/
         public virtual void VerifyData(AnimationClip a_clip)
         {
+            if (!a_clip)
+                return;
+
+            m_clipLength = a_clip.length;
+            
             if (m_tagPositions == null)
                 m_tagPositions = new List<Vector2>();
             

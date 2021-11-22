@@ -24,6 +24,11 @@ public class MotionCurveData
 
     public void InitializeCurvesRuntime()
     {
+        if (Curves == null || CurveHandles == null)
+        {
+            return;
+        }
+        
         if(Curves.Length != CurveHandles.Length)
         {
             Debug.LogError("MotionCurveData: Mismatch in number of curves and curve handles. " +
@@ -41,9 +46,7 @@ public class MotionCurveData
 
     public AnimationCurve GetCurve(int a_curveHandle)
     {
-        int localCurveHandle;
-
-        if (CurveHandleRemap.TryGetValue(a_curveHandle, out localCurveHandle))
+        if (CurveHandleRemap.TryGetValue(a_curveHandle, out var localCurveHandle))
         {
             return Curves[localCurveHandle];
         }
@@ -55,9 +58,7 @@ public class MotionCurveData
 
     public float GetCurveValue(int a_curveHandle, float a_time)
     {
-        int localCurveHandle;
-
-        if (CurveHandleRemap != null && CurveHandleRemap.TryGetValue(a_curveHandle, out localCurveHandle))
+        if (CurveHandleRemap != null && CurveHandleRemap.TryGetValue(a_curveHandle, out var localCurveHandle))
         {
             return Curves[localCurveHandle].Evaluate(a_time);
         }

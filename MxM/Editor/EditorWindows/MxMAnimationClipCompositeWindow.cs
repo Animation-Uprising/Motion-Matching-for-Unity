@@ -15,6 +15,7 @@ namespace MxMEditor
         private static MxMAnimationClipCompositeWindow m_inst;
 
         private static SerializedObject m_soData;
+        private static SerializedProperty m_spName;
         private static SerializedProperty m_spPrimaryClip;
         private static SerializedProperty m_spBeforeClips;
         private static SerializedProperty m_spAfterClips;
@@ -73,6 +74,7 @@ namespace MxMEditor
 
                 m_soData = new SerializedObject(m_data);
 
+                m_spName = m_soData.FindProperty("CompositeName");
                 m_spPrimaryClip = m_soData.FindProperty("PrimaryClip");
                 m_spBeforeClips = m_soData.FindProperty("BeforeClips");
                 m_spAfterClips = m_soData.FindProperty("AfterClips");
@@ -313,6 +315,9 @@ namespace MxMEditor
                     if (m_spTargetAnimModule.objectReferenceValue != null)
                         EditorGUIUtility.PingObject(m_spTargetAnimModule.objectReferenceValue);
                 }
+                
+                GUILayout.Label("Name: ");
+                m_spName.stringValue = GUILayout.TextField(m_spName.stringValue, EditorStyles.textField, GUILayout.MinWidth(150f));
 
                 GUILayout.FlexibleSpace();
 
@@ -603,6 +608,7 @@ namespace MxMEditor
                                                 m_selectionId = 0;
                                                 
                                                 m_data.GenerateRootLookupTable();
+                                                m_data.ValidateBaseData();
                                             }
                                             break;
                                         case EAnimType.Future:

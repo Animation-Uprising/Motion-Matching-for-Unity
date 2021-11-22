@@ -1,4 +1,4 @@
-﻿// ================================================================================================
+﻿ // ================================================================================================
 // File: MxMAnimator_Layers.cs
 // 
 // Authors:  Kenneth Claassen
@@ -71,7 +71,7 @@ namespace MxM
         *         
         *********************************************************************************************/
         public void SetLayerClip(int a_layerId, AnimationClip a_clip, AvatarMask a_mask,
-            float a_time = 0f, float a_weight = 1f, bool a_applyFootIK = true)
+            float a_time = 0f, float a_weight = 1f, bool a_applyFootIK = true, float a_playbackSpeed = 1f)
         {
             MxMLayer layer = null;
             if (m_layers.TryGetValue(a_layerId, out layer))
@@ -80,6 +80,7 @@ namespace MxM
                 layer.SetLayerClip(a_clip, a_time);
                 layer.Mask = a_mask;
                 layer.Weight = a_weight;
+                layer.PlaybackSpeed = a_playbackSpeed;
             }
             else
             {
@@ -88,8 +89,13 @@ namespace MxM
             }
         }
 
+        //============================================================================================
+        /**
+        *  @brief
+        *         
+        *********************************************************************************************/
         public void SetLayerPlayable(int a_layerId, ref Playable a_playable, AvatarMask a_mask,
-            float a_weight = 1f, bool a_applyuFootIK = true)
+            float a_weight = 1f, bool a_applyuFootIK = true, float a_playbackSpeed = 1f)
         {
             MxMLayer layer = null;
             if(m_layers.TryGetValue(a_layerId, out layer))
@@ -98,6 +104,7 @@ namespace MxM
                 layer.SetLayerPlayable(ref a_playable);
                 layer.Mask = a_mask;
                 layer.Weight = a_weight;
+                layer.PlaybackSpeed = a_playbackSpeed;
             }
             else
             {
@@ -501,7 +508,7 @@ namespace MxM
         *         
         *********************************************************************************************/
         public int SetLayer(int a_layerId, AnimationClip a_clip, float a_weight = 0f, 
-            bool a_additive = false, AvatarMask a_mask = null, bool a_applyFootIK=true)
+            bool a_additive = false, AvatarMask a_mask = null, bool a_applyFootIK=true, float a_playbackSpeed = 1f)
         {
             if (a_clip == null)
             {
@@ -516,6 +523,7 @@ namespace MxM
                 layer.ApplyHumanoidFootIK = a_applyFootIK;
                 layer.SetLayerClip(a_clip);
                 layer.Mask = a_mask;
+                layer.PlaybackSpeed = a_playbackSpeed;
 
                 m_animationLayerMixer.SetInputWeight(a_layerId, a_weight);
                 m_animationLayerMixer.SetLayerAdditive((uint)a_layerId, a_additive);
@@ -536,7 +544,7 @@ namespace MxM
         *         
         *********************************************************************************************/
         public int SetLayer(int a_layerId, ref Playable a_playable, float a_weight = 0, 
-            bool a_additive = false, AvatarMask a_mask = null, bool a_applyFootIK=true)
+            bool a_additive = false, AvatarMask a_mask = null, bool a_applyFootIK=true, float a_playbackSpeed=1f)
         {
             if (!a_playable.IsValid())
             {
@@ -550,6 +558,7 @@ namespace MxM
             {
                 layer.ApplyHumanoidFootIK = true;
                 layer.SetLayerPlayable(ref a_playable);
+                layer.PlaybackSpeed = a_playbackSpeed;
 
                 m_animationLayerMixer.SetInputWeight(a_layerId, a_weight);
                 m_animationLayerMixer.SetLayerAdditive((uint)a_layerId, a_additive);
@@ -603,6 +612,27 @@ namespace MxM
                 }
 
                 m_animationLayerMixer.SetInputWeight(pair.Key, 0f);
+            }
+        }
+
+        //============================================================================================
+        /**
+        *  @brief Sets the playback speed of a specified layer
+        *
+        * @param [int] a_layerId - the id of the layer to set the speed of
+        * @param [float] a_playbackSpeed - the playbackSpeed for the layer
+        *         
+        *********************************************************************************************/
+        public void SetLayerSpeed(int a_layerId, float a_playbackSpeed)
+        {
+            MxMLayer layer = null;
+            if (m_layers.TryGetValue(a_layerId, out layer))
+            {
+                layer.PlaybackSpeed = a_playbackSpeed;
+            }
+            else
+            {
+                Debug.LogWarning("MxMAnimator: Trying to set a layer playback speed by the layerId is invalid. Aborting.");
             }
         }
 

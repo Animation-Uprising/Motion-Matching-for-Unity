@@ -354,7 +354,13 @@ namespace MxMEditor
                 EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, GUILayout.Height(20f), GUILayout.ExpandWidth(true));
                 {
                     EditorGUILayout.LabelField("Name:", GUILayout.Width(40f));
+                    EditorGUI.BeginChangeCheck();
                     m_spName.stringValue = EditorGUILayout.TextField(m_spName.stringValue, GUILayout.Width(150f));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        m_data.name = m_spName.stringValue;
+                        EditorUtility.SetDirty(m_data);
+                    }
 
                     GUILayout.FlexibleSpace();
 

@@ -12,6 +12,9 @@ namespace MxMEditor
 {
     public class MxMAnimationClipComposite : ScriptableObject, IMxMAnim
     {
+        //Name
+        [SerializeField] public string CompositeName;
+        
         //Clips
         [SerializeField] public AnimationClip PrimaryClip;
         [SerializeField] public List<AnimationClip> BeforeClips;
@@ -66,7 +69,7 @@ namespace MxMEditor
 
         //Curves
         [SerializeField] public List<MxMCurveTrack> Curves;
-        
+
         //Reference Data
         [SerializeField] private MxMPreProcessData m_targetPreProcessData;
         [SerializeField] private AnimationModule m_targetAnimModule;
@@ -438,6 +441,8 @@ namespace MxMEditor
         {
             if (PrimaryClip != null)
             {
+                ValidateBaseData();
+                
                 foreach (EventMarker evtMarker in Events)
                 {
                     if (evtMarker.EventTime > PrimaryClip.length)
