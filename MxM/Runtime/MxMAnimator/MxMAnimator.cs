@@ -1922,8 +1922,6 @@ namespace MxM
             {
                 m_poseInterpolationValue = (timePassed / CurrentAnimData.PoseInterval) - (float)numPosesPassed;
             }
-            
-            DebugGraph.Log("PoseInterpolationValue", m_poseInterpolationValue);
 
             if (m_poseInterpolationValue >= 0.5f)
             {
