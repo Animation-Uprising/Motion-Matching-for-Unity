@@ -52,7 +52,11 @@ namespace MxM
                 else
                 {
                     var playable = m_layerMixer.GetInput(Id);
-                    playable.SetSpeed(m_playbackSpeed);
+
+                    if (playable.IsValid())
+                    {
+                        playable.SetSpeed(m_playbackSpeed);
+                    }
                 }
             }
         }
