@@ -65,22 +65,24 @@ namespace MxM
             
             int trackId = m_dominantPose.TracksId;
 
-            if (trackId < 0)
+            if (trackId < 0
+                || CurrentAnimData.LeftFootSteps.Length <= trackId
+                || CurrentAnimData.RightFootSteps.Length <= trackId)
+            {
                 return;
-
-            if (CurrentAnimData.LeftFootSteps.Length <= trackId || CurrentAnimData.RightFootSteps.Length <= trackId)
-                return;
-
+            }
+            
             ref MxMPlayableState dominantPlayableState = ref m_animationStates[m_dominantBlendChannel];
             float animTime = m_dominantPose.Time + dominantPlayableState.Age;
             AnimationClip clip = CurrentAnimData.Clips[m_dominantPose.PrimaryClipId];
             
+            if (clip.isLooping && animTime > clip.length)
+            {
+                animTime = (animTime % clip.length) * clip.length;
+            }
+            
             Vector2 range = new Vector2(animTime - (p_currentDeltaTime * m_playbackSpeed), animTime);
             
-            if (clip.isLooping && animTime > clip.length)
-                animTime = (animTime % clip.length) * clip.length;
-
-
             //Trigger Left Footstep?
             if (m_timeSinceLastLeftFootstep >= m_minFootstepInterval)
             {
