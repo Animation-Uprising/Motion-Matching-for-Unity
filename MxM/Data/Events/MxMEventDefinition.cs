@@ -21,6 +21,7 @@ namespace MxM
         public bool MatchPose = true;
         public bool MatchTrajectory = true;
         public bool MatchRequireTags = false;
+        public EFavourTagMethod FavourTagMethod = EFavourTagMethod.Exclusive;
         public EPostEventTrajectoryMode PostEventTrajectoryMode = EPostEventTrajectoryMode.Maintain;
 
         public bool MatchTiming;

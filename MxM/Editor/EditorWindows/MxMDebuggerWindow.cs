@@ -738,9 +738,9 @@ namespace MxMEditor
                     float columnWidth = 300f;
 
 #if UNITY_2019_3_OR_NEWER
-                    float rowHeight = 228f;
+                    float rowHeight = 246f;
 #else
-                    float rowHeight = 210f;
+                    float rowHeight = 226f;
 #endif
                     int rowIndex = 0;
                     int colIndex = 0;
@@ -790,10 +790,13 @@ namespace MxMEditor
                             GUILayout.Space(20f);
                             EditorGUILayout.BeginVertical();
                             {
+                                ref readonly PoseData startPose = ref animData.Poses[state.StartPoseId];
+                                
                                 EditorGUILayout.LabelField("Animation: " + usedIndex);
                                 EditorGUILayout.LabelField("Start Pose Id: " + state.StartPoseId);
                                 EditorGUILayout.LabelField("Animation Id: " + state.AnimId);
                                 EditorGUILayout.LabelField("Animation Type: " + state.AnimType.ToString());
+                                EditorGUILayout.LabelField("Anim Time: " + (startPose.Time + state.Age).ToString("F4"));
                                 EditorGUILayout.LabelField("Age: " + state.Age.ToString("F4"));
                                 EditorGUILayout.LabelField("Decay Age: " + state.DecayAge.ToString("F4"));
                                 EditorGUILayout.LabelField("Weight: " + state.Weight.ToString("F5"));
@@ -801,10 +804,10 @@ namespace MxMEditor
                                 EditorGUILayout.LabelField("Blend Status: " + state.BlendStatus.ToString());
                                 EditorGUILayout.BeginHorizontal();
                                 {
-                                    int clipId = animData.Poses[state.StartPoseId].PrimaryClipId;
+                                    int clipId = startPose.PrimaryClipId;
                                     AnimationClip clip = animData.Clips[clipId];
 
-                                    EditorGUILayout.LabelField("Primary Clip: ", GUILayout.Width(35f));
+                                    EditorGUILayout.LabelField("Primary Clip: ", GUILayout.Width(100f));
                                     EditorGUILayout.ObjectField(clip, typeof(AnimationClip), false);
                                 }
                                 EditorGUILayout.EndHorizontal();

@@ -17,6 +17,7 @@ namespace MxMEditor
         private SerializedProperty m_spMatchPose;
         private SerializedProperty m_spMatchTrajectory;
         private SerializedProperty m_spMatchRequireTags;
+        private SerializedProperty m_spFavourTagMethod;
         private SerializedProperty m_spPostEventTrajectoryMode;
 
         private SerializedProperty m_spMatchTiming;
@@ -54,6 +55,7 @@ namespace MxMEditor
             m_spMatchPose = serializedObject.FindProperty("MatchPose");
             m_spMatchTrajectory = serializedObject.FindProperty("MatchTrajectory");
             m_spMatchRequireTags = serializedObject.FindProperty("MatchRequireTags");
+            m_spFavourTagMethod = serializedObject.FindProperty("FavourTagMethod");
             m_spPostEventTrajectoryMode = serializedObject.FindProperty("PostEventTrajectoryMode");
 
             m_spMatchTiming = serializedObject.FindProperty("MatchTiming");
@@ -145,6 +147,8 @@ namespace MxMEditor
                 m_spMatchPose.boolValue = EditorGUILayout.Toggle("Match Pose", m_spMatchPose.boolValue);
                 m_spMatchTrajectory.boolValue = EditorGUILayout.Toggle("Match Trajectory", m_spMatchTrajectory.boolValue);
                 m_spMatchRequireTags.boolValue = EditorGUILayout.Toggle("Match Require Tags", m_spMatchRequireTags.boolValue);
+                m_spFavourTagMethod.intValue = (int) (EFavourTagMethod) EditorGUILayout.EnumPopup(
+                    "Favour Tag Method", (EFavourTagMethod) m_spFavourTagMethod.intValue);
                 m_spPostEventTrajectoryMode.intValue = (int)(EPostEventTrajectoryMode)EditorGUILayout.EnumPopup(
                     "Post Event Trajectory Mode", (EPostEventTrajectoryMode)m_spPostEventTrajectoryMode.intValue);
 
@@ -160,7 +164,7 @@ namespace MxMEditor
                     }
                 }
 
-                curHeight += 18f * 10f;
+                curHeight += 18f * 11f;
             }
 
             curHeight += 30f;

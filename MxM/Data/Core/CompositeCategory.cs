@@ -29,7 +29,7 @@ namespace MxMEditor
         }
 
 
-        public CompositeCategory(CompositeCategory a_copy, ScriptableObject a_parentObj)
+        public CompositeCategory(CompositeCategory a_copy, ScriptableObject a_parentObj, bool a_mirrored=false)
         {
 #if UNITY_EDITOR
             CatagoryName = a_copy.CatagoryName;
@@ -45,7 +45,7 @@ namespace MxMEditor
             foreach(MxMAnimationClipComposite sourceComposite in a_copy.Composites)
             {
                 MxMAnimationClipComposite newComposite = ScriptableObject.CreateInstance<MxMAnimationClipComposite>();
-                newComposite.CopyData(sourceComposite);
+                newComposite.CopyData(sourceComposite, a_mirrored);
                 newComposite.name = sourceComposite.name;
                 newComposite.hideFlags = HideFlags.HideInHierarchy;
 
@@ -69,8 +69,7 @@ namespace MxMEditor
                 {
                     AssetDatabase.AddObjectToAsset(newComposite, a_parentObj);
                 }
-
-
+                
                 Composites.Add(newComposite);
             }
 #endif

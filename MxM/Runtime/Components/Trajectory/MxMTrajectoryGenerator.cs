@@ -6,6 +6,8 @@
 // 
 //     Contains a part of the 'MxM' namespace for 'Unity Engine'. 
 // ================================================================================================
+
+using System;
 using UnityEngine;
 using Unity.Mathematics;
 using Unity.Collections;
@@ -64,6 +66,7 @@ namespace MxM
         [SerializeField] private bool m_faceDirectionOnIdle = false;
 
         [Header("Other")]
+        [SerializeField] private float m_scaleAdjustment = 1f; //How much to scale the max speed by.
         [SerializeField] private Transform m_camTransform = null; //A reference to the camera transform
         [SerializeField] private MxMInputProfile m_mxmInputProfile = null; //A reference to the Input profile asset used to shape the trajectory
         [SerializeField] private TrajectoryGeneratorModule m_trajectoryGeneratorModule = null; //The trajectory generator module to use
@@ -129,6 +132,7 @@ namespace MxM
         public Vector3 InputVector { get; set; } //The raw input vector
         public Vector2 InputVector2D { get { return new Vector2(InputVector.x, InputVector.z); } set { InputVector = new Vector3(value.x, 0f, value.y); } }
         public Vector3 LinearInputVector { get; set; } //The transformed input vector relative to camera
+        public float ScaleAdjustment { get => m_scaleAdjustment; set => m_scaleAdjustment = value; }
         public float MaxSpeed { get { return m_maxSpeed; } set { m_maxSpeed = value; } } //The maximum speed of the trajectory generator
         public float PositionBias { get { return m_posBias; } set { m_posBias = value; } } //The positional responsiveness of the trajectory generator
         public float DirectionBias { get { return m_dirBias; } set { m_dirBias = value; } } //The rotational responsiveness of the trajectory generator
@@ -249,6 +253,9 @@ namespace MxM
         *********************************************************************************************/
         protected override void UpdatePrediction()
         {
+            if (p_trajPositions.Length == 0 || p_trajFacingAngles.Length == 0)
+                return;
+            
             //Desired linear velocity is calculated based on user input
             Vector3 desiredLinearVelocity = Vector3.zero;
             switch (m_controlMode)
@@ -305,7 +312,7 @@ namespace MxM
             }
 
             m_lastDesiredOrientation = desiredOrientation;
-
+            
             var trajectoryGenerateJob = new TrajectoryGeneratorJob()
             {
                 TrajectoryPositions = p_trajPositions,
@@ -364,7 +371,7 @@ namespace MxM
                 for (int i = 1; i < iterations; ++i)
                 {
                     float percentage = (float)i / (float)(iterations - 1);
-                    float desiredDisplacement = m_maxSpeed * percentage;
+                    float desiredDisplacement = m_maxSpeed * m_scaleAdjustment * percentage;
 
                     //find the desired point along the path.
                     float3 lastPoint = float3.zero;
@@ -539,7 +546,7 @@ namespace MxM
 
                 if (m_camTransform == null)
                 {
-                    return InputVector * m_maxSpeed;
+                    return InputVector * m_maxSpeed * m_scaleAdjustment;
                 }
                 else
                 {
@@ -550,7 +557,7 @@ namespace MxM
                     LinearInputVector = Quaternion.FromToRotation(Vector3.forward, forward) * InputVector;
 
                     //Return our desired velocity by multiplying our input by our max speed
-                    return LinearInputVector * m_maxSpeed;
+                    return LinearInputVector * m_maxSpeed * m_scaleAdjustment;
                 }
             }
             else
@@ -589,7 +596,7 @@ namespace MxM
             {
                 InputVector = InputVector.normalized;
                 m_hasInputThisFrame = true;
-                float maxSpeed = Mathf.Min(Mathf.Sqrt(destSqr), m_maxSpeed);
+                float maxSpeed = Mathf.Min(Mathf.Sqrt(destSqr), m_maxSpeed * m_scaleAdjustment);
 
                 return InputVector * maxSpeed;
             }
@@ -709,7 +716,7 @@ namespace MxM
         {
             if (a_trajGenModule == null)
                 return;
-
+            
             m_maxSpeed = a_trajGenModule.MaxSpeed;
             m_posBias = a_trajGenModule.PosBias;
             m_dirBias = a_trajGenModule.DirBias;
@@ -721,6 +728,7 @@ namespace MxM
             m_stoppingDistance = a_trajGenModule.StoppingDistance;
             m_applyRootSpeedToNavAgent = a_trajGenModule.ApplyRootSpeedToNavAgent;
             m_faceDirectionOnIdle = a_trajGenModule.FaceDirectionOnIdle;
+            m_scaleAdjustment = a_trajGenModule.ScaleAdjustment;
             m_camTransform = a_trajGenModule.CamTransform;
             m_mxmInputProfile = a_trajGenModule.InputProfile;
             

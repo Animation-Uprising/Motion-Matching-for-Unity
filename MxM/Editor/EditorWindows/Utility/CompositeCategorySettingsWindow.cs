@@ -175,7 +175,8 @@ namespace MxMEditor
             EditorGUILayout.LabelField("Require", GUILayout.Width(50f));
             if (m_moduleData != null)
             {
-                EditorFunctions.DrawTagFlagFieldWithCustomNames(m_moduleData.TagNames.ToArray(), m_spRequireTags, 75f);
+                if(m_moduleData.TagNames != null)
+                    EditorFunctions.DrawTagFlagFieldWithCustomNames(m_moduleData.TagNames.ToArray(), m_spRequireTags, 75f);
             }
             else
             {
@@ -187,7 +188,8 @@ namespace MxMEditor
             EditorGUILayout.LabelField("Favour", GUILayout.Width(50f));
             if (m_moduleData != null)
             {
-                EditorFunctions.DrawTagFlagFieldWithCustomNames(m_moduleData.FavourTagNames.ToArray(), m_spFavourTags, 75f);
+                if(m_moduleData.FavourTagNames != null)
+                    EditorFunctions.DrawTagFlagFieldWithCustomNames(m_moduleData.FavourTagNames.ToArray(), m_spFavourTags, 75f);
             }
             else
             {

@@ -283,6 +283,13 @@ namespace MxMEditor
                         m_spClips.DeleteArrayElementAtIndex(m_queueDeleteIndex);
                         m_spPositions.DeleteArrayElementAtIndex(m_queueDeleteIndex);
 
+                        m_soData.ApplyModifiedPropertiesWithoutUndo();
+
+                        if (m_previewActive)
+                        {
+                            RemoveClipFromPreview(m_queueDeleteIndex);
+                        }
+                        
                         m_queueDeleteIndex = -1;
                     }
 
@@ -1101,9 +1108,50 @@ namespace MxMEditor
         *  @brief
         *         
         *********************************************************************************************/
-        private static void RemoveClipFromPreview(int a_clipId)
+        private void RemoveClipFromPreview(int a_clipId)
         {
-            //ToDo: Implement this
+            if (a_clipId < 0 || a_clipId >= m_blendWeights.Count)
+                return;
+            
+            m_blendWeights.RemoveAt(a_clipId);
+            
+            AnimationMixerPlayable mixer = MxMPreviewScene.Mixer;
+            var clipPlayable = mixer.GetInput(a_clipId);
+            
+            mixer.DisconnectInput(a_clipId);
+            clipPlayable.Destroy();
+
+            for (int i = a_clipId + 1; i < m_data.Clips.Count; ++i)
+            {
+                var shiftPlayable = mixer.GetInput(i);
+
+                mixer.DisconnectInput(i);
+                if (shiftPlayable.IsValid())
+                {
+                    mixer.ConnectInput(i-1, shiftPlayable, 0);
+                }
+            }
+            
+            CalculateBlendWeights();
+            
+            for (int i = 0; i < mixer.GetInputCount(); ++i)
+            {
+                var playable = mixer.GetInput(i);
+
+                if (playable.IsValid())
+                {
+                    float normalizedClipSpeed = 1.0f;
+                    if (m_spNormalizeTime.boolValue)
+                    {
+                        normalizedClipSpeed *= m_previewBlendSpace.Clips[i].length / m_normalizedClipLength;
+                    }
+
+                    playable.SetTime(0f);
+                    playable.SetSpeed(normalizedClipSpeed);
+                }
+            }
+
+            ApplyBlendWeights();
         }
 
         //===========================================================================================

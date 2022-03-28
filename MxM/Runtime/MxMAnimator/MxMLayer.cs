@@ -52,11 +52,9 @@ namespace MxM
                 else
                 {
                     var playable = m_layerMixer.GetInput(Id);
-
-                    if (playable.IsValid())
-                    {
+                    
+                    if(playable.IsValid())
                         playable.SetSpeed(m_playbackSpeed);
-                    }
                 }
             }
         }
@@ -189,7 +187,7 @@ namespace MxM
 
             PrimaryInputId = 0;
             ApplyHumanoidFootIK = a_applyFootIk;
-            PlaybackSpeed = a_playbackSpeed;
+            m_playbackSpeed = a_playbackSpeed;
 
             Mixer = AnimationMixerPlayable.Create(m_playableGraph, a_maxClips, true);
             
@@ -200,7 +198,7 @@ namespace MxM
 
             Mixer.ConnectInput(0, clipPlayable, 0);
             Mixer.SetInputWeight(0, 1f);
-            Mixer.SetSpeed(a_playbackSpeed);
+            Mixer.SetSpeed(m_playbackSpeed);
 
             Mask = a_mask;
 
@@ -243,7 +241,7 @@ namespace MxM
             MaxClips = a_maxClips;
             PrimaryInputId = 0;
             ApplyHumanoidFootIK = a_applyFootIk;
-            PlaybackSpeed = a_playbackSpeed;
+            m_playbackSpeed = a_playbackSpeed;
 
             Mixer = AnimationMixerPlayable.Create(m_playableGraph, a_maxClips, true);
 
@@ -251,7 +249,7 @@ namespace MxM
 
             Mixer.ConnectInput(0, a_playable, 0);
             Mixer.SetInputWeight(0, 1f);
-            Mixer.SetSpeed(a_playbackSpeed);
+            Mixer.SetSpeed(m_playbackSpeed);
 
             Mask = a_mask;
 
@@ -294,7 +292,7 @@ namespace MxM
             PrimaryInputId = 0;
             MaxClips = 1;
             ApplyHumanoidFootIK = a_applyFootIK;
-            PlaybackSpeed = a_playbackSpeed;
+            m_playbackSpeed = a_playbackSpeed;
 
             m_layerMixer.ConnectInput(Id, a_playable, 0);
             a_playable.SetSpeed(a_playbackSpeed);

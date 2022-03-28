@@ -7,6 +7,7 @@
 //     Contains a part of the 'MxM' namespace for 'Unity Engine'.
 // ================================================================================================
 using System;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Playables;
 
@@ -48,8 +49,16 @@ namespace MxM
 
         public ref readonly EventData CurrentEvent { get { return ref m_curEvent; } } //Get a handle to the current event data
         public EEventState CurrentEventState { get { return m_curEventState; } } //Returns the current state of a playing event if there is one.
+        
+        [Obsolete("This property is deprecated and will be removed in a future release. Please use NextEventContactRoot_Actual_World instead.")]
         public ref readonly EventContact NextEventContact_Actual_World { get { return ref m_currentEventRootWorld; } } //Returns the current EventContact point in world space if no warping occurs
+        
+        [Obsolete("This property is deprecated and will be removed in a future release. Please use NextEventContactRoot_Desired_World instead.")]
         public ref readonly EventContact NextEventContact_Desired_World { get { return ref m_desiredEventRootWorld; } } //Returns the desired EventContact point in world space
+        
+        public ref readonly EventContact NextEventContactRoot_Actual_World { get { return ref m_currentEventRootWorld; }}//Returns the current EventContact point in world space if no warping occurs
+        public ref readonly EventContact NextEventContactRoot_Desired_World { get { return ref m_desiredEventRootWorld; } } //Returns the desired EventContact point in world space
+        
         public EEventWarpType WarpType { get; set; } //The type / method of positional warping to use
         public EEventWarpType RotWarpType { get; set; }//The type / method of rotation warping to use
         public EEventWarpType TimeWarpType { get; set; }//The type / method of time warping to use
@@ -360,7 +369,7 @@ namespace MxM
             }
 
             //Snap character rotation to ensure 100% precise contact at this frame
-            if (RotWarpType == EEventWarpType.Linear || WarpType == EEventWarpType.Dynamic)
+            if (RotWarpType == EEventWarpType.Linear || RotWarpType == EEventWarpType.Dynamic)
             {
                 if (m_rootMotion != null)
                 {
@@ -746,7 +755,7 @@ namespace MxM
         *  @param [MxMEventDefinition] a_eventDefinition - event definition data to use to begin an event
         *         
         *********************************************************************************************/
-        public void BeginEvent(MxMEventDefinition a_eventDefinition)
+        public void BeginEvent(MxMEventDefinition a_eventDefinition, ETags a_overrideRequireTags = ETags.DoNotUse)
         {
             if (a_eventDefinition == null)
                 return;
@@ -807,8 +816,12 @@ namespace MxM
 
                         if (a_eventDefinition.MatchRequireTags)
                         {
-                            ETags evtTags = (pose.Tags & (~ETags.DoNotUse));
-
+                            ETags evtTags = a_overrideRequireTags;
+                            if (a_overrideRequireTags == ETags.DoNotUse)
+                            {
+                                evtTags = (pose.Tags & (~ETags.DoNotUse));
+                            }
+                            
                             if (evtTags != m_desireRequiredTags)
                                 continue;
                         }
@@ -837,8 +850,7 @@ namespace MxM
                         {
                             cost += Vector3.Distance(m_animationRoot.InverseTransformPoint(CurEventContacts[0].Position),
                                 evt.WindupPoseContactOffsets[i].Position) * a_eventDefinition.PositionWeight;
-
-
+                            
                             for (int k = 0; k < a_eventDefinition.ContactCountToMatch - 1 
                                 && k < evt.SubEventContactOffsets.Length 
                                 && k < CurEventContacts.Length - 1; ++k)
@@ -860,11 +872,35 @@ namespace MxM
                             }
                         }
 
-                        if(pose.FavourTags == FavourTags)
+                        switch (a_eventDefinition.FavourTagMethod)
                         {
-                            cost *= m_favourMultiplier;
+                            case EFavourTagMethod.Exclusive:
+                            {
+                                if(pose.FavourTags == FavourTags)
+                                    cost *= m_favourMultiplier;
+                                
+                            } break;
+                            case EFavourTagMethod.Inclusive:
+                            {
+                                if ((pose.FavourTags & FavourTags) != 0)
+                                    cost *= m_favourMultiplier;
+                                
+                            } break;
+                            case EFavourTagMethod.Stacking:
+                            {
+                                ETags activeTags = pose.FavourTags & FavourTags;
+                                uint activeTagCount = MxMUtility.CountFlags(activeTags);
+                                if (activeTagCount > 0)
+                                {
+                                    cost *= math.pow(FavourMultiplier, activeTagCount);
+                                }
+                            } break;
+                            default:
+                            {
+                                //Nothing to do here
+                            } break;
                         }
-
+                        
                         if (cost < bestCost)
                         {
                             m_eventLength = evt.Length - CurrentAnimData.PoseInterval * i;
@@ -1617,6 +1653,21 @@ namespace MxM
 
         //============================================================================================
         /**
+        *  @brief Forces the current event to be exited regardless of event conditions. In this case
+        * idle will be enforced immediately after the event
+        *         
+        *********************************************************************************************/
+        public void ForceExitEventToIdle()
+        {
+            if (m_fsm.CurrentStateId == (uint) EMxMStates.Event)
+            {
+                ResetMotion(m_trajectoryGenerators.Length > 1);
+                BeginIdle();
+            }
+        }
+
+        //============================================================================================
+        /**
         *  @brief Exits from the current event
         *         
         *********************************************************************************************/
@@ -1626,7 +1677,14 @@ namespace MxM
 
             if (CurrentNativeAnimData.Tags == RequiredTags)
             {
-                m_fsm.GoToState((uint)EMxMStates.Matching, true);
+                if (DetectIdle())
+                {
+                    BeginIdle();
+                }
+                else
+                {
+                    m_fsm.GoToState((uint)EMxMStates.Matching, true);
+                }
             }
             else
             {

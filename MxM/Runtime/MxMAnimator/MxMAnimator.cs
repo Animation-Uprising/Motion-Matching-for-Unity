@@ -554,8 +554,7 @@ namespace MxM
                 //Handle animation root warping if we are currently in an event
                 if (m_fsm.CurrentStateId == (uint)EMxMStates.Event)
                 {
-                    EventFrameData lookupData;
-                    FetchEventLookupData(out lookupData);
+                    FetchEventLookupData(out var lookupData);
 
                     if ((int) WarpType > (int) EEventWarpType.Snap)
                     {
@@ -599,11 +598,6 @@ namespace MxM
                 //This switch statement handles the application of root motion dependent on the user settings.
                 switch (m_rootMotionMode)
                 {
-                    case EMxMRootMotion.Off:
-                        {
-                            m_animationRoot.rotation *= warpRot; //Even with root motion off, angular error warping needs to be applied to the transform if it is on.
-                        }
-                        break;
                     case EMxMRootMotion.On:
                         {
                             Vector3 deltaPos = p_animator.deltaPosition;
@@ -656,6 +650,31 @@ namespace MxM
                         }
                         break;
                 }
+            }
+            else //root motion is set to off
+            {
+                Quaternion warpRot = Quaternion.identity;
+                
+                if (m_fsm.CurrentStateId != (uint)EMxMStates.Event)
+                {
+                    //This handles angular error warping when an event is not active. Angular error warping ensures the the character always runs in the 
+                    //direction you want them to go, even if there is no perfect animation that fits.
+                    if (m_angularWarpType == EAngularErrorWarp.On)
+                    {
+                        if (CanPerformTrajectoryErrorAngularWarping())
+                        {
+                            Quaternion errorWarpRot = ApplyTrajectoryErrorAngularWarping(p_animator.deltaRotation, p_currentDeltaTime);
+
+                            warpRot *= errorWarpRot;
+                        }
+                        else
+                        {
+                            LatErrorWarpAngle = 0f;
+                        }
+                    }
+                }
+                
+                m_animationRoot.rotation *= warpRot; //Even with root motion off, angular error warping needs to be applied to the transform if it is on.
             }
         }
 

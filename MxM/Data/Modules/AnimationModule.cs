@@ -385,6 +385,64 @@ namespace MxMEditor
             EditorUtility.SetDirty(this);
 #endif
         }
+        
+        //============================================================================================
+        /**
+        *  @brief 
+        *         
+        *********************************************************************************************/
+        public void CopyModuleMirrored(AnimationModule a_animModule)
+        {
+            if (a_animModule == null)
+                return;
+            
+            m_overrideTagModule = a_animModule.OverrideTagModule;
+            m_overrideEventModule = a_animModule.OverrideEventModule;
+            m_overrideConfigModule = a_animModule.OverrideConfigModule;
+
+            //Copy composite categories
+            for (int i = 0; i < a_animModule.CompositeCategories.Count; ++i)
+            {
+                CompositeCategory sourceCategory = a_animModule.CompositeCategories[i];
+
+                if (sourceCategory == null)
+                    continue;
+
+                CompositeCategory newCategory = new CompositeCategory(sourceCategory, this, /*mirrored*/true);
+                m_compositeCategories.Add(newCategory);
+            }
+            
+            //Copy idle sets
+            for (int i = 0; i < a_animModule.m_animIdleSets.Count; ++i)
+            {
+                MxMAnimationIdleSet sourceIdleSet = a_animModule.m_animIdleSets[i];
+
+                if (sourceIdleSet == null)
+                    continue;
+
+
+                MxMAnimationIdleSet newIdleSet = ScriptableObject.CreateInstance<MxMAnimationIdleSet>();
+                newIdleSet.CopyData(sourceIdleSet, /*mirrored*/true);
+                m_animIdleSets.Add(newIdleSet);
+            }
+            
+            //Copy blend spaces
+            for (int i = 0; i < a_animModule.m_blendSpaces.Count; ++i)
+            {
+                MxMBlendSpace sourceBlendSpace = a_animModule.m_blendSpaces[i];
+
+                if (sourceBlendSpace == null)
+                    continue;
+
+                MxMBlendSpace newBlendSpace = ScriptableObject.CreateInstance<MxMBlendSpace>();
+                newBlendSpace.CopyData(sourceBlendSpace, /*mirrored*/true);
+                m_blendSpaces.Add(newBlendSpace);
+            }
+
+#if UNITY_EDITOR
+            EditorUtility.SetDirty(this);
+#endif
+        }
 
         //============================================================================================
         /**
@@ -495,8 +553,9 @@ namespace MxMEditor
                         if (composite.PrimaryClip == null)
                         {
 #if UNITY_EDITOR
-                            EditorUtility.DisplayDialog("Error: Empty Composite", "You have a composite with no animations in it. " +
-                           "Please add an animation or remove the composite before pre-processing", "Ok");
+                            EditorUtility.DisplayDialog("Error: Empty Composite", "You have a composite with no animations in it. Anim Module: " 
+                                + name + " Category: " + category.CatagoryName + " Composite Name: " + composite.CompositeName
+                                + ". Please add an animation or remove the composite before pre-processing", "Ok");
 
                             EditorGUIUtility.PingObject(composite);
 #endif
@@ -518,8 +577,8 @@ namespace MxMEditor
                     if (idleSet.PrimaryClip == null)
                     {
 #if UNITY_EDITOR
-                        EditorUtility.DisplayDialog("Error: Empty Idle Set", "You have a IdleSet with no animations in it. " +
-                            "Please add an animation or remove the idle set before pre-processing", "Ok");
+                        EditorUtility.DisplayDialog("Error: Empty Idle Set", "You have a IdleSet with no animations in it. Anim Module: " 
+                            + name + ". Please add an animation or remove the idle set before pre-processing", "Ok");
 
                         EditorGUIUtility.PingObject(idleSet);
 #endif
@@ -540,8 +599,9 @@ namespace MxMEditor
                     if (clips == null || clips.Count == 0)
                     {
 #if UNITY_EDITOR
-                        EditorUtility.DisplayDialog("Error: Empty blend space", "You have a blendspace with no animations in it. " +
-                            "Please add an animation or remove the blendspace before pre-processing", "Ok");
+                        EditorUtility.DisplayDialog("Error: Empty blend space", "You have a blendspace with no animations in it. Anim Module: " 
+                            + name + " Blendspace Name: " + blendSpace.BlendSpaceName
+                            + ". Please add an animation or remove the blendspace before pre-processing", "Ok");
 
                         EditorGUIUtility.PingObject(blendSpace);
 #endif
@@ -551,8 +611,9 @@ namespace MxMEditor
                     if (clips[0] == null)
                     {
 #if UNITY_EDITOR
-                        EditorUtility.DisplayDialog("Error: Empty blend space", "You have a blendspace with no animations in it. " +
-                            "Please add an animation or remove the blendspace before pre-processing", "Ok");
+                        EditorUtility.DisplayDialog("Error: Empty blend space", "You have a blendspace with no animations in it. Anim Module: " 
+                            + name + " Blendspace Name: " + blendSpace.BlendSpaceName
+                            + ". Please add an animation or remove the blendspace before pre-processing", "Ok");
 
                         EditorGUIUtility.PingObject(blendSpace);
 #endif

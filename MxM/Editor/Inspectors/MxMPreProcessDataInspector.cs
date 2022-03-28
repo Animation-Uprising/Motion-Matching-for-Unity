@@ -2294,8 +2294,9 @@ namespace MxMEditor
 
                             if(composite.PrimaryClip == null)
                             {
-                                EditorUtility.DisplayDialog("Error: Empty Composite", "You have a composite with no animations in it. " +
-                               "Please add an animation or remove the composite before pre-processing", "Ok");
+                                EditorUtility.DisplayDialog("Error: Empty Composite", "You have a composite with no animations in it. Main PreProcessor, Category: " 
+                                    + category.CatagoryName + " Composite: " + composite.CompositeName 
+                                    + ". Please add an animation or remove the composite before pre-processing", "Ok");
 
                                 EditorGUIUtility.PingObject(composite);
 
@@ -2316,8 +2317,8 @@ namespace MxMEditor
 
                         if (idleSet.PrimaryClip == null)
                         {
-                            EditorUtility.DisplayDialog("Error: Empty Idle Set", "You have a IdleSet with no animations in it. " +
-                                "Please add an animation or remove the idle set before pre-processing", "Ok");
+                            EditorUtility.DisplayDialog("Error: Empty Idle Set", "You have a IdleSet with no animations in it. Main PreProcessor." 
+                                + "Please add an animation or remove the idle set before pre-processing", "Ok");
 
                             EditorGUIUtility.PingObject(idleSet);
 
@@ -2337,8 +2338,8 @@ namespace MxMEditor
 
                         if(clips == null || clips.Count == 0)
                         {
-                            EditorUtility.DisplayDialog("Error: Empty blend space", "You have a blendspace with no animations in it. " +
-                                "Please add an animation or remove the blendspace before pre-processing", "Ok");
+                            EditorUtility.DisplayDialog("Error: Empty blend space", "You have a blendspace with no animations in it. Main PreProcessor." 
+                                + " BlendSpace: " + blendSpace.BlendSpaceName + ". Please add an animation or remove the blendspace before pre-processing", "Ok");
 
                             EditorGUIUtility.PingObject(blendSpace);
 
@@ -2347,8 +2348,8 @@ namespace MxMEditor
 
                         if (clips[0] == null)
                         {
-                            EditorUtility.DisplayDialog("Error: Empty blend space", "You have a blendspace with no animations in it. " +
-                                "Please add an animation or remove the blendspace before pre-processing", "Ok");
+                            EditorUtility.DisplayDialog("Error: Empty blend space", "You have a blendspace with no animations in it. Main PreProcessor." 
+                                + " BlendSpace: " + blendSpace.BlendSpaceName + ". Please add an animation or remove the blendspace before pre-processing", "Ok");
 
                             EditorGUIUtility.PingObject(blendSpace);
 
@@ -2817,7 +2818,7 @@ namespace MxMEditor
                 Object assetAtPath = AssetDatabase.LoadAssetAtPath(fileName + ".asset", typeof(Object));
                 if (assetAtPath != null)
                 {
-                    EditorUtility.DisplayDialog("Error: Export will overwriting another asset.",
+                    EditorUtility.DisplayDialog("Error: Export will overwrite another asset.",
                             "You are trying to overwrite another asset. This is not allowed with exporting composite categories", "Ok");
 
                     shouldContinue = false;

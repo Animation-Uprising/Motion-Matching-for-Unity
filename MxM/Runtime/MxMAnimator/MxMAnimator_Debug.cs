@@ -41,6 +41,9 @@ namespace MxM
         private bool m_debugPreview;
         private Mesh m_debugArrowMesh;
 
+        public float LastChosenCost => m_lastChosenCost;
+
+
         public MxMDebugger DebugData { get; private set; }
 
         //============================================================================================

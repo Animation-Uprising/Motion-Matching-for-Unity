@@ -11,6 +11,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using GraphVisualizer;
 using UnityEditorInternal;
 using MxM;
 
@@ -313,6 +314,13 @@ namespace MxMEditor
                 curHeight += 31f;
                 GUILayout.Space(4f);
             }
+
+            if (GUI.Button(new Rect(EditorGUIUtility.currentViewWidth
+                                    - 175f, curHeight, 150f, 18f), "Export Mirrored"))
+            {
+                ExportToMirroredModule();
+            }
+
             curHeight += 35f;
             GUILayout.Space(35f);
 
@@ -1024,8 +1032,9 @@ namespace MxMEditor
 
                             if (composite.PrimaryClip == null)
                             {
-                                EditorUtility.DisplayDialog("Error: Empty Composite", "You have a composite with no animations in it. " +
-                               "Please add an animation or remove the composite before pre-processing", "Ok");
+                                EditorUtility.DisplayDialog("Error: Empty Composite", "You have a composite with no animations in it. Anim Module: " 
+                                    + m_data.name + " Category: " + category.CatagoryName + "Composite: " + composite.CompositeName
+                                    + ". Please add an animation or remove the composite before pre-processing", "Ok");
 
                                 EditorGUIUtility.PingObject(composite);
 
@@ -1046,8 +1055,9 @@ namespace MxMEditor
 
                         if (idleSet.PrimaryClip == null)
                         {
-                            EditorUtility.DisplayDialog("Error: Empty Idle Set", "You have a IdleSet with no animations in it. " +
-                                "Please add an animation or remove the idle set before pre-processing", "Ok");
+                            EditorUtility.DisplayDialog("Error: Empty Idle Set", "You have a IdleSet with no animations in it. Anim Module: " 
+                                + m_data.name
+                                + ". Please add an animation or remove the idle set before pre-processing", "Ok");
 
                             EditorGUIUtility.PingObject(idleSet);
 
@@ -1067,8 +1077,9 @@ namespace MxMEditor
 
                         if (clips == null || clips.Count == 0)
                         {
-                            EditorUtility.DisplayDialog("Error: Empty blend space", "You have a blendspace with no animations in it. " +
-                                "Please add an animation or remove the blendspace before pre-processing", "Ok");
+                            EditorUtility.DisplayDialog("Error: Empty blend space", "You have a blendspace with no animations in it. Anim Module: " 
+                                + m_data.name + " Blendspace: " + blendSpace.BlendSpaceName
+                                + ". Please add an animation or remove the blendspace before pre-processing", "Ok");
 
                             EditorGUIUtility.PingObject(blendSpace);
 
@@ -1077,8 +1088,9 @@ namespace MxMEditor
 
                         if (clips[0] == null)
                         {
-                            EditorUtility.DisplayDialog("Error: Empty blend space", "You have a blendspace with no animations in it. " +
-                                "Please add an animation or remove the blendspace before pre-processing", "Ok");
+                            EditorUtility.DisplayDialog("Error: Empty blend space", "You have a blendspace with no animations in it. Anim Module: " 
+                                + m_data.name + " Blendspace: " + blendSpace.BlendSpaceName
+                                + ". Please add an animation or remove the blendspace before pre-processing", "Ok");
 
                             EditorGUIUtility.PingObject(blendSpace);
 
@@ -1474,6 +1486,44 @@ namespace MxMEditor
                     AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(animModule));
 
                     animModule.CopyCompositeCategory(m_data, a_categoryId);
+                }
+            }
+        }
+
+        private void ExportToMirroredModule()
+        {
+            serializedObject.ApplyModifiedProperties();
+
+            m_data.ValidateData();
+            EditorUtility.SetDirty(m_data);
+            AssetDatabase.SaveAssets();
+
+            string startLocation = AssetDatabase.GetAssetPath(this).Replace(name + ".asset", "");
+            
+            string fileName = EditorUtility.SaveFilePanelInProject("Export Mirrored Module", 
+                "MxMAnimationModule", "asset", "Export mirrored module as", startLocation).Replace(".asset", "");
+
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                bool shouldContinue = true;
+
+                Object assetAtPath = AssetDatabase.LoadAssetAtPath(fileName + ".asset", typeof(Object));
+                if (assetAtPath != null)
+                {
+                    if (EditorUtility.DisplayDialogComplex("Export will overwrite another asset.",
+                            "Are you sure you want to do this? It cannot be undone!", "Yes", "No", "Cancel") != 0)
+                    {
+                        shouldContinue = false;
+                    }
+                }
+
+                if (shouldContinue)
+                {
+                    AnimationModule animModule = ScriptableObject.CreateInstance<AnimationModule>();
+                    AssetDatabase.CreateAsset(animModule, fileName + ".asset");
+                    AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(animModule));
+                    
+                    animModule.CopyModuleMirrored(m_data);
                 }
             }
         }

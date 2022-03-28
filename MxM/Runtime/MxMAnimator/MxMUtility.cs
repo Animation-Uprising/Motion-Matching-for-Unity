@@ -7,9 +7,13 @@
 //     Contains a part of the 'MxM' namespace for 'Unity Engine'.
 // ================================================================================================
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;    
+#endif
 using UnityEngine.Playables;
 using UnityEngine.Animations;
 using System;
+using Object = UnityEngine.Object;
 
 namespace MxM
 {
@@ -111,6 +115,52 @@ namespace MxM
 
             return c;
         }
+        
+#if UNITY_EDITOR        
+        //============================================================================================
+        /**
+        *  @brief Finds a mirrored version of an animation clip with the _MIRROR postfix
+        *  
+        *  @param [AnimationClip] a_sourceClip
+        *         
+        *********************************************************************************************/
+        public static AnimationClip FindMirroredClip(AnimationClip a_sourceClip)
+        {
+            if (a_sourceClip == null)
+                return null;
+
+            string animPath = AssetDatabase.GetAssetPath(a_sourceClip);
+            var assetRepresentationsAtPath = AssetDatabase.LoadAllAssetRepresentationsAtPath(animPath);
+
+            string desiredMirrorClipName = a_sourceClip.name + "_MIRROR";
+
+            AnimationClip newMirrorClip = null;
+            foreach (var assetRepresentation in assetRepresentationsAtPath)
+            {
+                AnimationClip animClip = assetRepresentation as AnimationClip;
+
+                if (animClip == null)
+                    continue;
+
+                if (animClip.name == desiredMirrorClipName)
+                {
+                    newMirrorClip = animClip;
+                    break;
+                }
+            }
+
+            if (newMirrorClip != null)
+            {
+                return newMirrorClip;
+            }
+            else
+            {
+                Debug.LogWarning("Find Mirror Clip: Could not find mirrored version of AnimationClip: " + a_sourceClip.name);
+                return a_sourceClip;
+            }
+        }
+#endif        
+        
 
     }//End of static class: MxMUtility
 }//End of namespace: MxM

@@ -113,7 +113,7 @@ namespace MxM
             }
         }
 
-        public void CopyData(MxMBlendSpace a_copy)
+        public void CopyData(MxMBlendSpace a_copy, bool a_mirrored=false)
         {
             ValidateBaseData();
 
@@ -128,8 +128,20 @@ namespace MxM
 
             GlobalTags = a_copy.GlobalTags;
             GlobalFavourTags = a_copy.GlobalFavourTags;
+            
+            if (a_mirrored)
+            {
+                m_clips = new List<AnimationClip>(a_copy.m_clips.Count + 1);
+                foreach (AnimationClip clip in a_copy.m_clips)
+                {
+                    m_clips.Add(MxMUtility.FindMirroredClip(clip));
+                }
+            }
+            else
+            {
+                m_clips = new List<AnimationClip>(a_copy.m_clips);
+            }
 
-            m_clips = new List<AnimationClip>(a_copy.m_clips);
             m_positions = new List<Vector2>(a_copy.Positions);
 
             if(m_targetPrefab == null)
@@ -153,8 +165,17 @@ namespace MxM
                 UserBoolTracks.Add(new TagTrackBase(track));
             }
 
-            LeftFootStepTrack = new FootStepTagTrack(a_copy.LeftFootStepTrack);
-            RightFootStepTrack = new FootStepTagTrack(a_copy.RightFootStepTrack);
+            if (a_mirrored)
+            {
+                LeftFootStepTrack = new FootStepTagTrack(a_copy.RightFootStepTrack);
+                RightFootStepTrack = new FootStepTagTrack(a_copy.LeftFootStepTrack);
+            }
+            else
+            {
+                LeftFootStepTrack = new FootStepTagTrack(a_copy.LeftFootStepTrack);
+                RightFootStepTrack = new FootStepTagTrack(a_copy.RightFootStepTrack);
+            }
+            
             WarpPositionTrack = new TagTrackBase(a_copy.WarpPositionTrack);
             WarpRotationTrack = new TagTrackBase(a_copy.WarpRotationTrack);
             EnableRootMotionTrack = new TagTrackBase(a_copy.EnableRootMotionTrack);
@@ -163,6 +184,8 @@ namespace MxM
             WarpTrajLongTrack = new TagTrackBase(a_copy.WarpTrajLongTrack);
 
             MotionModifier = new MotionModifyData(a_copy.MotionModifier, this);
+            
+            //Todo: mirror events
         }
 
         public void Initialize(AnimationClip a_clip)
@@ -263,6 +286,18 @@ namespace MxM
                 }
 
                 PoseFavourTrack.SetDefaultTagValue(1f);
+            }
+            
+            //Fix potential corrupted data
+            if (m_positions.Count > m_clips.Count)
+            {
+                m_positions.RemoveRange(m_clips.Count, m_positions.Count - m_clips.Count);
+                modified = true;
+            }
+            else if (m_clips.Count > m_positions.Count)
+            {
+                m_clips.RemoveRange(m_positions.Count, m_clips.Count - m_positions.Count);
+                modified = true;
             }
 
             if (MotionModifier.OnEnable(this))

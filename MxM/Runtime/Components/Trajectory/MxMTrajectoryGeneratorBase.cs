@@ -393,10 +393,10 @@ namespace MxM
         {
             DisposeNativeData();
 
-            p_trajPositions = new NativeArray<float3>(p_trajectoryIterations,
+            p_trajPositions = new NativeArray<float3>(Mathf.Max(p_trajectoryIterations, 1),
                 Allocator.Persistent, NativeArrayOptions.ClearMemory);
 
-            p_trajFacingAngles = new NativeArray<float>(p_trajectoryIterations,
+            p_trajFacingAngles = new NativeArray<float>(Mathf.Max(p_trajectoryIterations, 1),
                 Allocator.Persistent, NativeArrayOptions.ClearMemory);
         }
 

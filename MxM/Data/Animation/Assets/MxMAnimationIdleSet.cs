@@ -38,11 +38,31 @@ namespace MxMEditor
             set { m_targetAnimModule = value; }
         }
 
-        public void CopyData(MxMAnimationIdleSet a_copy)
+        public void CopyData(MxMAnimationIdleSet a_copy, bool a_mirrored=false)
         {
-            PrimaryClip = a_copy.PrimaryClip;
-            SecondaryClips = new List<AnimationClip>(a_copy.SecondaryClips);
-            TransitionClips = new List<AnimationClip>(a_copy.TransitionClips);
+            if (a_mirrored)
+            {
+                PrimaryClip = MxMUtility.FindMirroredClip(PrimaryClip);
+
+                SecondaryClips = new List<AnimationClip>(a_copy.SecondaryClips.Count + 1);
+                foreach (AnimationClip clip in a_copy.SecondaryClips)
+                {
+                    SecondaryClips.Add(MxMUtility.FindMirroredClip(clip));
+                }
+
+                TransitionClips = new List<AnimationClip>(a_copy.TransitionClips.Count + 1);
+                foreach (AnimationClip clip in a_copy.TransitionClips)
+                {
+                    TransitionClips.Add(MxMUtility.FindMirroredClip(clip));
+                }
+            }
+            else
+            {
+                PrimaryClip = a_copy.PrimaryClip;
+                SecondaryClips = new List<AnimationClip>(a_copy.SecondaryClips);
+                TransitionClips = new List<AnimationClip>(a_copy.TransitionClips);
+            }
+            
             Tags = a_copy.Tags;
             FavourTags = a_copy.FavourTags;
             MinLoops = a_copy.MinLoops;

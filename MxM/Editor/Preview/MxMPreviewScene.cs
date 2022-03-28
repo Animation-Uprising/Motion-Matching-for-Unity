@@ -80,6 +80,7 @@ namespace MxMEditor
                 var light = dirLightObj.AddComponent<Light>();
                 light.type = LightType.Directional;
                 light.transform.Rotate(36f, -160f, 0f);
+                light.SetLightDirty();
 
                 var groundObj = GameObject.Instantiate(Resources.Load("GroundGrid")) as GameObject;
 

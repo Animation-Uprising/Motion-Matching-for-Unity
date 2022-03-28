@@ -73,7 +73,7 @@ namespace MxM
 
         public bool RootMotionOverride { get { return m_rootMotionOverride; } set { m_rootMotionOverride = value; } }
         public float MaxDecouple { get { return m_maxDecouple; } set { m_maxDecouple = value; } }
-        public bool EnableGravity { get { return m_enableGravity; } set { m_enableGravity = false; } }
+        public bool EnableGravity { get { return m_enableGravity; } set { m_enableGravity = value; } }
 
         public enum EDecoupleMode
         {

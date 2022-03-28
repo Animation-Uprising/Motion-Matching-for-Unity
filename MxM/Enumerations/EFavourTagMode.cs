@@ -8,7 +8,8 @@ namespace MxM
     {
         Exclusive,
         Inclusive,
-        Stacking
+        Stacking,
+        None
 
     }//End of enum: EPoseFavourMode
 }//End of namespace: MxM

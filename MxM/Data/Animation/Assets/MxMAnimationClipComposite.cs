@@ -105,11 +105,36 @@ namespace MxMEditor
             set { m_targetPrefab = value; }
         }
 
-        public void CopyData(MxMAnimationClipComposite a_copy)
+        public void CopyData(MxMAnimationClipComposite a_copy, bool a_mirrored = false)
         {
-            PrimaryClip = a_copy.PrimaryClip;
-            BeforeClips = new List<AnimationClip>(a_copy.BeforeClips);
-            AfterClips = new List<AnimationClip>(a_copy.AfterClips);
+            if (a_mirrored)
+            {
+                PrimaryClip = MxMUtility.FindMirroredClip(a_copy.PrimaryClip);
+                
+                BeforeClips = new List<AnimationClip>(a_copy.BeforeClips.Count + 1);
+                foreach (AnimationClip clip in a_copy.BeforeClips)
+                {
+                    if (clip == null)
+                        continue;
+                    
+                    BeforeClips.Add(MxMUtility.FindMirroredClip(clip));
+                }
+                
+                AfterClips = new List<AnimationClip>(a_copy.AfterClips.Count + 1);
+                foreach (AnimationClip clip in a_copy.AfterClips)
+                {
+                    if (clip == null)
+                        continue;
+                    
+                    AfterClips.Add(MxMUtility.FindMirroredClip(clip));
+                }
+            }
+            else
+            {
+                PrimaryClip = a_copy.PrimaryClip;
+                BeforeClips = new List<AnimationClip>(a_copy.BeforeClips);
+                AfterClips = new List<AnimationClip>(a_copy.AfterClips);
+            }
 
             Looping= a_copy.Looping;
             IgnoreEdges = a_copy.IgnoreEdges;
@@ -125,11 +150,6 @@ namespace MxMEditor
             foreach(TagTrack track in a_copy.TagTracks)
             {
                 TagTracks.Add(new TagTrack(track));
-            }
-
-            for (int i = 0; i < a_copy.TagTracks.Count; ++i)
-            {
-                TagTracks.Add(new TagTrack(a_copy.TagTracks[i]));
             }
 
             FavourTagTracks = new List<TagTrack>(a_copy.FavourTagTracks.Count + 1);
@@ -156,8 +176,18 @@ namespace MxMEditor
 
             PoseList = null;
 
-            LeftFootStepTrack = new FootStepTagTrack(a_copy.LeftFootStepTrack);
-            RightFootStepTrack = new FootStepTagTrack(a_copy.RightFootStepTrack);
+            if (a_mirrored)
+            {
+                LeftFootStepTrack = new FootStepTagTrack(a_copy.RightFootStepTrack);
+                LeftFootStepTrack.Name = a_copy.LeftFootStepTrack.Name;
+                RightFootStepTrack = new FootStepTagTrack(a_copy.LeftFootStepTrack);
+                RightFootStepTrack.Name = a_copy.RightFootStepTrack.Name;
+            }
+            else
+            {
+                LeftFootStepTrack = new FootStepTagTrack(a_copy.LeftFootStepTrack);
+                RightFootStepTrack = new FootStepTagTrack(a_copy.RightFootStepTrack);
+            }
             WarpPositionTrack = new TagTrackBase(a_copy.WarpPositionTrack);
             WarpRotationTrack = new TagTrackBase(a_copy.WarpRotationTrack);
             EnableRootMotionTrack = new TagTrackBase(a_copy.EnableRootMotionTrack);
@@ -166,6 +196,8 @@ namespace MxMEditor
             WarpTrajLongTrack = new TagTrackBase(a_copy.WarpTrajLongTrack);
 
             MotionModifier = new MotionModifyData(a_copy.MotionModifier, this);
+            
+            //Todo: Mirror events
         }
 
         public void OnEnable()
