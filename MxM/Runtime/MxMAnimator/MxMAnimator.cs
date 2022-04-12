@@ -258,7 +258,7 @@ namespace MxM
         public ref PoseData DominantPose { get => ref m_dominantPose; }                     //Returns the pose data with the most weight
         public ref PoseData CurrentInterpolatedPose { get => ref m_curInterpolatedPose; }   //Returns the current interpolated pose calculated at runtime
         public MxMPlayableState[] AnimationState { get => m_animationStates; }              //Returns the animation state layer stack for motion matching
-        
+
         public float MinFootstepInterval
         {
             get => m_minFootstepInterval;
@@ -2942,6 +2942,36 @@ namespace MxM
                     --s_mxmAnimatorCount;
                 }
             }
+        }
+
+        //============================================================================================
+        /**
+        *  @brief returns the dominant animation clip in the motion matching blend
+        *         
+        *********************************************************************************************/
+        public AnimationClip GetDominantClip()
+        {
+            if (m_dominantPose.PrimaryClipId < 0 || m_dominantPose.PrimaryClipId >= CurrentAnimData.Clips.Length)
+            {
+                return null;
+            }
+            
+            return CurrentAnimData.Clips[m_dominantPose.PrimaryClipId];
+        }
+
+        //============================================================================================
+        /**
+        *  @brief returns the currently chosen clip in the motion matching blend
+        *         
+        *********************************************************************************************/
+        public AnimationClip GetChosenClip()
+        {
+            if (m_chosenPose.PrimaryClipId < 0 || m_chosenPose.PrimaryClipId >= CurrentAnimData.Clips.Length)
+            {
+                return null;
+            }
+
+            return CurrentAnimData.Clips[m_chosenPose.PrimaryClipId];
         }
 
         //============================================================================================
