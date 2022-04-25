@@ -40,6 +40,7 @@ namespace MxMEditor
 
         public void CopyData(MxMAnimationIdleSet a_copy, bool a_mirrored=false)
         {
+#if UNITY_EDITOR
             if (a_mirrored)
             {
                 PrimaryClip = MxMUtility.FindMirroredClip(PrimaryClip);
@@ -57,6 +58,7 @@ namespace MxMEditor
                 }
             }
             else
+#endif
             {
                 PrimaryClip = a_copy.PrimaryClip;
                 SecondaryClips = new List<AnimationClip>(a_copy.SecondaryClips);

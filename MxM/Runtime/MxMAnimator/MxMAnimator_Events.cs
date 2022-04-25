@@ -1679,6 +1679,7 @@ namespace MxM
             {
                 if (DetectIdle())
                 {
+                    m_fsm.GoToState((uint)EMxMStates.Idle, true);
                     BeginIdle();
                 }
                 else

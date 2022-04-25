@@ -128,7 +128,8 @@ namespace MxM
 
             GlobalTags = a_copy.GlobalTags;
             GlobalFavourTags = a_copy.GlobalFavourTags;
-            
+     
+#if UNITY_EDITOR
             if (a_mirrored)
             {
                 m_clips = new List<AnimationClip>(a_copy.m_clips.Count + 1);
@@ -138,6 +139,7 @@ namespace MxM
                 }
             }
             else
+#endif
             {
                 m_clips = new List<AnimationClip>(a_copy.m_clips);
             }
