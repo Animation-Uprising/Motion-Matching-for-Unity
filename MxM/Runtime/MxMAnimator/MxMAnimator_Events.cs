@@ -402,7 +402,7 @@ namespace MxM
             //Positional Warping
             if (a_lookupData.WarpPosThisFrame)
             {
-                float remainingWarpTime = a_lookupData.RemainingWarpTime / m_playbackSpeed;
+                float remainingWarpTime = a_lookupData.RemainingWarpTime / (m_playbackSpeed * m_eventSpeedMod);
 
                 switch (WarpType)
                 {
@@ -422,7 +422,7 @@ namespace MxM
             //Rotational warping
             if (a_lookupData.WarpRotThisFrame)
             {
-                float remainingWarpTime = a_lookupData.RemainingRotWarpTime / m_playbackSpeed;
+                float remainingWarpTime = a_lookupData.RemainingRotWarpTime / (m_playbackSpeed * m_eventSpeedMod);
 
                 //Rotational Warping
                 switch (RotWarpType)
