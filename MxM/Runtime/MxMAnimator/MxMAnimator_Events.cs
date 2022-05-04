@@ -9,6 +9,7 @@
 using System;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Android;
 using UnityEngine.Playables;
 
 namespace MxM
@@ -944,7 +945,15 @@ namespace MxM
                     if (RotWarpType == EEventWarpType.Snap)
                     {
                         float error = Mathf.DeltaAngle(m_currentEventRootWorld.RotationY, m_desiredEventRootWorld.RotationY);
-                        m_animationRoot.Rotate(Vector3.up, error);
+
+                        if (m_rootMotion != null)
+                        {
+                            m_rootMotion.Rotate(Vector3.up, error);
+                        }
+                        else
+                        {
+                            m_animationRoot.Rotate(Vector3.up, error);
+                        }
                     }
 
                     //Positional warping calculations
@@ -956,7 +965,14 @@ namespace MxM
 
                     if (WarpType == EEventWarpType.Snap)
                     {
-                        m_animationRoot.Translate(m_desiredEventRootWorld.Position - m_currentEventRootWorld.Position, Space.World);
+                        if (m_rootMotion != null)
+                        {
+                            m_rootMotion.Translate(m_desiredEventRootWorld.Position - m_currentEventRootWorld.Position);
+                        }
+                        else
+                        {
+                            m_animationRoot.Translate(m_desiredEventRootWorld.Position - m_currentEventRootWorld.Position, Space.World);
+                        }
                     }
                 }
 

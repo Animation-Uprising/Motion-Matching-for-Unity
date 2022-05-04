@@ -183,7 +183,7 @@ public class RootMotionApplicatorTemplate : MonoBehaviour, IMxMRootMotion
 
     //===========================================================================================
     /**
-    *  @brief Thi is basically Set Position and rotation combined
+    *  @brief This is basically Set Position and rotation combined
     *         
     *********************************************************************************************/
     public void SetPositionAndRotation(Vector3 a_position, Quaternion a_rotation)
@@ -198,4 +198,42 @@ public class RootMotionApplicatorTemplate : MonoBehaviour, IMxMRootMotion
             transform.SetPositionAndRotation(a_position, a_rotation);
         //}
     }
+
+    //===========================================================================================
+    /**
+    *  @brief This function should instantly translate the character via the passed delta. In this
+    * way, it should behave similarly to the SetPosition functions but use a delta instead to
+    * instantly move the character.
+    *         
+    *********************************************************************************************/
+    public void Translate(Vector3 a_delta)
+    {
+        // if (m_charController != null && m_charController.enabled)
+        // {
+        //     m_charController.Move(a_delta);
+        // }
+        // else
+        // {
+            m_rootTransform.Translate(a_delta);
+       //}
+    }
+
+    //===========================================================================================
+    /**
+    *  @brief Same as the translate function expect for rotations instead of position
+    *         
+    *********************************************************************************************/
+    public void Rotate(Vector3 a_axis, float a_angle)
+    {
+        // if (m_charController != null && m_charController.enabled)
+        // {
+        //     m_charController.Rotate(Quaternion.AngleAxis(a_angle, a_axis));
+        // }
+        // else
+        // {
+            m_rootTransform.Rotate(a_axis, a_angle);
+       // }
+    }
+    
+    
 }//End of class: RootMotionApplicatorTemplate

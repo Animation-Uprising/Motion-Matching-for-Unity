@@ -25,5 +25,8 @@ namespace MxM
         void SetRotation(Quaternion a_rotation);
         void SetPositionAndRotation(Vector3 a_position, Quaternion a_rotation);
 
+        void Translate(Vector3 a_delta);
+        void Rotate(Vector3 a_axis, float a_angle);
+
     }//End of interface: IMxMRootMotion
 }//End of namespace MxM
