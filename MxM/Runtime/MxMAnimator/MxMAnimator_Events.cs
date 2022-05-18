@@ -7,6 +7,7 @@
 //     Contains a part of the 'MxM' namespace for 'Unity Engine'.
 // ================================================================================================
 using System;
+using MxMEditor;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Android;
@@ -1009,6 +1010,153 @@ namespace MxM
 
                 StopJobs();
             }
+        }
+        
+         public (AnimationClip, float) SourceAnimationFromMxMEvent(MxMEventDefinition a_eventDefinition, ETags a_overrideRequireTags = ETags.DoNotUse)
+        {
+            if (a_eventDefinition == null)
+                return (null, 0.0f);
+            
+#if UNITY_2019_1_OR_NEWER && RIGGING_INTEGRATION
+            if (p_riggingIntegration != null)
+                p_riggingIntegration.CacheTransforms();
+#endif
+            CurEventContacts = a_eventDefinition.EventContacts.ToArray();
+
+            //Get the current pose
+            ComputeCurrentPose(); //Todo: Only do this once per frame
+
+            float bestCost = float.MaxValue;
+            int bestWindupPoseId = 0;
+            EventData bestEvent = new EventData(); //Un-necessary copying
+            
+            float playerRotationY = m_animationRoot.rotation.eulerAngles.y;
+            float desiredDelay = a_eventDefinition.DesiredDelay;
+            bool eventFound = false;
+
+            for (int index = 0; index < CurrentAnimData.Events.Length; ++index)
+            {
+                ref EventData evt = ref CurrentAnimData.Events[index];
+
+                if (evt.EventId != a_eventDefinition.Id)
+                    continue;
+
+                for (int i = 0; i < evt.WindupPoseContactOffsets.Length; ++i)
+                {
+                    ref PoseData pose = ref CurrentAnimData.Poses[evt.StartPoseId + i];
+
+                    if (a_eventDefinition.MatchRequireTags)
+                    {
+                        ETags evtTags = a_overrideRequireTags;
+                        if (a_overrideRequireTags == ETags.DoNotUse)
+                        {
+                            evtTags = (pose.Tags & (~ETags.DoNotUse));
+                        }
+                            
+                        if (evtTags != m_desireRequiredTags)
+                            continue;
+                    }
+
+                    float cost = 0f;
+
+                    if (a_eventDefinition.MatchPose)
+                    {
+                        cost += ComputePoseCost(ref pose);
+                    }
+
+                    if (a_eventDefinition.MatchTrajectory)
+                    {
+                        cost += ComputeTrajectoryCost(ref pose);
+                    }
+
+                    cost *= pose.Favour;
+
+                    if (a_eventDefinition.MatchTiming)
+                    {
+                        float timeWarp = Mathf.Abs(desiredDelay - evt.TimeToHit + CurrentAnimData.PoseInterval * i);
+                        cost += timeWarp * a_eventDefinition.TimingWeight;
+                    }
+
+                    if (a_eventDefinition.MatchPosition && CurEventContacts.Length > 0)
+                    {
+                        cost += Vector3.Distance(m_animationRoot.InverseTransformPoint(CurEventContacts[0].Position),
+                            evt.WindupPoseContactOffsets[i].Position) * a_eventDefinition.PositionWeight;
+                            
+                        for (int k = 0; k < a_eventDefinition.ContactCountToMatch - 1 && k < evt.SubEventContactOffsets.Length 
+                                && k < CurEventContacts.Length - 1; ++k)
+                        {
+                            cost += Vector3.Distance(m_animationRoot.InverseTransformPoint(CurEventContacts[k + 1].Position),
+                                evt.SubEventContactOffsets[k].Position) * a_eventDefinition.PositionWeight;
+                        }
+                    }
+
+                    if (a_eventDefinition.MatchRotation && CurEventContacts.Length > 0)
+                    {
+                        cost += Mathf.DeltaAngle(CurEventContacts[0].RotationY,
+                            playerRotationY + evt.WindupPoseContactOffsets[i].RotationY) * a_eventDefinition.RotationWeight;
+
+                        for (int k = 0; k < a_eventDefinition.ContactCountToMatch - 1 && k < evt.SubEventContactOffsets.Length; ++k)
+                        {
+                            cost += Mathf.DeltaAngle(CurEventContacts[k + 1].RotationY,
+                                playerRotationY + evt.SubEventContactOffsets[k].RotationY) * a_eventDefinition.RotationWeight;
+                        }
+                    }
+
+                    switch (a_eventDefinition.FavourTagMethod)
+                    {
+                        case EFavourTagMethod.Exclusive:
+                        {
+                            if(pose.FavourTags == FavourTags)
+                                cost *= m_favourMultiplier;
+                                
+                        } break;
+                        case EFavourTagMethod.Inclusive:
+                        {
+                            if ((pose.FavourTags & FavourTags) != 0)
+                                cost *= m_favourMultiplier;
+                                
+                        } break;
+                        case EFavourTagMethod.Stacking:
+                        {
+                            ETags activeTags = pose.FavourTags & FavourTags;
+                            uint activeTagCount = MxMUtility.CountFlags(activeTags);
+                            if (activeTagCount > 0)
+                            {
+                                cost *= math.pow(FavourMultiplier, activeTagCount);
+                            }
+                        } break;
+                        default:
+                        {
+                            //Nothing to do here
+                        } break;
+                    }
+                        
+                    if (cost < bestCost)
+                    {
+                        m_eventLength = evt.Length - CurrentAnimData.PoseInterval * i;
+                        bestWindupPoseId = i;
+                        bestCost = cost;
+                        bestEvent = evt;
+
+                        eventFound = true;
+                    }
+                }
+            }
+
+            if (!eventFound)
+            {
+                Debug.LogWarning("Could not find an event to match event definition: " + a_eventDefinition.ToString());
+                return (null, 0.0f);
+            }
+            
+            m_curEvent = bestEvent;
+            m_eventStartTimeOffset = ((float)bestWindupPoseId) * CurrentAnimData.PoseInterval;
+            ref PoseData eventPose = ref CurrentAnimData.Poses[bestEvent.StartPoseId + bestWindupPoseId];
+
+            if (eventPose.AnimType != EMxMAnimtype.Clip || eventPose.AnimType != EMxMAnimtype.Composite)
+                return (null, 0.0f);
+            
+            return (CurrentAnimData.Clips[eventPose.AnimId], eventPose.Time);
         }
 
         //============================================================================================
