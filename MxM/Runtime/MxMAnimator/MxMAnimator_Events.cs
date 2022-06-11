@@ -1047,14 +1047,20 @@ namespace MxM
 
                     if (a_eventDefinition.MatchRequireTags)
                     {
-                        ETags evtTags = a_overrideRequireTags;
                         if (a_overrideRequireTags == ETags.DoNotUse)
                         {
-                            evtTags = (pose.Tags & (~ETags.DoNotUse));
+                            ETags evtTags = (pose.Tags & (~ETags.DoNotUse));
+                                
+                            if (evtTags != m_desireRequiredTags)
+                                continue;
                         }
-                            
-                        if (evtTags != m_desireRequiredTags)
-                            continue;
+                        else
+                        {
+                            ETags evtTags = (pose.Tags & (~ETags.DoNotUse));
+                                
+                            if (evtTags != a_overrideRequireTags)
+                                continue;
+                        }
                     }
 
                     float cost = 0f;
