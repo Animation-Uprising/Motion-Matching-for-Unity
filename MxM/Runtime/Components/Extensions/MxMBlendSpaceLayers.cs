@@ -257,7 +257,7 @@ namespace MxM
             if (m_blendSpaceStates.TryGetValue(a_blendSpace, out bsState))
             {
                 a_positionY /= a_blendSpace.Magnitude.y;
-                bsState.SetPositionX(a_positionY);
+                bsState.SetPositionY(a_positionY);
             }
         }
 
