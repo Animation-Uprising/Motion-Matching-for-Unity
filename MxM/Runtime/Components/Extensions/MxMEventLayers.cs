@@ -37,6 +37,9 @@ namespace MxM
 
         [SerializeField]
         private int m_maxActiveEvents = 4;
+        
+        [SerializeField]
+        private bool m_isAdditive;
 
         private AnimationLayerMixerPlayable m_layerMixer;
         private MxMLayer m_baseLayer;
@@ -106,7 +109,7 @@ namespace MxM
 
             m_layerMixer = AnimationLayerMixerPlayable.Create(m_mxmAnimator.MxMPlayableGraph, m_maxActiveEvents);
 
-            m_layerId = m_mxmAnimator.AddLayer((Playable)m_layerMixer, 0f, false, null);
+            m_layerId = m_mxmAnimator.AddLayer((Playable)m_layerMixer, 0f, m_isAdditive, null);
             m_baseLayer = m_mxmAnimator.GetLayer(m_layerId);
             m_mxmAnimator.SetLayerWeight(m_layerId, 0f);
 
@@ -320,7 +323,7 @@ namespace MxM
             newEventLayer.Weight = 0f;
 
             m_layerMixer.ConnectInput(slotId, newEventLayer.ClipPlayable, 0);
-            m_layerMixer.SetLayerAdditive((uint)slotId, false);
+            m_layerMixer.SetLayerAdditive((uint)slotId, m_isAdditive);
             m_layerMixer.SetInputWeight(slotId, 0.001f);
             m_layerMixer.SetLayerMaskFromAvatarMask((uint)slotId, a_eventMask);
 
@@ -476,6 +479,7 @@ namespace MxM
             newEventLayer.Weight = 0f;
             
             m_layerMixer.ConnectInput(slotId, newEventLayer.ClipPlayable, 0);
+            m_layerMixer.SetLayerAdditive((uint)slotId, m_isAdditive);
             m_layerMixer.SetInputWeight(slotId, 0.001f);
             m_layerMixer.SetLayerMaskFromAvatarMask((uint)slotId, a_eventMask);
 

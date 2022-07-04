@@ -45,12 +45,15 @@ namespace MxM
     [RequireComponent(typeof(MxMAnimator))]
     public class MxMTIPExtension : MonoBehaviour, IMxMExtension
     {
+        [SerializeField] 
+        private bool m_useCustomTIPVector = false;
+        
         [SerializeField]
         private float m_blendTime = 0.5f;
 
         [SerializeField]
         private TurnInPlaceProfile[] m_turnInPlaceProfiles = null;
-
+        
         private float m_minAngleToTriggerTIP;
 
         private MxMAnimator m_mxmAnimator;
@@ -59,6 +62,8 @@ namespace MxM
         private MxMEventDefinition m_eventDef;
 
         private float m_mxmBlendTime = 0.25f;
+
+        public Vector3 TIPVector { get; set; } 
 
         private int CurrentTurnProfileId { get; set; }
         private int CurrentTurnEventHandle { get; set; }
@@ -166,7 +171,19 @@ namespace MxM
         private void DetectAndTurn()
         {
             //We can only start turning if we are beyond the min turn threshold
-            float rawAngle = m_trajectoryGenerator.DesiredOrientation - transform.rotation.eulerAngles.y;
+
+            float rawAngle = 0f;
+
+            if (m_useCustomTIPVector)
+            {
+                rawAngle = Vector3.SignedAngle(Vector3.forward, TIPVector, Vector3.up) -
+                           transform.rotation.eulerAngles.y;
+            }
+            else
+            {
+                rawAngle = m_trajectoryGenerator.DesiredOrientation - transform.rotation.eulerAngles.y;
+            }
+            
             Quaternion rotation = Quaternion.AngleAxis(rawAngle, Vector3.up);
             rawAngle = rotation.eulerAngles.y;
 
