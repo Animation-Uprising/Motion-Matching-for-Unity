@@ -21,6 +21,7 @@ namespace MxMEditor
         private SerializedProperty m_spPostEventTrajectoryMode;
 
         private SerializedProperty m_spMatchTiming;
+        private SerializedProperty m_spExactTimeMatch;
         private SerializedProperty m_spTimingWeight;
         private SerializedProperty m_spTimingWarpType;
 
@@ -59,6 +60,7 @@ namespace MxMEditor
             m_spPostEventTrajectoryMode = serializedObject.FindProperty("PostEventTrajectoryMode");
 
             m_spMatchTiming = serializedObject.FindProperty("MatchTiming");
+            m_spExactTimeMatch = serializedObject.FindProperty("ExactTimeMatch");
             m_spTimingWeight = serializedObject.FindProperty("TimingWeight");
             m_spTimingWarpType = serializedObject.FindProperty("TimingWarpType");
 
@@ -184,6 +186,8 @@ namespace MxMEditor
                         m_spWarpTimeScaling.boolValue = false;
                     }
                 }
+
+                m_spExactTimeMatch.boolValue = EditorGUILayout.Toggle("Exact Time Match", m_spExactTimeMatch.boolValue);
                 m_spTimingWeight.floatValue = EditorGUILayout.FloatField("Timing Weight", m_spTimingWeight.floatValue);
                 m_spTimingWarpType.intValue = (int)(EEventWarpType)EditorGUILayout.EnumPopup("Timing Warp Type", (EEventWarpType)m_spTimingWarpType.intValue);
                 

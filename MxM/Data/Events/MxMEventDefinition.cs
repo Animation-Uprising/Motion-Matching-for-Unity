@@ -25,6 +25,7 @@ namespace MxM
         public EPostEventTrajectoryMode PostEventTrajectoryMode = EPostEventTrajectoryMode.Maintain;
 
         public bool MatchTiming;
+        public bool ExactTimeMatch;
         public float TimingWeight;
         public EEventWarpType TimingWarpType;
 

@@ -141,14 +141,14 @@ namespace MxM
         
         [System.Serializable] public class UnityEvent_PoseChange : UnityEvent<PoseChangeData> {};      //Custom Unity event for pose changes
 
-        [SerializeField] private UnityEvent m_onSetupComplete = new UnityEvent();                   //Unity event called when setup of the motion matching playable graph and settings is complete
-        [SerializeField] private UnityEvent m_onIdleTriggered = new UnityEvent();                   //Unity event called when the idle state is triggered
-        [SerializeField] private UnityEvent m_onEventComplete = new UnityEvent();                   //Unity event called when an Event (MxM Action Event) is completed
-        [SerializeField] private UnityEvent_EEventState m_onEventStateChanged = new UnityEvent_EEventState();   //Unity event called when an Event (MxM Action Event) state is changed. The event state will be passed
-        [SerializeField] private UnityEvent_Int m_onEventContactReached = new UnityEvent_Int();         //Unity event called whenever a contact has been reached in an event (MxM Action Event). The id of the contact will be passed
-        [SerializeField] private UnityEvent_FootStepData m_onLeftFootStepStart = new UnityEvent_FootStepData();  //Unity event called when a left footstep is triggered. Footstep data will be passed
-        [SerializeField] private UnityEvent_FootStepData m_onRightFootStepStart = new UnityEvent_FootStepData(); //Unity event called when a right footstep is triggered. Footstep data will be passed.  
-        [SerializeField] private UnityEvent_PoseChange m_onPoseChanged = new UnityEvent_PoseChange(); //Unity event called when the pose is changed
+        [SerializeField] public UnityEvent m_onSetupComplete = new UnityEvent();                   //Unity event called when setup of the motion matching playable graph and settings is complete
+        [SerializeField] public UnityEvent m_onIdleTriggered = new UnityEvent();                   //Unity event called when the idle state is triggered
+        [SerializeField] public UnityEvent m_onEventComplete = new UnityEvent();                   //Unity event called when an Event (MxM Action Event) is completed
+        [SerializeField] public UnityEvent_EEventState m_onEventStateChanged = new UnityEvent_EEventState();   //Unity event called when an Event (MxM Action Event) state is changed. The event state will be passed
+        [SerializeField] public UnityEvent_Int m_onEventContactReached = new UnityEvent_Int();         //Unity event called whenever a contact has been reached in an event (MxM Action Event). The id of the contact will be passed
+        [SerializeField] public UnityEvent_FootStepData m_onLeftFootStepStart = new UnityEvent_FootStepData();  //Unity event called when a left footstep is triggered. Footstep data will be passed
+        [SerializeField] public UnityEvent_FootStepData m_onRightFootStepStart = new UnityEvent_FootStepData(); //Unity event called when a right footstep is triggered. Footstep data will be passed.  
+        [SerializeField] public UnityEvent_PoseChange m_onPoseChanged = new UnityEvent_PoseChange(); //Unity event called when the pose is changed
 
         public UnityEvent OnSetupComplete { get { return m_onSetupComplete; } } //Can be used to setup OnSetupComplete callbacks during runtime
         public UnityEvent OnIdleTriggered { get { return m_onIdleTriggered; } } //Can be used to setup OnIdleTriggered callbacks during runtime

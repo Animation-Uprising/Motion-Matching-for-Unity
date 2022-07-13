@@ -7,10 +7,8 @@
 //     Contains a part of the 'MxM' namespace for 'Unity Engine'.
 // ================================================================================================
 using System;
-using MxMEditor;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Android;
 using UnityEngine.Playables;
 
 namespace MxM
@@ -749,7 +747,7 @@ namespace MxM
             m_currentEventRootWorld.Position += warp;
             return warp;
         }
-
+        
         //============================================================================================
         /**
         *  @brief Begins an event via an MxMEventDefinition
@@ -804,7 +802,7 @@ namespace MxM
                 float playerRotationY = m_animationRoot.rotation.eulerAngles.y;
                 float desiredDelay = a_eventDefinition.DesiredDelay;
                 bool eventFound = false;
-
+                
                 for (int index = 0; index < CurrentAnimData.Events.Length; ++index)
                 {
                     ref EventData evt = ref CurrentAnimData.Events[index];
@@ -812,20 +810,34 @@ namespace MxM
                     if (evt.EventId != a_eventDefinition.Id)
                         continue;
 
-                    for (int i = 0; i < evt.WindupPoseContactOffsets.Length; ++i)
+                    int startTimeOffsetIndex = 0;
+                    int iterationEnd = evt.WindupPoseContactOffsets.Length;
+                    if (a_eventDefinition.ExactTimeMatch && desiredDelay <= evt.TimeToHit)
+                    {
+                        startTimeOffsetIndex = Mathf.RoundToInt((evt.TimeToHit - desiredDelay) / CurrentAnimData.PoseInterval);
+                        iterationEnd = Mathf.Min(iterationEnd, startTimeOffsetIndex + 1);
+                    }
+                    
+                    for (int i = startTimeOffsetIndex; i < iterationEnd; ++i)
                     {
                         ref PoseData pose = ref CurrentAnimData.Poses[evt.StartPoseId + i];
 
                         if (a_eventDefinition.MatchRequireTags)
                         {
-                            ETags evtTags = a_overrideRequireTags;
                             if (a_overrideRequireTags == ETags.DoNotUse)
                             {
-                                evtTags = (pose.Tags & (~ETags.DoNotUse));
+                                ETags evtTags = (pose.Tags & (~ETags.DoNotUse));
+                                
+                                if (evtTags != m_desireRequiredTags)
+                                    continue;
                             }
-                            
-                            if (evtTags != m_desireRequiredTags)
-                                continue;
+                            else
+                            {
+                                ETags evtTags = (pose.Tags & (~ETags.DoNotUse));
+                                
+                                if (evtTags != a_overrideRequireTags)
+                                    continue;
+                            }
                         }
 
                         float cost = 0f;
@@ -864,13 +876,13 @@ namespace MxM
 
                         if (a_eventDefinition.MatchRotation && CurEventContacts.Length > 0)
                         {
-                            cost += Mathf.DeltaAngle(CurEventContacts[0].RotationY,
-                                playerRotationY + evt.WindupPoseContactOffsets[i].RotationY) * a_eventDefinition.RotationWeight;
+                            cost += Mathf.Abs(Mathf.DeltaAngle(CurEventContacts[0].RotationY,
+                                playerRotationY + evt.WindupPoseContactOffsets[i].RotationY) * a_eventDefinition.RotationWeight);
 
                             for (int k = 0; k < a_eventDefinition.ContactCountToMatch - 1 && k < evt.SubEventContactOffsets.Length; ++k)
                             {
-                                cost += Mathf.DeltaAngle(CurEventContacts[k + 1].RotationY,
-                                    playerRotationY + evt.SubEventContactOffsets[k].RotationY) * a_eventDefinition.RotationWeight;
+                                cost += Mathf.Abs(Mathf.DeltaAngle(CurEventContacts[k + 1].RotationY,
+                                    playerRotationY + evt.SubEventContactOffsets[k].RotationY) * a_eventDefinition.RotationWeight);
                             }
                         }
 
@@ -1047,20 +1059,14 @@ namespace MxM
 
                     if (a_eventDefinition.MatchRequireTags)
                     {
+                        ETags evtTags = a_overrideRequireTags;
                         if (a_overrideRequireTags == ETags.DoNotUse)
                         {
-                            ETags evtTags = (pose.Tags & (~ETags.DoNotUse));
-                                
-                            if (evtTags != m_desireRequiredTags)
-                                continue;
+                            evtTags = (pose.Tags & (~ETags.DoNotUse));
                         }
-                        else
-                        {
-                            ETags evtTags = (pose.Tags & (~ETags.DoNotUse));
-                                
-                            if (evtTags != a_overrideRequireTags)
-                                continue;
-                        }
+                            
+                        if (evtTags != m_desireRequiredTags)
+                            continue;
                     }
 
                     float cost = 0f;
