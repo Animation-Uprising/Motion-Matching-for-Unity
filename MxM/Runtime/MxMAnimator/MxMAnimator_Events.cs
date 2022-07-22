@@ -1104,13 +1104,13 @@ namespace MxM
 
                     if (a_eventDefinition.MatchRotation && CurEventContacts.Length > 0)
                     {
-                        cost += Mathf.DeltaAngle(CurEventContacts[0].RotationY,
-                            playerRotationY + evt.WindupPoseContactOffsets[i].RotationY) * a_eventDefinition.RotationWeight;
+                        cost += Mathf.Abs(Mathf.DeltaAngle(CurEventContacts[0].RotationY,
+                            playerRotationY + evt.WindupPoseContactOffsets[i].RotationY)) * a_eventDefinition.RotationWeight;
 
                         for (int k = 0; k < a_eventDefinition.ContactCountToMatch - 1 && k < evt.SubEventContactOffsets.Length; ++k)
                         {
-                            cost += Mathf.DeltaAngle(CurEventContacts[k + 1].RotationY,
-                                playerRotationY + evt.SubEventContactOffsets[k].RotationY) * a_eventDefinition.RotationWeight;
+                            cost += Mathf.Abs(Mathf.DeltaAngle(CurEventContacts[k + 1].RotationY,
+                                playerRotationY + evt.SubEventContactOffsets[k].RotationY)) * a_eventDefinition.RotationWeight;
                         }
                     }
 

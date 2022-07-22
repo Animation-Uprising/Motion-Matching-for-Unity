@@ -102,6 +102,8 @@ namespace MxM
 
         //Footstep Tracking
         [SerializeField] private float m_minFootstepInterval = 0.2f; //The minimum time interval allowable between triggered footsteps
+        [SerializeField] private int m_cachedLastLeftFootstepId = 0; //Optimization for footstep tracking to cull already checked tags
+        [SerializeField] private int m_cachedLastRightFootstepId = 0; //Optimization for footstep tracking to cull already checked tags
         
         
         //MxM Extensions
@@ -141,14 +143,14 @@ namespace MxM
         
         [System.Serializable] public class UnityEvent_PoseChange : UnityEvent<PoseChangeData> {};      //Custom Unity event for pose changes
 
-        [SerializeField] public UnityEvent m_onSetupComplete = new UnityEvent();                   //Unity event called when setup of the motion matching playable graph and settings is complete
-        [SerializeField] public UnityEvent m_onIdleTriggered = new UnityEvent();                   //Unity event called when the idle state is triggered
-        [SerializeField] public UnityEvent m_onEventComplete = new UnityEvent();                   //Unity event called when an Event (MxM Action Event) is completed
-        [SerializeField] public UnityEvent_EEventState m_onEventStateChanged = new UnityEvent_EEventState();   //Unity event called when an Event (MxM Action Event) state is changed. The event state will be passed
-        [SerializeField] public UnityEvent_Int m_onEventContactReached = new UnityEvent_Int();         //Unity event called whenever a contact has been reached in an event (MxM Action Event). The id of the contact will be passed
-        [SerializeField] public UnityEvent_FootStepData m_onLeftFootStepStart = new UnityEvent_FootStepData();  //Unity event called when a left footstep is triggered. Footstep data will be passed
-        [SerializeField] public UnityEvent_FootStepData m_onRightFootStepStart = new UnityEvent_FootStepData(); //Unity event called when a right footstep is triggered. Footstep data will be passed.  
-        [SerializeField] public UnityEvent_PoseChange m_onPoseChanged = new UnityEvent_PoseChange(); //Unity event called when the pose is changed
+        [SerializeField] private UnityEvent m_onSetupComplete = new UnityEvent();                   //Unity event called when setup of the motion matching playable graph and settings is complete
+        [SerializeField] private UnityEvent m_onIdleTriggered = new UnityEvent();                   //Unity event called when the idle state is triggered
+        [SerializeField] private UnityEvent m_onEventComplete = new UnityEvent();                   //Unity event called when an Event (MxM Action Event) is completed
+        [SerializeField] private UnityEvent_EEventState m_onEventStateChanged = new UnityEvent_EEventState();   //Unity event called when an Event (MxM Action Event) state is changed. The event state will be passed
+        [SerializeField] private UnityEvent_Int m_onEventContactReached = new UnityEvent_Int();         //Unity event called whenever a contact has been reached in an event (MxM Action Event). The id of the contact will be passed
+        [SerializeField] private UnityEvent_FootStepData m_onLeftFootStepStart = new UnityEvent_FootStepData();  //Unity event called when a left footstep is triggered. Footstep data will be passed
+        [SerializeField] private UnityEvent_FootStepData m_onRightFootStepStart = new UnityEvent_FootStepData(); //Unity event called when a right footstep is triggered. Footstep data will be passed.  
+        [SerializeField] private UnityEvent_PoseChange m_onPoseChanged = new UnityEvent_PoseChange(); //Unity event called when the pose is changed
 
         public UnityEvent OnSetupComplete { get { return m_onSetupComplete; } } //Can be used to setup OnSetupComplete callbacks during runtime
         public UnityEvent OnIdleTriggered { get { return m_onIdleTriggered; } } //Can be used to setup OnIdleTriggered callbacks during runtime
@@ -1545,20 +1547,67 @@ namespace MxM
 
             if (m_dominantBlendChannel != highestBlendChannel)
             {
-                //if (m_chosenPose.AnimType == EMxMAnimtype.BlendSpace)
-                //    m_blendSpacePosition = CurrentAnimData.BlendSpaces[m_chosenPose.AnimId].Positions[0];
-                //else
-                //    m_blendSpacePosition = Vector2.zero;
+                //First Check if the current dominant blend channel is 'inside' a footstep (i.e. grounded)
+                int leftGrounded = -1; 
+                int rightGrounded = -1;
+                if (m_dominantPose.TracksId > -1)
+                {
+                    FootstepTagTrackData leftSteps = CurrentAnimData.LeftFootSteps[m_dominantPose.TracksId];
+                    FootstepTagTrackData rightSteps = CurrentAnimData.RightFootSteps[m_dominantPose.TracksId];
+
+                    ref MxMPlayableState oldDominantState = ref m_animationStates[m_dominantBlendChannel];
+
+                    leftGrounded = leftSteps.IsGrounded(oldDominantState.Time, ref m_cachedLastLeftFootstepId);
+                    rightGrounded = rightSteps.IsGrounded(oldDominantState.Time, ref m_cachedLastRightFootstepId);
+                }
+                m_cachedLastLeftFootstepId = 0;
+                m_cachedLastRightFootstepId = 0;
 
                 m_animationStates[m_dominantBlendChannel].BlendStatus = EBlendStatus.Decaying;
                 m_dominantBlendChannel = highestBlendChannel;
 
+                //Update the new dominant state
                 ref MxMPlayableState playableState = ref m_animationStates[m_dominantBlendChannel];
 
                 playableState.BlendStatus = EBlendStatus.Dominant;
 
                 int dominantPoseId = playableState.StartPoseId;
                 m_dominantPose = CurrentAnimData.Poses[dominantPoseId];
+                
+                //Check if a footstep tag was perhaps missed in the transition?
+                if (m_dominantPose.TracksId > -1)
+                {
+                    float time = playableState.Time;
+                    if (leftGrounded != -1 && m_timeSinceLastLeftFootstep >= m_minFootstepInterval)
+                    {
+                        FootstepTagTrackData leftSteps = CurrentAnimData.LeftFootSteps[m_dominantPose.TracksId];
+                        int footStepId = leftSteps.IsGrounded(playableState.Time, ref m_cachedLastLeftFootstepId);
+                            
+                        // int footStepId =  leftSteps.GetStepStart(new Vector2(Mathf.Max(0f, time - m_matchBlendTime),
+                        //     time), ref m_cachedLastLeftFootstepId);
+
+                        if (footStepId > -1)
+                        {
+                            m_onLeftFootStepStart.Invoke(leftSteps.FootSteps[footStepId]);
+                            m_timeSinceLastLeftFootstep = 0f;
+                        }
+                    }
+
+                    if (rightGrounded != -1 && m_timeSinceLastLeftFootstep >= m_minFootstepInterval)
+                    {
+                        FootstepTagTrackData rightSteps = CurrentAnimData.RightFootSteps[m_dominantPose.TracksId];
+                        int footStepId = rightSteps.IsGrounded(playableState.Time, ref m_cachedLastRightFootstepId);
+                            
+                        // int footStepId = rightSteps.GetStepStart(new Vector2(Mathf.Max(0f, time - m_matchBlendTime),
+                        //     time), ref m_cachedLastRightFootstepId);
+
+                        if (footStepId > -1)
+                        {
+                            m_onRightFootStepStart.Invoke(rightSteps.FootSteps[footStepId]);
+                            m_timeSinceLastRightFootstep = 0f;
+                        }
+                    }
+                }
             }
 
             //This guarantees that there is some animation to play
@@ -1568,7 +1617,9 @@ namespace MxM
             float blendNormalizeFactor = 1f / totalBlendPower;
 
             for (int i = 0; i < m_animationStates.Length; ++i)
+            {
                 m_animationMixer.SetInputWeight(i, m_animationStates[i].Weight * blendNormalizeFactor);
+            }
         }
 
         //============================================================================================

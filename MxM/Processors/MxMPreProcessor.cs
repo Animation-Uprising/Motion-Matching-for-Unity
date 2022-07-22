@@ -7,6 +7,8 @@
 //     Contains a part of the 'MxMEditor' namespace for 'Unity Engine'.
 // 
 // ============================================================================================
+
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -995,16 +997,39 @@ namespace MxMEditor
 
                 leftStepData.SetFootStep(i, data.range, data.step.Pace, data.step.Type);
             }
+            
             for(int i = 0; i < rightFootTagTrack.StepCount; ++i)
             {
                 var data = rightFootTagTrack.GetFootStepData(i);
 
                 rightStepData.SetFootStep(i, data.range, data.step.Pace, data.step.Type);
             }
-
+            
+            //Sort footstep data by start time of each footstep
+            Array.Sort(leftStepData.Tags, leftStepData.FootSteps, new TagComparer());
+            Array.Sort(rightStepData.Tags, rightStepData.FootSteps, new TagComparer());
 
             m_leftFootStepTrackData.Add(leftStepData);
             m_rightFootStepTrackData.Add(rightStepData);
+        }
+
+        //============================================================================================
+        /**
+        *  @brief Comparer for sorting tags
+        *         
+        *********************************************************************************************/
+        private class TagComparer : IComparer<Vector2>
+        {
+            public int Compare(Vector2 TagA, Vector2 TagB)
+            {
+                if (TagA.x < TagB.x)
+                    return -1;
+
+                if (TagA.x > TagB.x)
+                    return 1;
+
+                return 0;
+            }
         }
 
         //============================================================================================

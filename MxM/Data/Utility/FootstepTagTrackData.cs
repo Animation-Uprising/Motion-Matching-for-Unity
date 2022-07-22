@@ -36,18 +36,47 @@ namespace MxM
             }
         }
 
-        public int GetStepStart(Vector2 a_range)
+        public int GetStepStart(Vector2 a_range, ref int a_cachedLastStep)
         {
-            for(int i=0; i < Tags.Length; ++i)
+            for(int i=a_cachedLastStep; i < Tags.Length; ++i)
             {
                 float start = Tags[i].x;
 
-                if(a_range.x <= start && a_range.y > start)
+                if (start > a_range.y)
                 {
+                    a_cachedLastStep = i;
+                    return -1;
+                }
+                else if(a_range.x <= start)
+                {
+                    a_cachedLastStep = i;
                     return i;
                 }
             }
 
+            a_cachedLastStep = Tags.Length;
+            return -1;
+        }
+
+        public int IsGrounded(float a_time, ref int a_cachedLastStep)
+        {
+            for (int i = a_cachedLastStep; i < Tags.Length; ++i)
+            {
+                Vector2 tag = Tags[i];
+
+                if (a_time < tag.x)
+                {
+                    a_cachedLastStep = i;
+                    return i;
+                }
+                else if (a_time > tag.x && a_time < tag.y)
+                {
+                    a_cachedLastStep = i;
+                    return i;
+                }
+            }
+
+            a_cachedLastStep = Tags.Length;
             return -1;
         }
 

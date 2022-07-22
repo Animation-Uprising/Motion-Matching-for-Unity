@@ -86,7 +86,7 @@ namespace MxM
             {
                 var leftFootStepTrack = CurrentAnimData.LeftFootSteps[trackId];
 
-                int stepId = leftFootStepTrack.GetStepStart(range);
+                int stepId = leftFootStepTrack.GetStepStart(range, ref m_cachedLastLeftFootstepId);
 
                 if (stepId > -1)
                 {
@@ -101,7 +101,7 @@ namespace MxM
 
                 var rightFootStepTrack = CurrentAnimData.RightFootSteps[trackId];
 
-                int stepId = rightFootStepTrack.GetStepStart(range);
+                int stepId = rightFootStepTrack.GetStepStart(range, ref m_cachedLastRightFootstepId);
 
                 if (stepId > -1)
                 {
