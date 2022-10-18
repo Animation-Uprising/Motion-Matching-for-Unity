@@ -49,7 +49,6 @@ namespace MxM
         private int m_layerId = 2;
         
         private int m_currentEventSlotId = -1;
-        
         public int CurrentEventId { get; private set; }
         
         public EEventState CurrentEventState 
@@ -88,6 +87,12 @@ namespace MxM
                 return EEventState.Recovery;
             } 
         }
+
+        public MxMLayer BaseLayer
+        {
+            get => m_baseLayer;
+        }
+        
 
         public bool IsEnabled { get { return enabled; } }
         public bool DoUpdatePhase1 { get { return false; } }
