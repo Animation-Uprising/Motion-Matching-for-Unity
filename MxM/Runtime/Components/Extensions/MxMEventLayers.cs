@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Animations;
+using UnityEngine.Events;
 
 namespace MxM
 {
@@ -50,6 +51,14 @@ namespace MxM
         
         private int m_currentEventSlotId = -1;
         public int CurrentEventId { get; private set; }
+        
+         //[System.Serializable] public class UnityEvent_EEventState : UnityEvent<EEventState> { };    //Custom Unity event for passing current EEventState during events
+        // [System.Serializable] public class UnityEvent_Int : UnityEvent<int> { };                    //Custom Unity event for passing an integer
+        
+         [Header("Callbacks")]
+         [SerializeField] private UnityEvent m_onEventComplete = new UnityEvent();                   //Unity event called when an Event (MxM Action Event) is completed
+        // [SerializeField] private UnityEvent_EEventState m_onEventStateChanged = new UnityEvent_EEventState();   //Unity event called when an Event (MxM Action Event) state is changed. The event state will be passed
+        // [SerializeField] private UnityEvent_Int m_onEventContactReached = new UnityEvent_Int();  
         
         public EEventState CurrentEventState 
         { 
@@ -153,6 +162,8 @@ namespace MxM
                     m_layerMixer.DisconnectInput(i);
                     eventLayer.ClipPlayable.Destroy();
                     eventLayer.LayerStatus = EEventLayerStatus.Inactive;
+
+                    m_onEventComplete.Invoke();
                     
                     if(i == m_currentEventSlotId)
                     {
@@ -194,7 +205,12 @@ namespace MxM
         }
 
         public void Terminate() { }
-        public void UpdatePhase1() { }
+
+        public void UpdatePhase1()
+        {
+            CurrentEventState
+            
+        }
         
         public void UpdatePost() { }
 

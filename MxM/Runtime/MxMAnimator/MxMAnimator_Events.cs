@@ -444,7 +444,7 @@ namespace MxM
         private void FetchEventLookupData(out EventFrameData lookupData)
         {
             //Find warping lookup table data within the current event based on event timing
-            float lookupTableFloatIndex = (m_timeSinceEventTriggered + m_eventStartTimeOffset) / (1f / 60f);
+            float lookupTableFloatIndex = (m_timeSinceEventTriggered - (p_currentDeltaTime * m_playbackSpeed * m_eventSpeedMod) + m_eventStartTimeOffset) / (1f / 60f);
             int lookupTableIndex = Mathf.Clamp(Mathf.FloorToInt(lookupTableFloatIndex), 0, m_curEvent.WarpingLookupTable.Length - 1);
 
             lookupData = new EventFrameData();
