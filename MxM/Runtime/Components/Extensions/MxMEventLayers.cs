@@ -206,11 +206,7 @@ namespace MxM
 
         public void Terminate() { }
 
-        public void UpdatePhase1()
-        {
-            CurrentEventState
-            
-        }
+        public void UpdatePhase1() { }
         
         public void UpdatePost() { }
 
