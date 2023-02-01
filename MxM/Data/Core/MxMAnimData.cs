@@ -135,6 +135,16 @@ namespace MxM
             {
                 clipData.CurveData.InitializeCurvesRuntime();
             }
+
+            foreach (BlendClipData blendClipData in BlendClips)
+            {
+                blendClipData.CurveData.InitializeCurvesRuntime();
+            }
+
+            foreach (CompositeData compClipData in Composites)
+            {
+                compClipData.CurveData.InitializeCurvesRuntime();
+            }
         }
         
         public void ReleaseNativeData()
