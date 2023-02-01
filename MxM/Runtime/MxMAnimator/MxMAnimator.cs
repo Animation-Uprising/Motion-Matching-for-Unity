@@ -64,6 +64,7 @@ namespace MxM
         [SerializeField] private ETransitionMethod m_transitionMethod = ETransitionMethod.Blend;        //The method of blending to use to transition between animations
         [SerializeField] private EPastTrajectoryMode m_pastTrajectoryMode = EPastTrajectoryMode.ActualHistory; //The method for obtaining past trajectory points
         [SerializeField] private bool m_applyHumanoidFootIK = true;          //If false, humanoid foot Ik retargetting will be turned off
+        [SerializeField] private bool m_applyPlayableIK = true;              //If true playable IK will be applied to this clip.
         [SerializeField] private EFavourTagMethod m_favourTagMethod = EFavourTagMethod.Exclusive; //The method for handling favour tags, do they need to match exactly? partially? or does each matching tag contribute to the favour?
         [SerializeField] private bool m_applyTrajectoryBlending = false;     //If true the desired trajectory will be blended with the current animation with a linear falloff over prediction time                                 
         [SerializeField] private float m_trajectoryBlendingWeight = 0.5f;    //A weighting for 'Trajectory Blending'. Keep between 0-1. Impacts how strong the trajectory blending is.
@@ -967,6 +968,7 @@ namespace MxM
 
                     var clipPlayable = AnimationClipPlayable.Create(MxMPlayableGraph, clip);
                     clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
+                    clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
 
                     m_animationMixer.ConnectInput(i, clipPlayable, 0);
                     m_animationMixer.SetInputWeight(i, 0f);
@@ -995,6 +997,7 @@ namespace MxM
 
                 var clipPlayable = AnimationClipPlayable.Create(MxMPlayableGraph, clip);
                 clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
+                clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
 
                 startState.TargetPlayable = clipPlayable;
 
@@ -1095,6 +1098,7 @@ namespace MxM
 
             var clipPlayable = AnimationClipPlayable.Create(MxMPlayableGraph, clip);
             clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
+            clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
 
             startState.TargetPlayable = clipPlayable;
 
@@ -2293,6 +2297,7 @@ namespace MxM
             ref MxMPlayableState playableState = ref m_animationStates[0];
             var clipPlayable = AnimationClipPlayable.Create(MxMPlayableGraph, clip);
             clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
+            clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
 
             playableState.TargetPlayable = clipPlayable;
 

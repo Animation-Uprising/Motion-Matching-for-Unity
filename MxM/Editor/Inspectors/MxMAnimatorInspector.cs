@@ -57,6 +57,7 @@ namespace MxMEditor
         private SerializedProperty m_spFavourTagMethod;
         private SerializedProperty m_spPastTrajectoryMode;
         private SerializedProperty m_spApplyHumanoidFootIK;
+        private SerializedProperty m_spApplyPlayableIK;
         private SerializedProperty m_spMinFootstepInterval;
         
         private SerializedProperty m_spAngularErrorWarpRate;
@@ -145,6 +146,7 @@ namespace MxMEditor
             m_spFavourTagMethod = serializedObject.FindProperty("m_favourTagMethod");
             m_spPastTrajectoryMode = serializedObject.FindProperty("m_pastTrajectoryMode");
             m_spApplyHumanoidFootIK = serializedObject.FindProperty("m_applyHumanoidFootIK");
+            m_spApplyPlayableIK = serializedObject.FindProperty("m_applyPlayableIK");
             m_spMinFootstepInterval = serializedObject.FindProperty("m_minFootstepInterval");
             
             m_spAngularErrorWarpRate = serializedObject.FindProperty("m_angularErrorWarpRate");
@@ -745,6 +747,10 @@ namespace MxMEditor
                 m_spApplyHumanoidFootIK.boolValue = EditorGUILayout.Toggle(new GUIContent("Apply Humanoid Foot IK",
                     "Turns on/off Unity's humanoid foot IK for runtime fixing the feet on a humanoid pose."), m_spApplyHumanoidFootIK.boolValue);
 
+                m_spApplyPlayableIK.boolValue = EditorGUILayout.Toggle(
+                    new GUIContent("Apply Playable IK", "Turns on/off playable IK for this clip"),
+                    m_spApplyPlayableIK.boolValue);
+
                 m_spMinFootstepInterval.floatValue = EditorGUILayout.FloatField(new GUIContent("Min Footstep Interval",
                         "The minimum time interval between footstep triggers of the same foot."),
                     m_spMinFootstepInterval.floatValue);
@@ -756,7 +762,7 @@ namespace MxMEditor
                 }
 
                 GUILayout.Space(5f);
-                curHeight += 18f * 17f + 5f;
+                curHeight += 18f * 18f + 5f;
             }
 
             curHeight += 30f;
