@@ -134,6 +134,7 @@ namespace MxM
             public override void DoExit()
             {
                 m_animator.m_timeSinceMotionChosen = m_animator.m_updateInterval + 0.00001f;
+                m_animator.OnIdleEnd.Invoke();
             }
         }
 
