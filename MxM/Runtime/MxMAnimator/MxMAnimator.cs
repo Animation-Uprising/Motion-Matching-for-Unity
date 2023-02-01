@@ -242,7 +242,18 @@ namespace MxM
         public float LatErrorWarpAngle { get; private set; }
         public float AngularErrorWarpRate { get { return m_angularErrorWarpRate; } set { m_angularErrorWarpRate = value; } }
         public float AngularErrorWarpThreshold { get { return m_angularErrorWarpThreshold; } set { m_angularErrorWarpThreshold = value; } }
-        public AvatarMask AnimatorControllerMask { get { return m_animatorControllerMask; } set { m_animatorControllerMask = value; } }
+
+        public AvatarMask AnimatorControllerMask
+        {
+            get { return m_animatorControllerMask; }
+            set
+            {
+                m_animatorControllerMask = value;
+                
+                if(m_animControllerLayer > 0)
+                    m_animationLayerMixer.SetLayerMaskFromAvatarMask((uint)m_animControllerLayer, m_animatorControllerMask);
+            }
+        }
         public float DesiredPlaybackSpeed { get; set; }
         public float UserPlaybackSpeedMultiplier { get; set; }
         public float PlaybackSpeedSmoothRate { get { return m_playbackSpeedSmoothRate; } set { m_playbackSpeedSmoothRate = value; } }

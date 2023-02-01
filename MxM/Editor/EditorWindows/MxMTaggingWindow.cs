@@ -595,6 +595,7 @@ namespace MxMEditor
             }
 
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
             GUILayout.EndArea();
 
             //Content Area
@@ -690,7 +691,7 @@ namespace MxMEditor
 
 
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
             GUILayout.EndArea();
         }
 
