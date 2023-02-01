@@ -1400,12 +1400,12 @@ namespace MxM
         {
             if(!m_enforcePoseSearch && m_nextPoseToleranceTest)
             {
-                ref PoseData nextPose = ref CurrentAnimData.Poses[m_chosenPose.NextPoseId]; //Potential out of range here?
+                ref PoseData nextPose = ref CurrentAnimData.Poses[CurrentInterpolatedPose.NextPoseId]; //Potential out of range here?
 
                 if ((nextPose.Tags & ETags.DoNotUse) != ETags.DoNotUse)
                 {
                     //If the next pose from the current animation is close enough, skip the search
-                    if (CloseEnoughTest(ref nextPose))
+                    if (NextPoseToleranceTest(ref nextPose))
                     {
                         m_timeSinceMotionUpdate = 0f;
                         return;
@@ -2108,7 +2108,7 @@ namespace MxM
         *  @param [ref PoseData] a_nextPose - reference to the pose data for the next pose
         *         
         *********************************************************************************************/
-        private bool CloseEnoughTest(ref PoseData a_nextPose)
+        private bool NextPoseToleranceTest(ref PoseData a_nextPose)
         {
             //We already know that the next pose data will have good pose transition so we only
             //need to test trajectory (closeness). Additionally there is no need to test past trajectory
@@ -2128,7 +2128,7 @@ namespace MxM
 
                     float sqrDistance = Vector3.SqrMagnitude(a_nextPose.Trajectory[i].Position - m_desiredGoal[i].Position);
 
-                    if(sqrDistance > relativeTolerance_Pos * relativeTolerance_Pos)
+                    if(Mathf.Abs(sqrDistance) > relativeTolerance_Pos * relativeTolerance_Pos)
                     {
                         return false;
                     }
@@ -2141,7 +2141,6 @@ namespace MxM
                     }
                 }                
             }
-
             return true;
         }
 
