@@ -235,5 +235,16 @@ public class RootMotionApplicatorTemplate : MonoBehaviour, IMxMRootMotion
        // }
     }
     
+    //===========================================================================================
+    /**
+    *  @brief Called at the very end of OnAnimatorMove() in the MxMAnimator. Use this function to
+    *  update any rigid bodies before the next physics update.
+    *         
+    *********************************************************************************************/
+    public void Finalize()
+    {
+        
+    }
+    
     
 }//End of class: RootMotionApplicatorTemplate

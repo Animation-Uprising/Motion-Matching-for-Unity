@@ -28,5 +28,8 @@ namespace MxM
         void Translate(Vector3 a_delta);
         void Rotate(Vector3 a_axis, float a_angle);
 
+        /*Called at the end of OnAnimatorMove*/
+        void Finalize();
+
     }//End of interface: IMxMRootMotion
 }//End of namespace MxM

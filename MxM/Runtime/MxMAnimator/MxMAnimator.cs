@@ -650,6 +650,7 @@ namespace MxM
                                 m_animationRoot.SetPositionAndRotation(m_animationRoot.position 
                                     + deltaPos + warp, p_animator.rootRotation * warpRot); //Revert to transform if there is no IMxMRootMotion attached
                             }
+                            
                         }
                         break;
                     case EMxMRootMotion.RootMotionApplicator_AngularErrorWarpingOnly:
@@ -689,6 +690,8 @@ namespace MxM
                 
                 m_animationRoot.rotation *= warpRot; //Even with root motion off, angular error warping needs to be applied to the transform if it is on.
             }
+
+            m_rootMotion?.Finalize();
         }
 
         //============================================================================================

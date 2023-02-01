@@ -214,6 +214,16 @@ namespace MxM
                 m_rootTransform.Rotate(a_axis, a_angle);
             }
         }
+        
+        //===========================================================================================
+        /**
+        *  @brief
+        *
+        *********************************************************************************************/
+        public void Finalize()
+        {
+            
+        }
 
     }//End of class: MxMDecoupleMotionApplicator
 }//End of namespace: MxM
