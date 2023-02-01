@@ -693,7 +693,7 @@ namespace MxM
                 m_animationRoot.rotation *= warpRot; //Even with root motion off, angular error warping needs to be applied to the transform if it is on.
             }
 
-            m_rootMotion?.Finalize();
+            m_rootMotion?.FinalizeRootMotion();
         }
 
         //============================================================================================

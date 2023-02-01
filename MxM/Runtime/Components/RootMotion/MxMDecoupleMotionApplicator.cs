@@ -220,7 +220,7 @@ namespace MxM
         *  @brief
         *
         *********************************************************************************************/
-        public void Finalize()
+        public void FinalizeRootMotion()
         {
             
         }

@@ -42,6 +42,7 @@ namespace MxMEditor
         private bool m_positionFoldout = true;
         private bool m_rotationFoldout = true;
 
+        //private SerializedProperty m_spEventNamingModule;
         private SerializedProperty m_spTargetAnimData;
 
         private void OnEnable()
@@ -77,6 +78,7 @@ namespace MxMEditor
             m_spMinWarpTimeScale = serializedObject.FindProperty("MinWarpTimeScale");
             m_spMaxWarpTimeScale = serializedObject.FindProperty("MaxWarpTimeScale");
 
+           //m_spEventNamingModule = serializedObject.FindProperty("m_eventNamingModule");
             m_spTargetAnimData = serializedObject.FindProperty("m_targetAnimData");
         }
 

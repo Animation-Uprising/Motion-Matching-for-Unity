@@ -73,6 +73,19 @@ namespace MxMEditor
             {
                 leftToeJoint = animator.GetBoneTransform(HumanBodyBones.LeftToes);
                 rightToeJoint = animator.GetBoneTransform(HumanBodyBones.RightToes);
+
+                if (leftToeJoint == null)
+                    leftToeJoint = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
+
+                if (rightToeJoint == null)
+                    rightToeJoint = animator.GetBoneTransform(HumanBodyBones.RightFoot);
+
+                if (leftToeJoint == null || rightToeJoint == null)
+                {
+                    Debug.LogError("Could not find toe or foot joint on humanoid body rig. " +
+                                   "Aborting automatic footstep detection");
+                    return;
+                }
             }
             else
             {

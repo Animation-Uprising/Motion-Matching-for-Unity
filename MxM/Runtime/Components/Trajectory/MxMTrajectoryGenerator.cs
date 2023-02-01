@@ -183,7 +183,7 @@ namespace MxM
         {
             if(p_animator.updateMode == AnimatorUpdateMode.AnimatePhysics)
             {
-                UpdatePastTrajectory();
+                UpdatePastTrajectory(Time.fixedDeltaTime);
             }
         }
 
@@ -199,7 +199,7 @@ namespace MxM
         {
             if (p_animator.updateMode != AnimatorUpdateMode.AnimatePhysics)
             {
-                UpdatePastTrajectory();
+                UpdatePastTrajectory(Time.deltaTime);
             }
         }
 
@@ -251,7 +251,7 @@ namespace MxM
         *  MxMAnimator.
         *         
         *********************************************************************************************/
-        protected override void UpdatePrediction()
+        protected override void UpdatePrediction(float a_deltaTime)
         {
             if (p_trajPositions.Length == 0 || p_trajFacingAngles.Length == 0)
                 return;
@@ -320,8 +320,8 @@ namespace MxM
                 NewTrajectoryPositions = m_newTrajPositions,
                 DesiredLinearDisplacement = desiredLinearDisplacement,
                 DesiredOrientation = desiredOrientation,
-                MoveRate = m_posBias * m_posBiasMultiplier * m_simulationSpeedScale * Time.deltaTime,
-                TurnRate = m_dirBias * m_dirBiasMultiplier * m_simulationSpeedScale * Time.deltaTime
+                MoveRate = m_posBias * m_posBiasMultiplier * m_simulationSpeedScale * a_deltaTime,
+                TurnRate = m_dirBias * m_dirBiasMultiplier * m_simulationSpeedScale * a_deltaTime
             };
 
             p_trajectoryGenerateJobHandle = trajectoryGenerateJob.Schedule();

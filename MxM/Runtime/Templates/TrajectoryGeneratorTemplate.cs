@@ -56,7 +56,7 @@ public class MxMTrajectoryGeneratorTemplate : MxMTrajectoryGeneratorBase
     *  MANDATORY
     *         
     *********************************************************************************************/
-    protected override void UpdatePrediction()
+    protected override void UpdatePrediction(float a_deltaTime)
     {
         //Poll your stick input here
 

@@ -71,7 +71,7 @@ namespace MxM
         public bool IsPaused { get; private set; } //Used to pause and un-pause the trajectory generator
 
         //Abstract functions
-        protected abstract void UpdatePrediction(); //Abstract function to update the future prediction logic. This needs to be overriden with a custom implementation
+        protected abstract void UpdatePrediction(float a_deltaTime); //Abstract function to update the future prediction logic. This needs to be overriden with a custom implementation
         public abstract bool HasMovementInput(); //Returns true if there is movement input this frame.
         protected abstract void Setup(float[] a_predictionTimes); //Setup function to be implemented for any custom logic based on the prediction times. It is called at the end of SetGoalRequirements.
 
@@ -104,7 +104,7 @@ namespace MxM
         *  @brief Updates the trajectory logic
         *         
         *********************************************************************************************/
-        protected void UpdatePastTrajectory()
+        protected void UpdatePastTrajectory(float a_deltaTime)
         {
             if (!IsPaused)
             {
@@ -114,7 +114,7 @@ namespace MxM
                 p_curFacingAngle = transform.rotation.eulerAngles.y;
 
                 p_trajectoryGenerateJobHandle.Complete(); //Complete the job before it needs to be used again
-                UpdatePrediction();
+                UpdatePrediction(a_deltaTime);
 
                 ++s_curTrajectoryGeneratorId;
                 if(s_curTrajectoryGeneratorId == s_trajectoryGeneratorCount)

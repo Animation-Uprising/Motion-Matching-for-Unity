@@ -70,7 +70,7 @@ namespace MxM
         *  MxMAnimator.
         *         
         *********************************************************************************************/
-        protected override void UpdatePrediction()
+        protected override void UpdatePrediction(float a_deltaTime)
         {
             //Desired linear velocity is calculated based on user input
             Vector3 desiredLinearVelocity = CalculateDesiredLinearVelocity();
@@ -100,8 +100,8 @@ namespace MxM
                 NewTrajectoryPositions = m_newTrajPositions,
                 DesiredLinearDisplacement = desiredLinearDisplacement,
                 DesiredOrientation = desiredOrientation,
-                MoveRate = m_moveResponsiveness * Time.deltaTime,
-                TurnRate = m_turnResponsiveness * Time.deltaTime
+                MoveRate = m_moveResponsiveness * a_deltaTime,
+                TurnRate = m_turnResponsiveness * a_deltaTime
             };
 
             p_trajectoryGenerateJobHandle = trajectoryGenerateJob.Schedule();
@@ -131,7 +131,7 @@ namespace MxM
         {
             if (p_animator.updateMode == AnimatorUpdateMode.AnimatePhysics)
             {
-                UpdatePastTrajectory();
+                UpdatePastTrajectory(Time.fixedDeltaTime);
             }
         }
 
@@ -147,7 +147,7 @@ namespace MxM
         {
             if (p_animator.updateMode != AnimatorUpdateMode.AnimatePhysics)
             {
-                UpdatePastTrajectory();
+                UpdatePastTrajectory(Time.deltaTime);
             }
         }
 

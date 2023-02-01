@@ -49,7 +49,7 @@ namespace MxMEditor
         private static Vector2 m_previewPos;
         private static bool m_draggingPreview;
         private static bool m_showClipNames = true;
-        private static float m_previewProgress = 0f;
+        //private static float m_previewProgress = 0f;
         private static float m_normalizedClipLength = 0f;
 
         private int m_queueDeleteIndex = -1;

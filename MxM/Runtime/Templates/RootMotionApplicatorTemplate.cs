@@ -241,7 +241,7 @@ public class RootMotionApplicatorTemplate : MonoBehaviour, IMxMRootMotion
     *  update any rigid bodies before the next physics update.
     *         
     *********************************************************************************************/
-    public void Finalize()
+    public void FinalizeRootMotion()
     {
         
     }

@@ -29,7 +29,7 @@ namespace MxM
         void Rotate(Vector3 a_axis, float a_angle);
 
         /*Called at the end of OnAnimatorMove*/
-        void Finalize();
+        void FinalizeRootMotion();
 
     }//End of interface: IMxMRootMotion
 }//End of namespace MxM

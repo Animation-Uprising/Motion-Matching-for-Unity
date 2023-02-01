@@ -95,7 +95,7 @@ namespace MxM
 
             }
             
-            UpdatePastTrajectory();
+            UpdatePastTrajectory(Time.deltaTime);
         }
 
         //===========================================================================================
@@ -104,7 +104,7 @@ namespace MxM
         *  mesh.
         *         
         *********************************************************************************************/
-        protected override void UpdatePrediction()
+        protected override void UpdatePrediction(float a_deltaTime)
         {
             Vector3 charPosition = transform.position;
 
@@ -119,7 +119,7 @@ namespace MxM
                     float percentage = (float)i / (float)(iterations - 1);
 
                     m_newTrajectoryPositions[i] = math.lerp(p_trajPositions[i], float3.zero,
-                        1f - math.exp(-m_moveRate * percentage * Time.deltaTime));
+                        1f - math.exp(-m_moveRate * percentage * a_deltaTime));
                 }
 
                 m_hasInputThisFrame = false;
@@ -175,7 +175,7 @@ namespace MxM
                     float3 lastPosition = p_trajPositions[i - 1];
 
                     float3 adjustedTrajectoryDisplacement = math.lerp(p_trajPositions[i] - lastPosition, desiredPos - lastPosition,
-                        1f - math.exp(-m_moveRate * percentage * Time.deltaTime));
+                        1f - math.exp(-m_moveRate * percentage * a_deltaTime));
 
                     m_newTrajectoryPositions[i] = m_newTrajectoryPositions[i - 1] + adjustedTrajectoryDisplacement;
                 }
