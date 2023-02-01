@@ -82,6 +82,8 @@ namespace MxMEditor
         
         private SerializedProperty m_spOnSetupCompleteCallback;
         private SerializedProperty m_spOnIdleTriggeredCallback;
+        private SerializedProperty m_spOnIdleEndCallback;
+        private SerializedProperty m_spOnRequiredTagsChangedCallback;
         private SerializedProperty m_spOnLeftFootStepStartCallback;
         private SerializedProperty m_spOnRightFootStepStartCallback;
         private SerializedProperty m_spOnEventCompleteCallback;
@@ -167,6 +169,8 @@ namespace MxMEditor
             
             m_spOnSetupCompleteCallback = serializedObject.FindProperty("m_onSetupComplete");
             m_spOnIdleTriggeredCallback = serializedObject.FindProperty("m_onIdleTriggered");
+            m_spOnIdleEndCallback = serializedObject.FindProperty("m_onIdleEnd");
+            m_spOnRequiredTagsChangedCallback = serializedObject.FindProperty("m_onRequireTagsChanged");
             m_spOnLeftFootStepStartCallback = serializedObject.FindProperty("m_onLeftFootStepStart");
             m_spOnRightFootStepStartCallback = serializedObject.FindProperty("m_onRightFootStepStart");
             m_spOnEventCompleteCallback = serializedObject.FindProperty("m_onEventComplete");
@@ -1040,6 +1044,8 @@ namespace MxMEditor
             {
                 EditorGUILayout.PropertyField(m_spOnSetupCompleteCallback);
                 EditorGUILayout.PropertyField(m_spOnIdleTriggeredCallback);
+                EditorGUILayout.PropertyField(m_spOnIdleEndCallback);
+                EditorGUILayout.PropertyField(m_spOnRequiredTagsChangedCallback);
                 EditorGUILayout.PropertyField(m_spOnLeftFootStepStartCallback);
                 EditorGUILayout.PropertyField(m_spOnRightFootStepStartCallback);
                 EditorGUILayout.PropertyField(m_spOnEventCompleteCallback);

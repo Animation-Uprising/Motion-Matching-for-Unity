@@ -1505,7 +1505,7 @@ namespace MxMEditor
                     if (frameData.WarpRotThisFrame)
                         cumAvailableRotTime += SixtyHz;
                 }
-
+                
                 int eventId = GetEventIdByName(evt.EventName);
 
                 if(eventId == -1)

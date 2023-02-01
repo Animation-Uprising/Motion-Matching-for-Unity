@@ -47,6 +47,9 @@ namespace MxM
             if(RequiredTags != m_desireRequiredTags)
             {
                 RequiredTags = m_desireRequiredTags;
+                
+                OnRequireTagsChanged.Invoke(RequiredTags);
+                
                 FetchNativeAnimData();
                 CheckIdleSuitability();
             }

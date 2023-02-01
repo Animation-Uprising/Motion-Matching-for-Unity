@@ -125,6 +125,7 @@ namespace MxM
         [System.Serializable] public class UnityEvent_EEventState : UnityEvent<EEventState> { };    //Custom Unity event for passing current EEventState during events
         [System.Serializable] public class UnityEvent_Int : UnityEvent<int> { };                    //Custom Unity event for passing an integer
         [System.Serializable] public class UnityEvent_FootStepData : UnityEvent<FootStepData> { };  //Custom Unity event for passing FootStepData
+        [System.Serializable] public class UnityEvent_Tag : UnityEvent<ETags> { };                  //Custom Unity event for passing required tags
         
         
         [System.Serializable]
@@ -148,6 +149,7 @@ namespace MxM
         [SerializeField] private UnityEvent m_onIdleTriggered = new UnityEvent();                   //Unity event called when the idle state is triggered
         [SerializeField] private UnityEvent m_onIdleEnd = new UnityEvent();                         //Unity event called when the idle state is exited
         [SerializeField] private UnityEvent m_onEventComplete = new UnityEvent();                   //Unity event called when an Event (MxM Action Event) is completed
+        [SerializeField] private UnityEvent_Tag m_onRequireTagsChanged = new UnityEvent_Tag();          //Unity event called when required tags are changed.
         [SerializeField] private UnityEvent_EEventState m_onEventStateChanged = new UnityEvent_EEventState();   //Unity event called when an Event (MxM Action Event) state is changed. The event state will be passed
         [SerializeField] private UnityEvent_Int m_onEventContactReached = new UnityEvent_Int();         //Unity event called whenever a contact has been reached in an event (MxM Action Event). The id of the contact will be passed
         [SerializeField] private UnityEvent_FootStepData m_onLeftFootStepStart = new UnityEvent_FootStepData();  //Unity event called when a left footstep is triggered. Footstep data will be passed
@@ -158,6 +160,7 @@ namespace MxM
         public UnityEvent OnIdleTriggered { get { return m_onIdleTriggered; } } //Can be used to setup OnIdleTriggered callbacks during runtime
         public UnityEvent OnIdleEnd { get { return m_onIdleEnd; } } //Can be used to setup OnIdleEnd callbacks during runtime
         public UnityEvent OnEventComplete { get { return m_onEventComplete; } } //Can be used to setup OnEventComplete callbacks during runtime
+        public UnityEvent_Tag OnRequireTagsChanged { get {return m_onRequireTagsChanged; } } //Can be used to setup OnRequireTagsChanged callbacks during runtime
         public UnityEvent_EEventState OnEventStateChanged { get { return m_onEventStateChanged; } } // Can be used to setup OnEventStateChanged callbacks during runtime
         public UnityEvent_Int OnEventContactReached { get { return m_onEventContactReached; } } //Can be used to setup OnEventContactReached callbacks during runtime
         public UnityEvent_FootStepData OnLeftFootStepStart { get { return m_onLeftFootStepStart; } } //Can be used to setup OnLeftFootStepStart callbacks during runtime
