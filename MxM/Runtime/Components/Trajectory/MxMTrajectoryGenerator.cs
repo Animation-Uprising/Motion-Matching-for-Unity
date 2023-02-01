@@ -716,6 +716,8 @@ namespace MxM
         {
             if (a_trajGenModule == null)
                 return;
+
+            m_trajectoryGeneratorModule = a_trajGenModule;
             
             m_maxSpeed = a_trajGenModule.MaxSpeed;
             m_posBias = a_trajGenModule.PosBias;
@@ -729,9 +731,7 @@ namespace MxM
             m_applyRootSpeedToNavAgent = a_trajGenModule.ApplyRootSpeedToNavAgent;
             m_faceDirectionOnIdle = a_trajGenModule.FaceDirectionOnIdle;
             m_scaleAdjustment = a_trajGenModule.ScaleAdjustment;
-            m_camTransform = a_trajGenModule.CamTransform;
             m_mxmInputProfile = a_trajGenModule.InputProfile;
-            
         }
         
         //===========================================================================================

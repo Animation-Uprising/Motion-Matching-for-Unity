@@ -47,9 +47,6 @@ namespace MxM
         [Header("Other")]
         [Tooltip("How much to scale the max speed by to compensate for character scale")]
         public float ScaleAdjustment = 1.0f;
-        
-        [Tooltip("The camera that this trajectory is being generated relative to.")]
-        public Transform CamTransform;
 
         [Tooltip("The input profile to use to shape the trajectory to valid ranges of input.")]
         public MxMInputProfile InputProfile;
