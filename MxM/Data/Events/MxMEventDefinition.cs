@@ -1,6 +1,10 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using MxMEditor;
+#endif
+
 namespace MxM
 {
     //============================================================================================
@@ -41,6 +45,11 @@ namespace MxM
         public float RotationWeight;
         public EEventWarpType RotationWarpType;
 
+#if UNITY_EDITOR        
+        [SerializeField] 
+        private EventNamingModule m_targetEventNamingModule = null;
+#endif
+
         [SerializeField]
         private MxMAnimData m_targetAnimData = null;
 
@@ -58,7 +67,14 @@ namespace MxM
             if (EventContacts == null)
                 EventContacts = new List<EventContact>();
 
-            ValidateEventId();
+            if (m_targetEventNamingModule != null)
+            {
+                ValidateEventId(m_targetEventNamingModule);
+            }
+            else if (m_targetAnimData != null)
+            {
+                ValidateEventId(m_targetAnimData);
+            }
         }
 
         //============================================================================================
@@ -160,29 +176,29 @@ namespace MxM
         *  @brief 
         *         
         *********************************************************************************************/
-        public void ValidateEventId()
+        public void ValidateEventId(MxMAnimData targetAnimData)
         {
-            if (m_targetAnimData == null)
+            if (targetAnimData == null)
                 return;
 
             if(EventName == null || EventName == "")
             {
-                if(Id < 0 || Id >= m_targetAnimData.EventNames.Length)
+                if(Id < 0 || Id >= targetAnimData.EventNames.Length)
                 {
                     Id = -1;
                     EventName = "";
                 }
                 else
                 {
-                    EventName = m_targetAnimData.EventNames[Id];
+                    EventName = targetAnimData.EventNames[Id];
                 }
             }
             else
             {
                 bool found = false;
-                for (int i = 0; i < m_targetAnimData.EventNames.Length; ++i)
+                for (int i = 0; i < targetAnimData.EventNames.Length; ++i)
                 {
-                    if (m_targetAnimData.EventNames[i] == EventName)
+                    if (targetAnimData.EventNames[i] == EventName)
                     {
                         found = true;
                         Id = i;
@@ -191,6 +207,48 @@ namespace MxM
                 }
 
                 //If no id of that name is found reset the event to null
+                if (!found)
+                {
+                    Id = -1;
+                }
+            }
+        }
+        
+        //============================================================================================
+        /**
+        *  @brief 
+        *         
+        *********************************************************************************************/
+        public void ValidateEventId(EventNamingModule targetEventModule)
+        {
+            if (targetEventModule == null)
+                return;
+
+            if (EventName == null || EventName == "")
+            {
+                if (Id < 0 || Id >= targetEventModule.EventNames.Count)
+                {
+                    Id = -1;
+                    EventName = "";
+                }
+                else
+                {
+                    EventName = targetEventModule.EventNames[Id];
+                }
+            }
+            else
+            {
+                bool found = false;
+                for (int i = 0; i < targetEventModule.EventNames.Count; ++i)
+                {
+                    if (targetEventModule.EventNames[i] == EventName)
+                    {
+                        found = true;
+                        Id = i;
+                        break;
+                    }
+                }
+
                 if (!found)
                 {
                     Id = -1;

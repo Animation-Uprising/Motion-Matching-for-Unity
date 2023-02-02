@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 using UnityEditor;
 using MxM;
 
@@ -42,7 +43,7 @@ namespace MxMEditor
         private bool m_positionFoldout = true;
         private bool m_rotationFoldout = true;
 
-        //private SerializedProperty m_spEventNamingModule;
+        private SerializedProperty m_spEventNamingModule;
         private SerializedProperty m_spTargetAnimData;
 
         private void OnEnable()
@@ -78,7 +79,7 @@ namespace MxMEditor
             m_spMinWarpTimeScale = serializedObject.FindProperty("MinWarpTimeScale");
             m_spMaxWarpTimeScale = serializedObject.FindProperty("MaxWarpTimeScale");
 
-           //m_spEventNamingModule = serializedObject.FindProperty("m_eventNamingModule");
+            m_spEventNamingModule = serializedObject.FindProperty("m_targetEventNamingModule");
             m_spTargetAnimData = serializedObject.FindProperty("m_targetAnimData");
         }
 
@@ -97,12 +98,26 @@ namespace MxMEditor
             {
 
                 MxMAnimData animData = m_spTargetAnimData.objectReferenceValue as MxMAnimData;
+                EventNamingModule eventNameData = m_spEventNamingModule.objectReferenceValue as EventNamingModule;
 
-                if (animData != null)
+                if (eventNameData != null)
+                {
+                    EditorGUI.BeginChangeCheck();
+                    m_spId.intValue = EditorGUILayout.Popup("Event Name", m_spId.intValue,
+                        eventNameData.EventNames.ToArray());
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        if (m_spId.intValue > -1 && m_spId.intValue < eventNameData.EventNames.Count)
+                        {
+                            m_spEventName.stringValue = eventNameData.EventNames[m_spId.intValue];
+                        }
+                    }
+                }
+                else if (animData != null)
                 {
                     EditorGUI.BeginChangeCheck();
                     m_spId.intValue = EditorGUILayout.Popup("Event Name", m_spId.intValue, animData.EventNames);
-                    if(EditorGUI.EndChangeCheck())
+                    if (EditorGUI.EndChangeCheck())
                     {
                         if (m_spId.intValue > -1 && m_spId.intValue < animData.EventNames.Length)
                         {
@@ -121,7 +136,8 @@ namespace MxMEditor
                     }
                 }
 
-                m_spEventType.intValue = (int)(EMxMEventType)EditorGUILayout.EnumPopup("Event Type", (EMxMEventType)m_spEventType.intValue);
+                m_spEventType.intValue =
+                    (int)(EMxMEventType)EditorGUILayout.EnumPopup("Event Type", (EMxMEventType)m_spEventType.intValue);
 
                 EditorGUI.BeginChangeCheck();
                 m_spPriority.intValue = EditorGUILayout.IntField("Priority", m_spPriority.intValue);
@@ -132,15 +148,17 @@ namespace MxMEditor
                 }
 
                 EditorGUI.BeginChangeCheck();
-                m_spContactCountToMatch.intValue = EditorGUILayout.IntField("Num Contacts to Match", m_spContactCountToMatch.intValue);
-                if(EditorGUI.EndChangeCheck())
+                m_spContactCountToMatch.intValue =
+                    EditorGUILayout.IntField("Num Contacts to Match", m_spContactCountToMatch.intValue);
+                if (EditorGUI.EndChangeCheck())
                 {
                     if (m_spContactCountToMatch.intValue < 0)
                         m_spContactCountToMatch.intValue = 0;
                 }
 
                 EditorGUI.BeginChangeCheck();
-                m_spContactCountToWarp.intValue = EditorGUILayout.IntField("Num Contacts to Warp", m_spContactCountToWarp.intValue);
+                m_spContactCountToWarp.intValue =
+                    EditorGUILayout.IntField("Num Contacts to Warp", m_spContactCountToWarp.intValue);
                 if (EditorGUI.EndChangeCheck())
                 {
                     if (m_spContactCountToWarp.intValue < 0)
@@ -149,23 +167,45 @@ namespace MxMEditor
 
                 m_spExitWithMotion.boolValue = EditorGUILayout.Toggle("Exit With Motion", m_spExitWithMotion.boolValue);
                 m_spMatchPose.boolValue = EditorGUILayout.Toggle("Match Pose", m_spMatchPose.boolValue);
-                m_spMatchTrajectory.boolValue = EditorGUILayout.Toggle("Match Trajectory", m_spMatchTrajectory.boolValue);
-                m_spMatchRequireTags.boolValue = EditorGUILayout.Toggle("Match Require Tags", m_spMatchRequireTags.boolValue);
-                m_spFavourTagMethod.intValue = (int) (EFavourTagMethod) EditorGUILayout.EnumPopup(
-                    "Favour Tag Method", (EFavourTagMethod) m_spFavourTagMethod.intValue);
+                m_spMatchTrajectory.boolValue =
+                    EditorGUILayout.Toggle("Match Trajectory", m_spMatchTrajectory.boolValue);
+                m_spMatchRequireTags.boolValue =
+                    EditorGUILayout.Toggle("Match Require Tags", m_spMatchRequireTags.boolValue);
+                m_spFavourTagMethod.intValue = (int)(EFavourTagMethod)EditorGUILayout.EnumPopup(
+                    "Favour Tag Method", (EFavourTagMethod)m_spFavourTagMethod.intValue);
                 m_spPostEventTrajectoryMode.intValue = (int)(EPostEventTrajectoryMode)EditorGUILayout.EnumPopup(
                     "Post Event Trajectory Mode", (EPostEventTrajectoryMode)m_spPostEventTrajectoryMode.intValue);
 
                 EditorGUI.BeginChangeCheck();
-                EditorGUILayout.ObjectField(m_spTargetAnimData, typeof(MxMAnimData), new GUIContent("Ref AnimData"));
+                EditorGUILayout.ObjectField(m_spEventNamingModule,
+                    typeof(EventNamingModule), new GUIContent("Event Module"));
                 if (EditorGUI.EndChangeCheck())
                 {
-                    animData = m_spTargetAnimData.objectReferenceValue as MxMAnimData;
+                    eventNameData = m_spEventNamingModule.objectReferenceValue as EventNamingModule;
 
-                    if (animData != null)
+                    if (eventNameData != null)
                     {
-                        (target as MxMEventDefinition).ValidateEventId();
+                        (target as MxMEventDefinition).ValidateEventId(eventNameData);
                     }
+                }
+
+                if (m_spEventNamingModule.objectReferenceValue == null)
+                {
+                    EditorGUI.BeginChangeCheck();
+                    EditorGUILayout.ObjectField(m_spTargetAnimData, typeof(MxMAnimData),
+                        new GUIContent("Ref AnimData (Legacy)",
+                            "Use event naming module instead to avoid needing to re-process to see updated event list"));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        animData = m_spTargetAnimData.objectReferenceValue as MxMAnimData;
+
+                        if (animData != null)
+                        {
+                            (target as MxMEventDefinition).ValidateEventId(animData);
+                        }
+                    }
+
+                    curHeight += 18f;
                 }
 
                 curHeight += 18f * 11f;
