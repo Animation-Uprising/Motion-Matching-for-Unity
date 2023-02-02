@@ -9,7 +9,6 @@ namespace MxM
     {
         public static string AssetStore = "https://assetstore.unity.com/packages/tools/animation/motion-matching-for-unity-145624";
         public static string Discord = "https://discord.gg/CFyhERt";
-        public static string ForumPage = "https://forum.unity.com/threads/released-motion-matching-for-unity-advanced-character-animation.685489/";
         public static string IssueTracker = "https://github.com/Avindr/MxM-IssueTracking";
         public static string QuickStart = "https://docs.google.com/document/d/1EWlYWT4mFi9d895J6P7GBOeDQXM-HK5wjqgY3w9hu3w/edit?usp=sharing";
         public static string UserManual = "https://docs.google.com/document/d/1zBdEQh8nJyOkWnKS5fAwchaE7u0kEvl4fSxlR7S2Wfk/edit?usp=sharing";
@@ -24,9 +23,6 @@ namespace MxM
 
         [MenuItem("Tools/MxM/Support/Discord")]
         public static void OpenDiscord() { Application.OpenURL(Discord); }
-
-        [MenuItem("Tools/MxM/Support/Forum")]
-        public static void OpenForumPage() { Application.OpenURL(ForumPage); }
 
         [MenuItem("Tools/MxM/Support/Issue Tracker (Bug Reports)")]
         public static void OpenIssueTracker() { Application.OpenURL(IssueTracker); }
