@@ -293,8 +293,8 @@ namespace MxM
 
         public float UpdateRate
         {
-            get { return m_updateInterval * 60f; }
-            set { m_updateInterval = Mathf.Clamp(value / 60f, 0f, 3f); }
+            get { return 1 / m_updateInterval; }
+            set { m_updateInterval = Mathf.Clamp(1 / value, 0f, 3f); }
         }
 
         //Used to modify the blend time for the general motion matching state. Blend time is clamped
