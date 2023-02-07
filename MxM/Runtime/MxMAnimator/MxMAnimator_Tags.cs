@@ -79,11 +79,14 @@ namespace MxM
             AnimationClip clip = CurrentAnimData.Clips[m_dominantPose.PrimaryClipId];
             
             Vector2 range = new Vector2(animTime - (p_currentDeltaTime * m_playbackSpeed), animTime);
-            
+
             if (clip.isLooping && animTime > clip.length)
+            {
+                m_cachedLastLeftFootstepId = 0;
+                m_cachedLastRightFootstepId = 0;
                 animTime = (animTime % clip.length) * clip.length;
-
-
+            }
+            
             //Trigger Left Footstep?
             if (m_timeSinceLastLeftFootstep >= m_minFootstepInterval)
             {

@@ -66,7 +66,7 @@ namespace MxM
         {
             if (EventContacts == null)
                 EventContacts = new List<EventContact>();
-
+#if UNITY_EDITOR          
             if (m_targetEventNamingModule != null)
             {
                 ValidateEventId(m_targetEventNamingModule);
@@ -75,6 +75,12 @@ namespace MxM
             {
                 ValidateEventId(m_targetAnimData);
             }
+#else
+            if (m_targetAnimData != null)
+            {
+                ValidateEventId(m_targetAnimData);
+            }
+#endif
         }
 
         //============================================================================================
@@ -214,6 +220,7 @@ namespace MxM
             }
         }
         
+ #if UNITY_EDITOR       
         //============================================================================================
         /**
         *  @brief 
@@ -255,6 +262,7 @@ namespace MxM
                 }
             }
         }
+#endif
 
     }//End of class: Event Defenition
 }//End of namespace: MxM
