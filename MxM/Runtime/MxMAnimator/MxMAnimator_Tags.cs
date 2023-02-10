@@ -82,7 +82,7 @@ namespace MxM
             {
                 m_cachedLastLeftFootstepId = 0;
                 m_cachedLastRightFootstepId = 0;
-                animTime = (animTime % clip.length) * clip.length;
+                animTime = (animTime % clip.length);
             }
             
             Vector2 range = new Vector2(animTime - (p_currentDeltaTime * m_playbackSpeed), animTime);

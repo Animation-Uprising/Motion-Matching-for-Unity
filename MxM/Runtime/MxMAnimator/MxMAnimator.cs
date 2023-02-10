@@ -1616,7 +1616,7 @@ namespace MxM
                         }
                     }
 
-                    if (rightGrounded != -1 && m_timeSinceLastLeftFootstep >= m_minFootstepInterval)
+                    if (rightGrounded != -1 && m_timeSinceLastRightFootstep >= m_minFootstepInterval)
                     {
                         FootstepTagTrackData rightSteps = CurrentAnimData.RightFootSteps[m_dominantPose.TracksId];
                         int footStepId = rightSteps.IsGrounded(playableState.Time, ref m_cachedLastRightFootstepId);
