@@ -629,6 +629,32 @@ namespace MxM
                 p_recordedPastPositions[i] = zeroVector;
             }
         }
+        
+        //===========================================================================================
+        /**
+        *  @brief
+        * 
+        *********************************************************************************************/
+        public void ForcePastTrajectoryByVelocity(Vector3 a_velocity)
+        {
+            int pastRecordCount = Mathf.CeilToInt(p_maxRecordTime / p_recordingFrequency);
+
+            p_recordedPastPositions.Capacity = pastRecordCount;
+            p_recordedPastFacingAngles.Capacity = pastRecordCount;
+            
+            Vector3 trajectoryStartPosition = transform.position;
+            Vector3 incrementVelocityVector = a_velocity * p_recordingFrequency * -1f;
+
+            float facingAngle = Vector3.SignedAngle(Vector3.forward, a_velocity.normalized, Vector3.up);
+
+            for (int i = 0; i < pastRecordCount; ++i)
+            {
+                p_recordedPastPositions[i] = trajectoryStartPosition + (incrementVelocityVector * i);
+                p_recordedPastFacingAngles[i] = facingAngle;
+            }
+
+            p_recordingTimer = Time.time;
+        }
 
         //===========================================================================================
         /**

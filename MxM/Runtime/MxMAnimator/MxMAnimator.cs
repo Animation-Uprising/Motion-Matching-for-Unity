@@ -278,6 +278,9 @@ namespace MxM
         public ref PoseData CurrentInterpolatedPose { get => ref m_curInterpolatedPose; }   //Returns the current interpolated pose calculated at runtime
         public MxMPlayableState[] AnimationState { get => m_animationStates; }              //Returns the animation state layer stack for motion matching
 
+        public float ChosenAnimationTime => ChosenPose.Time + m_timeSinceMotionChosen;
+        public float ChosenAnimationNormalizedTime => ChosenAnimationTime / CurrentAnimData.Clips[ChosenPose.AnimId].length;
+
         public float MinFootstepInterval
         {
             get => m_minFootstepInterval;

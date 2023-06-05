@@ -814,7 +814,7 @@ namespace MxM
                     int iterationEnd = evt.WindupPoseContactOffsets.Length;
                     if (a_eventDefinition.ExactTimeMatch && desiredDelay <= evt.TimeToHit)
                     {
-                        startTimeOffsetIndex = Mathf.RoundToInt((evt.TimeToHit - desiredDelay) / CurrentAnimData.PoseInterval);
+                        startTimeOffsetIndex = Mathf.RoundToInt(Mathf.Max(evt.TimeToHit - desiredDelay, 0) / CurrentAnimData.PoseInterval);
                         iterationEnd = Mathf.Min(iterationEnd, startTimeOffsetIndex + 1);
                     }
                     

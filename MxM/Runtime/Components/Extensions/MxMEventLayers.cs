@@ -50,15 +50,21 @@ namespace MxM
         private int m_layerId = 2;
         
         private int m_currentEventSlotId = -1;
+        
+        [System.Serializable] 
+        public class UnityEvent_LayerEventComplete : UnityEvent<int> { };    //Custom Unity event for triggering callbacks when events are complete
+        
+        [Header("Callbacks")]
+        [SerializeField] private UnityEvent_LayerEventComplete m_onLayerEventComplete = new UnityEvent_LayerEventComplete();                   //Unity event called when an Event (MxM Action Event) is completed
+        
+        public UnityEvent_LayerEventComplete OnLayerEventComplete
+        {
+            get { return m_onLayerEventComplete; }
+        }
+        
+        public int ActiveEventCount { get; private set; }
         public int CurrentEventId { get; private set; }
-        
-         //[System.Serializable] public class UnityEvent_EEventState : UnityEvent<EEventState> { };    //Custom Unity event for passing current EEventState during events
-        // [System.Serializable] public class UnityEvent_Int : UnityEvent<int> { };                    //Custom Unity event for passing an integer
-        
-         [Header("Callbacks")]
-         [SerializeField] private UnityEvent m_onEventComplete = new UnityEvent();                   //Unity event called when an Event (MxM Action Event) is completed
-        // [SerializeField] private UnityEvent_EEventState m_onEventStateChanged = new UnityEvent_EEventState();   //Unity event called when an Event (MxM Action Event) state is changed. The event state will be passed
-        // [SerializeField] private UnityEvent_Int m_onEventContactReached = new UnityEvent_Int();  
+        public bool IsLayerEventActive { get { return ActiveEventCount >= 0; }}
         
         public EEventState CurrentEventState 
         { 
@@ -162,14 +168,14 @@ namespace MxM
                     m_layerMixer.DisconnectInput(i);
                     eventLayer.ClipPlayable.Destroy();
                     eventLayer.LayerStatus = EEventLayerStatus.Inactive;
-
-                    m_onEventComplete.Invoke();
                     
                     if(i == m_currentEventSlotId)
                     {
                         CurrentEventId = -1;
                         m_currentEventSlotId = -1;
                     }
+                    
+                    m_onLayerEventComplete.Invoke(numActiveLayers - 1);
                 }
                 else if (Mathf.Abs(weight - eventLayer.Weight) > Mathf.Epsilon)
                 {
@@ -177,6 +183,8 @@ namespace MxM
                     m_layerMixer.SetInputWeight(i, weight);
                 }
             }
+
+            ActiveEventCount = numActiveLayers;
 
             float weightAdjust = (1.0f / Mathf.Max(0.01f, highestWeight));
 
@@ -349,7 +357,8 @@ namespace MxM
             clipPlayable.SetSpeed(a_playbackRate * m_mxmAnimator.PlaybackSpeed);
 
             m_baseLayer.Mask = newEventLayer.Mask;
-            
+
+            ++ActiveEventCount;
         }
 
         //============================================================================================
@@ -507,6 +516,8 @@ namespace MxM
             m_baseLayer.Mask = newEventLayer.Mask;
 
             m_mxmAnimator.SetLayerWeight(m_layerId, 1.0f);
+
+            ++ActiveEventCount;
         }
 
         private int FindEmptySlot()
@@ -547,6 +558,7 @@ namespace MxM
 
             CurrentEventId = -1;
             m_currentEventSlotId = -1;
+            ActiveEventCount = 0;
         }
 
         public void CancelAllEvents(float a_blendTime)
@@ -566,6 +578,7 @@ namespace MxM
 
             CurrentEventId = -1;
             m_currentEventSlotId = -1;
+            ActiveEventCount = 0;
         }
 
     }//End of class: MxMEventLayers

@@ -33,12 +33,16 @@ namespace MxM
         private bool m_rotationOnly = false;
 
         [SerializeField] 
+        private bool m_lockRotation = false;
+
+        [SerializeField] 
         private Vector3 m_axisLock = Vector3.one;
         
         private Transform m_rootTransform;
-
+        
         public float SpeedScale  { get => m_moveScale; set => m_moveScale = value;}
         public bool EnableGravity { get => m_enableGravity; set => m_enableGravity = value; }
+        public bool LockRotation { get => m_lockRotation; set => m_lockRotation = value; }
         public bool RotationOnly { get => m_rotationOnly; set => m_rotationOnly = value; }
         public Transform RootTransform { get => m_rootTransform; set => m_rootTransform = value; }
         public GenericControllerWrapper ControllerWrapper { get => m_charController; set => m_charController = value; }
@@ -113,7 +117,9 @@ namespace MxM
                     }
 
                     m_rootTransform.Translate(moveDelta * m_moveScale, Space.World);
-                    m_rootTransform.rotation *= a_rootRotDelta * a_warpRot;
+                    
+                    if(!m_lockRotation)
+                        m_rootTransform.rotation *= a_rootRotDelta * a_warpRot;
 
                 }
                 else
@@ -125,7 +131,15 @@ namespace MxM
                             Physics.gravity.y * a_deltaTime) * a_deltaTime;
                     }
 
-                    m_charController.MoveAndRotate(moveDelta * m_moveScale, a_rootRotDelta * a_warpRot);
+                    if (m_lockRotation)
+                    {
+                        m_charController.Move(moveDelta * m_moveScale);
+                    }
+                    else
+                    {
+                        m_charController.MoveAndRotate(moveDelta * m_moveScale, a_rootRotDelta * a_warpRot);
+                    }
+                    
                 }
             }
         }
