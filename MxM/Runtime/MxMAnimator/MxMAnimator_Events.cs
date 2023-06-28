@@ -236,12 +236,12 @@ namespace MxM
                                             Vector3 rootPosition = m_animationRoot.position;
 
                                             //determine the scale and apply it.
-                                            Vector3 VectorToCurrentContact_Local = m_animationRoot.InverseTransformPoint(m_currentEventRootWorld.Position - rootPosition);
-                                            Vector3 VectorToDesiredContact_Local = m_animationRoot.InverseTransformPoint(m_desiredEventRootWorld.Position - rootPosition);
+                                            float vectorToCurrentContactMagnitude_Local = m_animationRoot.InverseTransformPoint(m_currentEventRootWorld.Position - rootPosition).magnitude;
+                                            float vectorToDesiredContactMagnitude_Local = m_animationRoot.InverseTransformPoint(m_desiredEventRootWorld.Position - rootPosition).magnitude;
 
-                                            if (VectorToDesiredContact_Local.z > Mathf.Epsilon || VectorToDesiredContact_Local.z < -Mathf.Epsilon)
+                                            if (vectorToDesiredContactMagnitude_Local > Mathf.Epsilon)
                                             {
-                                                DesiredPlaybackSpeed = Mathf.Clamp(Mathf.Abs(VectorToCurrentContact_Local.z / VectorToDesiredContact_Local.z),
+                                                DesiredPlaybackSpeed = Mathf.Clamp(Mathf.Abs(vectorToCurrentContactMagnitude_Local / vectorToDesiredContactMagnitude_Local),
                                                     m_minWarpTimeScaling, m_maxWarpTimeScaling);
                                             }
                                         }
@@ -1001,15 +1001,12 @@ namespace MxM
                     Vector3 rootPosition = m_animationRoot.position;
 
                     //determine the scale and apply it.
-                    Vector3 VectorToCurrentContact_Local = m_animationRoot.InverseTransformPoint(m_currentEventRootWorld.Position - rootPosition);
-                    Vector3 VectorToDesiredContact_Local = m_animationRoot.InverseTransformPoint(m_desiredEventRootWorld.Position - rootPosition);
+                    float vectorToCurrentContactMagnitudeLocal = m_animationRoot.InverseTransformPoint(m_currentEventRootWorld.Position - rootPosition).magnitude;
+                    float vectorToDesiredContactMagnitudeLocal = m_animationRoot.InverseTransformPoint(m_desiredEventRootWorld.Position - rootPosition).magnitude;
 
-                    if (VectorToDesiredContact_Local.z > Mathf.Epsilon || VectorToDesiredContact_Local.z < -Mathf.Epsilon)
+                    if (vectorToDesiredContactMagnitudeLocal > Mathf.Epsilon)
                     {
-                        //DesiredPlaybackSpeed = Mathf.Clamp(Mathf.Abs(VectorToCurrentContact_Local.z / VectorToDesiredContact_Local.z),
-                        //    m_minWarpTimeScaling, m_maxWarpTimeScaling);
-
-                        m_eventSpeedMod = Mathf.Clamp(Mathf.Abs(VectorToCurrentContact_Local.z / VectorToDesiredContact_Local.z),
+                        m_eventSpeedMod = Mathf.Clamp(Mathf.Abs(vectorToCurrentContactMagnitudeLocal / vectorToDesiredContactMagnitudeLocal),
                             m_minWarpTimeScaling, m_maxWarpTimeScaling);
                     }
                 }
@@ -1024,7 +1021,7 @@ namespace MxM
             }
         }
         
-         public (AnimationClip, float) SourceAnimationFromMxMEvent(MxMEventDefinition a_eventDefinition, ETags a_overrideRequireTags = ETags.DoNotUse)
+        public (AnimationClip, float) SourceAnimationFromMxMEvent(MxMEventDefinition a_eventDefinition, ETags a_overrideRequireTags = ETags.DoNotUse)
         {
             if (a_eventDefinition == null)
                 return (null, 0.0f);

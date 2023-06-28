@@ -2951,7 +2951,7 @@ namespace MxM
                 SwapAnimData(a_animDataId, a_startPoseId);
             }
 
-            if (a_animDataId > 0 && a_animDataId < m_animData.Length)
+            if (a_animDataId >= 0 && a_animDataId < m_animData.Length)
             {
                 MxMAnimData animData = m_animData[a_animDataId];
 
