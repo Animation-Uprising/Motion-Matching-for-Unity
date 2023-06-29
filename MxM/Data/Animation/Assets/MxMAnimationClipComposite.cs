@@ -138,6 +138,7 @@ namespace MxMEditor
                 AfterClips = new List<AnimationClip>(a_copy.AfterClips);
             }
 
+            CompositeName = a_copy.CompositeName;
             Looping= a_copy.Looping;
             IgnoreEdges = a_copy.IgnoreEdges;
             ExtrapolateTrajectory = a_copy.ExtrapolateTrajectory;

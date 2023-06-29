@@ -128,10 +128,12 @@ namespace MxM
 
             GlobalTags = a_copy.GlobalTags;
             GlobalFavourTags = a_copy.GlobalFavourTags;
-     
+
 #if UNITY_EDITOR
             if (a_mirrored)
             {
+                BlendSpaceName = a_copy.BlendSpaceName + "_MIRROR";
+                
                 m_clips = new List<AnimationClip>(a_copy.m_clips.Count + 1);
                 foreach (AnimationClip clip in a_copy.m_clips)
                 {
@@ -141,6 +143,7 @@ namespace MxM
             else
 #endif
             {
+                BlendSpaceName = a_copy.BlendSpaceName;
                 m_clips = new List<AnimationClip>(a_copy.m_clips);
             }
 

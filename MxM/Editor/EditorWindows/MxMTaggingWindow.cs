@@ -2802,6 +2802,8 @@ namespace MxMEditor
                 
                 UpdateAutoZoom();
                 m_targetMxMAnim.VerifyData();
+                
+                SelectFirstEventIfAvailable();
 
                 Repaint();
             }
@@ -3010,7 +3012,7 @@ namespace MxMEditor
 
         //===========================================================================================
         /**
-        *  @brief
+        *  @brief 
         *         
         *********************************************************************************************/
         public void SelectEvent(EventMarker _event, float _time)
@@ -3020,11 +3022,31 @@ namespace MxMEditor
 
             m_selectEvent = _event;
             m_eventSelected = true;
+            m_selectEvent.Selected = true;
 
             InitializeGenericRigData();
 
             m_curTime = _time;
             Repaint();
+        }
+        
+        //===========================================================================================
+        /**
+        *  @brief If an event exists in the animation, this function will automatically select it. If
+        * there are multiple it will simply select the first one. This is called when new animation
+        * data is set as most of the time the user will select an event when changing animations
+        *         
+        *********************************************************************************************/
+        private void SelectFirstEventIfAvailable()
+        {
+            if (m_targetMxMAnim.EventMarkers.Count == 0)
+                return;
+
+            EventMarker eventMarker = m_targetMxMAnim.EventMarkers[0];
+            if (eventMarker != null)
+            {
+                SelectEvent(eventMarker, eventMarker.EventTime);
+            }
         }
 
         //===========================================================================================
