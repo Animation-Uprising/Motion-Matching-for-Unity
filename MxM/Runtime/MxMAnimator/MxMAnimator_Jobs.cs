@@ -23,17 +23,15 @@ namespace MxM
         //Job Data
         private NativeArray<float> m_poseCosts;
         private NativeArray<float> m_trajCosts;
-        private NativeArray<int> m_chosenPoseIds;
-        private NativeArray<float> m_chosenPoseCosts;
+        private NativeArray<int> m_chosenPoseId;
+
         private delegate JobHandle GenerateTrajectoryJob(int a_numPoses);
         private delegate JobHandle GeneratePoseJob(int a_numPoses);
         private GenerateTrajectoryJob m_trajJobDelegate;
         private GeneratePoseJob m_poseJobDelegate;
         private JobHandle m_poseJobHandle;
         private JobHandle m_trajJobHandle;
-        private JobHandle m_minimaJobHandle;
-        private const int k_minimaBatchSize = 64;
-
+        
         private const int k_scheduleBatchSize = 8; //Change this value to change how often MxMAnimator jobs are batched.
 
         //============================================================================================
@@ -110,7 +108,6 @@ namespace MxM
         {
             m_poseJobHandle.Complete();
             m_trajJobHandle.Complete();
-            m_minimaJobHandle.Complete();
         }
 
         //============================================================================================
@@ -1814,14 +1811,13 @@ namespace MxM
         *  @return JobHandle - a handle to the scheduled job
         *         
         *********************************************************************************************/
-        private JobHandle GenerateMinimaJob(int a_currentPoseId, bool a_enforceClipChange, int a_numPoses)
+        private int ComputeMinimaJob(int a_currentPoseId, bool a_enforceClipChange, int a_numPoses)
         {
             if (a_enforceClipChange)
             {
                 if (m_favourCurrentPose)
                 {
-                    int usedPoseId;
-                    if (CurrentNativeAnimData.UsedPoseIdMap.TryGetValue(a_currentPoseId, out usedPoseId))
+                    if (CurrentNativeAnimData.UsedPoseIdMap.TryGetValue(a_currentPoseId, out var usedPoseId))
                     {
                         m_poseCosts[usedPoseId] *= m_currentPoseFavour;
                         m_trajCosts[usedPoseId] *= m_currentPoseFavour;
@@ -1836,13 +1832,12 @@ namespace MxM
                         TrajCosts = m_trajCosts,
                         PoseFavour = CurrentNativeAnimData.FavourPacked,
                         PoseClipIds = CurrentNativeAnimData.ClipIdsPacked,
-                        ChosenPoseId = m_chosenPoseIds,
-                        ChosenPoseCost = m_chosenPoseCosts,
                         CurrentClipId = m_chosenPose.PrimaryClipId,
-                        BatchSize = k_minimaBatchSize
+                        ChosenPoseId = m_chosenPoseId
                     };
 
-                    return minimaJob.ScheduleBatch(a_numPoses, k_minimaBatchSize, m_minimaJobHandle);
+                    minimaJob.Run();
+                    return m_chosenPoseId[0];
 
                 }
                 else
@@ -1862,12 +1857,10 @@ namespace MxM
                                     CurrentClipId = m_chosenPose.PrimaryClipId,
                                     FavourTags = FavourTags,
                                     FavourMultiplier = m_favourMultiplier,
-                                    ChosenPoseId = m_chosenPoseIds,
-                                    ChosenPoseCost = m_chosenPoseCosts,
-                                    BatchSize = k_minimaBatchSize
+                                    ChosenPoseId = m_chosenPoseId
                                 };
 
-                                return minimaJob.ScheduleBatch(a_numPoses, k_minimaBatchSize, m_minimaJobHandle);
+                                return m_chosenPoseId[0];
                             }
                         case EFavourTagMethod.Inclusive:
                             {
@@ -1881,12 +1874,11 @@ namespace MxM
                                     CurrentClipId = m_chosenPose.PrimaryClipId,
                                     FavourTags = FavourTags,
                                     FavourMultiplier = m_favourMultiplier,
-                                    ChosenPoseId = m_chosenPoseIds,
-                                    ChosenPoseCost = m_chosenPoseCosts,
-                                    BatchSize = k_minimaBatchSize
+                                    ChosenPoseId = m_chosenPoseId
                                 };
-
-                                return minimaJob.ScheduleBatch(a_numPoses, k_minimaBatchSize, m_minimaJobHandle);
+                                
+                                minimaJob.Run();
+                                return m_chosenPoseId[0];
                             }
                         case EFavourTagMethod.Stacking:
                             {
@@ -1900,20 +1892,18 @@ namespace MxM
                                     CurrentClipId = m_chosenPose.PrimaryClipId,
                                     FavourTags = FavourTags,
                                     FavourMultiplier = m_favourMultiplier,
-                                    ChosenPoseId = m_chosenPoseIds,
-                                    ChosenPoseCost = m_chosenPoseCosts,
-                                    BatchSize = k_minimaBatchSize
+                                    ChosenPoseId = m_chosenPoseId
                                 };
-
-                                return minimaJob.ScheduleBatch(a_numPoses, k_minimaBatchSize, m_minimaJobHandle);
+                                
+                                minimaJob.Run();
+                                return m_chosenPoseId[0];
                             }
                     }
                 }
             }
             else
             {
-                int usedPoseId;
-                if (CurrentNativeAnimData.UsedPoseIdMap.TryGetValue(a_currentPoseId, out usedPoseId))
+                if (CurrentNativeAnimData.UsedPoseIdMap.TryGetValue(a_currentPoseId, out var usedPoseId))
                 {
                     m_poseCosts[usedPoseId] *= m_currentPoseFavour;
                 }
@@ -1925,12 +1915,11 @@ namespace MxM
                         PoseCosts = m_poseCosts,
                         TrajCosts = m_trajCosts,
                         PoseFavour = CurrentNativeAnimData.FavourPacked,
-                        ChosenPoseId = m_chosenPoseIds,
-                        ChosenPoseCost = m_chosenPoseCosts,
-                        BatchSize = k_minimaBatchSize
+                        ChosenPoseId = m_chosenPoseId
                     };
-
-                    return minimaJob.ScheduleBatch(a_numPoses, k_minimaBatchSize, m_minimaJobHandle);
+                    
+                    minimaJob.Run();
+                    return m_chosenPoseId[0];
                 }
                 else
                 {
@@ -1947,12 +1936,11 @@ namespace MxM
                                     PoseFavourTags = CurrentNativeAnimData.FavourTagsPacked,
                                     FavourTags = FavourTags,
                                     FavourMultiplier = m_favourMultiplier,
-                                    ChosenPoseId = m_chosenPoseIds,
-                                    ChosenPoseCost = m_chosenPoseCosts,
-                                    BatchSize = k_minimaBatchSize
+                                    ChosenPoseId = m_chosenPoseId
                                 };
 
-                                return minimaJob.ScheduleBatch(a_numPoses, k_minimaBatchSize, m_minimaJobHandle);
+                                minimaJob.Run();
+                                return m_chosenPoseId[0];
                             }
                         case EFavourTagMethod.Inclusive:
                             {
@@ -1964,12 +1952,11 @@ namespace MxM
                                     PoseFavourTags = CurrentNativeAnimData.FavourTagsPacked,
                                     FavourTags = FavourTags,
                                     FavourMultiplier = m_favourMultiplier,
-                                    ChosenPoseId = m_chosenPoseIds,
-                                    ChosenPoseCost = m_chosenPoseCosts,
-                                    BatchSize = k_minimaBatchSize
+                                    ChosenPoseId = m_chosenPoseId
                                 };
 
-                                return minimaJob.ScheduleBatch(a_numPoses, k_minimaBatchSize, m_minimaJobHandle);
+                                minimaJob.Run();
+                                return m_chosenPoseId[0];
                             }
                         case EFavourTagMethod.Stacking:
                             {
@@ -1981,12 +1968,11 @@ namespace MxM
                                     PoseFavourTags = CurrentNativeAnimData.FavourTagsPacked,
                                     FavourTags = FavourTags,
                                     FavourMultiplier = m_favourMultiplier,
-                                    ChosenPoseId = m_chosenPoseIds,
-                                    ChosenPoseCost = m_chosenPoseCosts,
-                                    BatchSize = k_minimaBatchSize
+                                    ChosenPoseId = m_chosenPoseId
                                 };
 
-                                return minimaJob.ScheduleBatch(a_numPoses, k_minimaBatchSize, m_minimaJobHandle);
+                                minimaJob.Run();
+                                return m_chosenPoseId[0];
                             }
                     }
                 }

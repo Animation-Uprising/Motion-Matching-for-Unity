@@ -74,7 +74,5 @@ namespace MxMEditor
             }
 #endif
         }
-
-
     }//End of class: CompositeCategory
 }//End of namespace: MxMEditor

@@ -23,7 +23,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct FindMinima : IJobParallelForBatch
+    public struct FindMinima : IJob
     {
         [ReadOnly]
         public NativeArray<float> PoseCosts;
@@ -34,25 +34,18 @@ namespace MxM
         [ReadOnly]
         public NativeArray<float> PoseFavour;
 
-        [NativeDisableParallelForRestriction]
-        [WriteOnly]
+        //Output
+        [WriteOnly] 
         public NativeArray<int> ChosenPoseId;
-
-        [NativeDisableParallelForRestriction]
-        [WriteOnly]
-        public NativeArray<float> ChosenPoseCost;
-
-        [ReadOnly]
-        public int BatchSize;
-
-        public void Execute(int startIndex, int count)
+        
+        public void Execute()
         {
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            for (int i = 0; i < count; ++i)
+            int iterations = PoseCosts.Length;
+            for (int index = 0; index < iterations; ++index)
             {
-                int index = startIndex + i;
                 float goalCost = (PoseCosts[index] + TrajCosts[index]) * PoseFavour[index];
 
                 if (goalCost < bestCost)
@@ -61,11 +54,8 @@ namespace MxM
                     bestPoseId = index;
                 }
             }
-
-            int batchId = startIndex / BatchSize;
-
-            ChosenPoseId[batchId] = bestPoseId;
-            ChosenPoseCost[batchId] = bestCost;
+            
+            ChosenPoseId[0] = bestPoseId;
         }
     }//End of struct: FindMinima
 
@@ -80,7 +70,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct FindMinima_EnforceClipChange : IJobParallelForBatch
+    public struct FindMinima_EnforceClipChange : IJob
     {
         //Output
         [ReadOnly]
@@ -98,26 +88,18 @@ namespace MxM
         [ReadOnly]
         public int CurrentClipId;
 
-        [ReadOnly]
-        public int BatchSize;
-
-        [NativeDisableParallelForRestriction]
+        //Output
         [WriteOnly]
         public NativeArray<int> ChosenPoseId;
 
-        [NativeDisableParallelForRestriction]
-        [WriteOnly]
-        public NativeArray<float> ChosenPoseCost;
-
-        public void Execute(int startIndex, int count)
+        public void Execute()
         {
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            for (int i = 0; i < count; ++i)
+            int iterations = PoseCosts.Length;
+            for (int index = 0; index < iterations; ++index)
             {
-                int index = startIndex + i;
-
                 if (CurrentClipId == PoseClipIds[index])
                     continue;
 
@@ -130,11 +112,7 @@ namespace MxM
                 }
             }
 
-
-            int batchId = startIndex / BatchSize;
-
-            ChosenPoseId[batchId] = bestPoseId;
-            ChosenPoseCost[batchId] = bestCost;
+            ChosenPoseId[0] = bestPoseId;
         }
     }//End of struct: FindMinima_EnforceClipChange
 
@@ -149,7 +127,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct FindMinima_FavourExclusive : IJobParallelForBatch
+    public struct FindMinima_FavourExclusive : IJob
     {
         //Input
         [ReadOnly]
@@ -163,34 +141,25 @@ namespace MxM
 
         [ReadOnly]
         public NativeArray<ETags> PoseFavourTags;
-
-        [ReadOnly]
-        public int BatchSize;
-
-        //Output
-        [NativeDisableParallelForRestriction]
-        [WriteOnly]
-        public NativeArray<int> ChosenPoseId;
-
-        [NativeDisableParallelForRestriction]
-        [WriteOnly]
-        public NativeArray<float> ChosenPoseCost;
-
+        
         [ReadOnly]
         public ETags FavourTags;
 
         [ReadOnly]
         public float FavourMultiplier;
+        
+        //Output
+        [WriteOnly]
+        public NativeArray<int> ChosenPoseId;
 
-        public void Execute(int startIndex, int count)
+        public void Execute()
         {
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            for (int i = 0; i < count; ++i)
+            int iterations = PoseCosts.Length;
+            for (int index = 0; index < iterations; ++index)
             {
-                int index = startIndex + i;
-
                 float curCost = (PoseCosts[index] + TrajCosts[index]) * PoseFavour[index];
 
                 if ((PoseFavourTags[index] & FavourTags) == FavourTags)
@@ -203,10 +172,7 @@ namespace MxM
                 }
             }
 
-            int batchId = startIndex / BatchSize;
-
-            ChosenPoseId[batchId] = bestPoseId;
-            ChosenPoseCost[batchId] = bestCost;
+            ChosenPoseId[0] = bestPoseId;
         }
     }//End of struct: FindMinima_Favour
 
@@ -221,7 +187,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct FindMinima_FavourExclusive_EnforceClipChange : IJobParallelForBatch
+    public struct FindMinima_FavourExclusive_EnforceClipChange : IJob
     {
         //Input
         [ReadOnly]
@@ -237,9 +203,6 @@ namespace MxM
         public NativeArray<ETags> PoseFavourTags;
 
         [ReadOnly]
-        public int BatchSize;
-
-        [ReadOnly]
         public NativeArray<int> PoseClipIds;
 
         [ReadOnly]
@@ -252,23 +215,17 @@ namespace MxM
         public float FavourMultiplier;
 
         //Output
-        [NativeDisableParallelForRestriction]
         [WriteOnly]
         public NativeArray<int> ChosenPoseId;
 
-        [NativeDisableParallelForRestriction]
-        [WriteOnly]
-        public NativeArray<float> ChosenPoseCost;
-
-        public void Execute(int startIndex, int count)
+        public void Execute()
         {
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            for (int i = 0; i < count; ++i)
+            int iterations = PoseCosts.Length;
+            for (int index = 0; index < iterations; ++index)
             {
-                int index = startIndex + i;
-
                 if (CurrentClipId == PoseClipIds[index])
                     continue;
 
@@ -284,10 +241,7 @@ namespace MxM
                 }
             }
 
-            int batchId = startIndex / BatchSize;
-
-            ChosenPoseId[batchId] = bestPoseId;
-            ChosenPoseCost[batchId] = bestCost;
+            ChosenPoseId[0] = bestPoseId;
         }
     }//End of struct: FindMinima_Favour_EnforceClipChange
 
@@ -302,7 +256,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct FindMinima_FavourInclusive : IJobParallelForBatch
+    public struct FindMinima_FavourInclusive : IJob
     {
         //Input
         [ReadOnly]
@@ -316,34 +270,25 @@ namespace MxM
 
         [ReadOnly]
         public NativeArray<ETags> PoseFavourTags;
-
-        [ReadOnly]
-        public int BatchSize;
-
-        //Output
-        [NativeDisableParallelForRestriction]
-        [WriteOnly]
-        public NativeArray<int> ChosenPoseId;
-
-        [NativeDisableParallelForRestriction]
-        [WriteOnly]
-        public NativeArray<float> ChosenPoseCost;
-
+        
         [ReadOnly]
         public ETags FavourTags;
 
         [ReadOnly]
         public float FavourMultiplier;
 
-        public void Execute(int startIndex, int count)
+        //Output
+        [WriteOnly]
+        public NativeArray<int> ChosenPoseId;
+
+        public void Execute()
         {
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            for (int i = 0; i < count; ++i)
+            int iterations = PoseCosts.Length;
+            for (int index = 0; index < iterations; ++index)
             {
-                int index = startIndex + i;
-
                 float curCost = (PoseCosts[index] + TrajCosts[index]) * PoseFavour[index];
 
                 if ((PoseFavourTags[index] & FavourTags) != 0)
@@ -356,10 +301,7 @@ namespace MxM
                 }
             }
 
-            int batchId = startIndex / BatchSize;
-
-            ChosenPoseId[batchId] = bestPoseId;
-            ChosenPoseCost[batchId] = bestCost;
+            ChosenPoseId[0] = bestPoseId;
         }
     }//End of struct: FindMinima_FavourInclusive
 
@@ -374,7 +316,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct FindMinima_FavourInclusive_EnforceClipChange : IJobParallelForBatch
+    public struct FindMinima_FavourInclusive_EnforceClipChange : IJob
     {
         //Input
         [ReadOnly]
@@ -388,9 +330,7 @@ namespace MxM
 
         [ReadOnly]
         public NativeArray<ETags> PoseFavourTags;
-
-        [ReadOnly]
-        public int BatchSize;
+        
 
         [ReadOnly]
         public NativeArray<int> PoseClipIds;
@@ -405,23 +345,17 @@ namespace MxM
         public float FavourMultiplier;
 
         //Output
-        [NativeDisableParallelForRestriction]
         [WriteOnly]
         public NativeArray<int> ChosenPoseId;
-
-        [NativeDisableParallelForRestriction]
-        [WriteOnly]
-        public NativeArray<float> ChosenPoseCost;
-
-        public void Execute(int startIndex, int count)
+        
+        public void Execute()
         {
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            for (int i = 0; i < count; ++i)
+            int iterations = PoseCosts.Length;
+            for (int index = 0; index < iterations; ++index)
             {
-                int index = startIndex + i;
-
                 if (CurrentClipId == PoseClipIds[index])
                     continue;
 
@@ -437,10 +371,7 @@ namespace MxM
                 }
             }
 
-            int batchId = startIndex / BatchSize;
-
-            ChosenPoseId[batchId] = bestPoseId;
-            ChosenPoseCost[batchId] = bestCost;
+            ChosenPoseId[0] = bestPoseId;
         }
     }//End of struct: FindMinima_FavourInclusive_EnforceClipChange
 
@@ -455,7 +386,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct FindMinima_FavourStacking : IJobParallelForBatch
+    public struct FindMinima_FavourStacking : IJob
     {
         //Input
         [ReadOnly]
@@ -469,34 +400,25 @@ namespace MxM
 
         [ReadOnly]
         public NativeArray<ETags> PoseFavourTags;
-
-        [ReadOnly]
-        public int BatchSize;
-
-        //Output
-        [NativeDisableParallelForRestriction]
-        [WriteOnly]
-        public NativeArray<int> ChosenPoseId;
-
-        [NativeDisableParallelForRestriction]
-        [WriteOnly]
-        public NativeArray<float> ChosenPoseCost;
-
+        
         [ReadOnly]
         public ETags FavourTags;
 
         [ReadOnly]
         public float FavourMultiplier;
 
-        public void Execute(int startIndex, int count)
+        //Output
+        [WriteOnly]
+        public NativeArray<int> ChosenPoseId;
+
+        public void Execute()
         {
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            for (int i = 0; i < count; ++i)
+            int iterations = PoseCosts.Length;
+            for (int index = 0; index < iterations; ++index)
             {
-                int index = startIndex + i;
-
                 float curCost = (PoseCosts[index] + TrajCosts[index]) * PoseFavour[index];
 
                 ETags activeTags = PoseFavourTags[index] & FavourTags;
@@ -514,10 +436,7 @@ namespace MxM
                 }
             }
 
-            int batchId = startIndex / BatchSize;
-
-            ChosenPoseId[batchId] = bestPoseId;
-            ChosenPoseCost[batchId] = bestCost;
+            ChosenPoseId[0] = bestPoseId;
         }
     }//End of struct: FindMinima_FavourStacking
 
@@ -532,7 +451,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct FindMinima_FavourStacking_EnforceClipChange : IJobParallelForBatch
+    public struct FindMinima_FavourStacking_EnforceClipChange : IJob
     {
         //Input
         [ReadOnly]
@@ -546,9 +465,7 @@ namespace MxM
 
         [ReadOnly]
         public NativeArray<ETags> PoseFavourTags;
-
-        [ReadOnly]
-        public int BatchSize;
+        
 
         [ReadOnly]
         public NativeArray<int> PoseClipIds;
@@ -563,23 +480,17 @@ namespace MxM
         public float FavourMultiplier;
 
         //Output
-        [NativeDisableParallelForRestriction]
         [WriteOnly]
         public NativeArray<int> ChosenPoseId;
 
-        [NativeDisableParallelForRestriction]
-        [WriteOnly]
-        public NativeArray<float> ChosenPoseCost;
-
-        public void Execute(int startIndex, int count)
+        public void Execute()
         {
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            for (int i = 0; i < count; ++i)
+            int iterations = PoseCosts.Length;
+            for (int index = 0; index < iterations; ++index)
             {
-                int index = startIndex + i;
-
                 if (CurrentClipId == PoseClipIds[index])
                     continue;
 
@@ -599,11 +510,7 @@ namespace MxM
                 }
             }
 
-            int batchId = startIndex / BatchSize;
-
-            ChosenPoseId[batchId] = bestPoseId;
-            ChosenPoseCost[batchId] = bestCost;
+            ChosenPoseId[0] = bestPoseId;
         }
     }//End of struct: FindMinima_FavourStacking_EnforceClipChange
-
 }//End of namespace: MxM

@@ -546,11 +546,8 @@ namespace MxM
             if (m_trajCosts.IsCreated)
                 m_trajCosts.Dispose();
 
-            if (m_chosenPoseIds.IsCreated)
-                m_chosenPoseIds.Dispose();
-
-            if (m_chosenPoseCosts.IsCreated)
-                m_chosenPoseCosts.Dispose();
+            if (m_chosenPoseId.IsCreated)
+                m_chosenPoseId.Dispose();
 
             if (m_inertialBlendModule != null)
                 m_inertialBlendModule.DisposeNativeData();
@@ -874,17 +871,9 @@ namespace MxM
             //Setup local native arrays for job calculation cost results
             m_poseCosts = new NativeArray<float>(totalMaxUsedPoseCount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
             m_trajCosts = new NativeArray<float>(totalMaxUsedPoseCount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
-
-            //The minima job runs on batches that match the number of available threads. These native arrays are used to sotre the 
-            //chosen poseId for each batch and then the minima of those minima is selected on the main thread.
-            int minimaJobBatches = (totalMaxUsedPoseCount + k_minimaBatchSize - 1) / k_minimaBatchSize;
-            m_chosenPoseIds = new NativeArray<int>(minimaJobBatches, Allocator.Persistent, NativeArrayOptions.ClearMemory);
-            m_chosenPoseCosts = new NativeArray<float>(minimaJobBatches, Allocator.Persistent);
+            m_chosenPoseId = new NativeArray<int>(1, Allocator.Persistent, NativeArrayOptions.ClearMemory);
 
             SetupJobDelegates();
-
-            for (int i = 0; i < minimaJobBatches; ++i)
-                m_chosenPoseCosts[i] = float.MaxValue;
 
             if(m_calibrationOverride != null)
             {
@@ -1436,31 +1425,15 @@ namespace MxM
             m_trajJobHandle.Complete();
 
             //Schedule the minima job
-            m_minimaJobHandle = GenerateMinimaJob(m_curInterpolatedPose.PoseId,
+            int chosenPoseId = ComputeMinimaJob(m_curInterpolatedPose.PoseId,
                 m_enforcePoseSearch, CurrentNativeAnimData.UsedPoseIds.Length);
-
-            int bestPoseId = m_curInterpolatedPose.PoseId;
-
-            //Complete the minima job 
-            m_minimaJobHandle.Complete();
-
-            int chosenPoseId = 0;
-            float chosenPoseCost = float.MaxValue;
-            for (int i = 0; i < CurrentNativeAnimData.MinimaBatchCount; ++i)
-            {
-                if (m_chosenPoseCosts[i] < chosenPoseCost)
-                {
-                    chosenPoseId = m_chosenPoseIds[i];
-                    chosenPoseCost = m_chosenPoseCosts[i];
-                }
-            }
-
+            
 #if UNITY_EDITOR
-            m_lastChosenCost = chosenPoseCost;
             m_lastPoseCost = m_poseCosts[chosenPoseId];
             m_lastTrajectoryCost = m_trajCosts[chosenPoseId];
+            m_lastChosenCost = m_lastPoseCost + m_lastTrajectoryCost;
 #endif
-            bestPoseId = CurrentNativeAnimData.UsedPoseIds[chosenPoseId];
+            int bestPoseId = CurrentNativeAnimData.UsedPoseIds[chosenPoseId];
 
             ref PoseData bestPose = ref CurrentAnimData.Poses[bestPoseId];
 
