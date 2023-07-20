@@ -43,7 +43,7 @@ namespace MxM
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            int iterations = PoseCosts.Length;
+            int iterations = PoseFavour.Length;
             for (int index = 0; index < iterations; ++index)
             {
                 float goalCost = (PoseCosts[index] + TrajCosts[index]) * PoseFavour[index];
@@ -97,7 +97,7 @@ namespace MxM
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            int iterations = PoseCosts.Length;
+            int iterations = PoseFavour.Length;
             for (int index = 0; index < iterations; ++index)
             {
                 if (CurrentClipId == PoseClipIds[index])
@@ -157,7 +157,7 @@ namespace MxM
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            int iterations = PoseCosts.Length;
+            int iterations = PoseFavour.Length;
             for (int index = 0; index < iterations; ++index)
             {
                 float curCost = (PoseCosts[index] + TrajCosts[index]) * PoseFavour[index];
@@ -223,7 +223,7 @@ namespace MxM
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            int iterations = PoseCosts.Length;
+            int iterations = PoseFavour.Length;
             for (int index = 0; index < iterations; ++index)
             {
                 if (CurrentClipId == PoseClipIds[index])
@@ -286,7 +286,7 @@ namespace MxM
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            int iterations = PoseCosts.Length;
+            int iterations = PoseFavour.Length;
             for (int index = 0; index < iterations; ++index)
             {
                 float curCost = (PoseCosts[index] + TrajCosts[index]) * PoseFavour[index];
@@ -353,7 +353,7 @@ namespace MxM
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            int iterations = PoseCosts.Length;
+            int iterations = PoseFavour.Length;
             for (int index = 0; index < iterations; ++index)
             {
                 if (CurrentClipId == PoseClipIds[index])
@@ -416,7 +416,7 @@ namespace MxM
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            int iterations = PoseCosts.Length;
+            int iterations = PoseFavour.Length;
             for (int index = 0; index < iterations; ++index)
             {
                 float curCost = (PoseCosts[index] + TrajCosts[index]) * PoseFavour[index];
@@ -488,7 +488,7 @@ namespace MxM
             float bestCost = float.MaxValue;
             int bestPoseId = 0;
 
-            int iterations = PoseCosts.Length;
+            int iterations = PoseFavour.Length;
             for (int index = 0; index < iterations; ++index)
             {
                 if (CurrentClipId == PoseClipIds[index])
