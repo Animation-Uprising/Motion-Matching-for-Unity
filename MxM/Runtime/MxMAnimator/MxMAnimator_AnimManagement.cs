@@ -276,15 +276,13 @@ namespace MxM
                 var clipPlayable = AnimationClipPlayable.Create(MxMPlayableGraph, clipB);
                 clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
                 clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
-
                 
-
                 float startTime = a_pose.Time + m_timeSinceMotionChosen  + a_timeOffset;
-                playableState.TargetPlayable.SetTime(startTime - composite.ClipALength);
-                playableState.TargetPlayable.SetTime(startTime - composite.ClipALength);
-                playableState.TargetPlayable.SetSpeed(m_playbackSpeed * a_speedMod * composite.PlaybackSpeed);
+                clipPlayable.SetTime(startTime - composite.ClipALength);
+                clipPlayable.SetTime(startTime - composite.ClipALength);
+                clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * composite.PlaybackSpeed);
 
-                m_animationMixer.ConnectInput(a_slotId, playableState.TargetPlayable, 0, p_currentDeltaTime + Mathf.Epsilon);
+                m_animationMixer.ConnectInput(a_slotId, clipPlayable, 0, p_currentDeltaTime + Mathf.Epsilon);
                 
                 playableState.TargetPlayable = clipPlayable;
             }
