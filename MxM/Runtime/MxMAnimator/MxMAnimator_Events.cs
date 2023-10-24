@@ -348,7 +348,15 @@ namespace MxM
                     break;
             }
 
-            m_timeSinceEventTriggered += p_currentDeltaTime * m_playbackSpeed * m_eventSpeedMod;
+            int currentAnimId = CurrentInterpolatedPose.AnimId;
+            float clipSpeed = 1.0f;
+            if (currentAnimId > -1 && currentAnimId < CurrentAnimData.ClipsData.Length)
+            {
+                clipSpeed = CurrentAnimData.ClipsData[CurrentInterpolatedPose.AnimId].PlaybackSpeed;
+            }
+
+            m_timeSinceEventTriggered += p_currentDeltaTime * m_playbackSpeed * m_eventSpeedMod * clipSpeed;
+
         }
 
         //============================================================================================

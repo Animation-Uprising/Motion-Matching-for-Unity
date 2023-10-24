@@ -3039,8 +3039,12 @@ namespace MxMEditor
         *********************************************************************************************/
         private void SelectFirstEventIfAvailable()
         {
-            if (m_targetMxMAnim.EventMarkers.Count == 0)
+            if ((m_targetMxMAnim == null)
+                || (m_targetMxMAnim.EventMarkers == null)
+                || (m_targetMxMAnim.EventMarkers.Count == 0))
+            {
                 return;
+            }
 
             EventMarker eventMarker = m_targetMxMAnim.EventMarkers[0];
             if (eventMarker != null)
