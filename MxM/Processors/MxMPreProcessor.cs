@@ -204,7 +204,7 @@ namespace MxMEditor
             m_playableGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
 
             var playableOutput = AnimationPlayableOutput.Create(m_playableGraph, "Animation", m_animator);
-            m_animationMixer = AnimationMixerPlayable.Create(m_playableGraph, 1, true);
+            m_animationMixer = AnimationMixerPlayable.Create(m_playableGraph, 1);
             playableOutput.SetSourcePlayable(m_animationMixer);
             m_animationMixer.SetInputWeight(0, 1f);
         }

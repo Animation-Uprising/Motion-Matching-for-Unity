@@ -128,6 +128,7 @@ namespace MxMGameplay
             if (m_enableCollision)
             {
                 m_characterController.Move(a_move);
+                m_characterController.SimpleMove(a_move);
             }
             else
             {

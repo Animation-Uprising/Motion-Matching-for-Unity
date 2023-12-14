@@ -1460,7 +1460,7 @@ namespace MxMEditor
             EditorUtility.SetDirty(m_data);
             AssetDatabase.SaveAssets();
 
-            string startLocation = AssetDatabase.GetAssetPath(this).Replace(name + ".asset", "");
+            string startLocation = AssetDatabase.GetAssetPath(m_data).Replace(name + ".asset", "");
 
             string fileName = EditorUtility.SaveFilePanelInProject("Export Composite Category", 
                 "MxMAnimationModule", "asset", "Export composite category as", startLocation).Replace(".asset", "");

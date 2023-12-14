@@ -46,6 +46,7 @@ namespace MxM
         private float m_minWarpTimeScaling; //The minimum limit of time scale warping
         private float m_maxWarpTimeScaling; //The maximum limit of time scale warping
         private float m_eventSpeedMod = 1f; //The current speed modification to events to account for time warping
+        
 
         public ref readonly EventData CurrentEvent { get { return ref m_curEvent; } } //Get a handle to the current event data
         public EEventState CurrentEventState { get { return m_curEventState; } } //Returns the current state of a playing event if there is one.

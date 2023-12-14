@@ -405,7 +405,7 @@ namespace MxM
 
             ref readonly BlendSpaceData blendSpaceData = ref CurrentAnimData.BlendSpaces[a_blendSpaceId];
 
-            AnimationMixerPlayable Mixer = AnimationMixerPlayable.Create(MxMPlayableGraph, blendSpaceData.ClipIds.Length, true);
+            AnimationMixerPlayable Mixer = AnimationMixerPlayable.Create(MxMPlayableGraph, blendSpaceData.ClipIds.Length);
 
             for (int i = 0; i < blendSpaceData.ClipIds.Length; ++i)
             {
@@ -439,7 +439,7 @@ namespace MxM
                 return AnimationMixerPlayable.Null;
             }
 
-            AnimationMixerPlayable Mixer = AnimationMixerPlayable.Create(MxMPlayableGraph, a_blendSpace.Clips.Count, true);
+            AnimationMixerPlayable Mixer = AnimationMixerPlayable.Create(MxMPlayableGraph, a_blendSpace.Clips.Count);
             
             float firstClipLength = a_blendSpace.Clips[0].length;
 

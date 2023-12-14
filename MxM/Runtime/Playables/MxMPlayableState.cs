@@ -11,7 +11,7 @@ using UnityEngine.Playables;
 using UnityEngine.Animations;
 
 namespace MxM
-{
+{ 
     //============================================================================================
     /**
     *  @brief This struct is used to hold data on an MxMPlayable. This is useful for tracking the
@@ -131,12 +131,12 @@ namespace MxM
         *  @brief Sets the status of the Playable State to chosen with the passed pose data
         *  
         *  @param [ref PoseData] a_pose - the pose to set as chosen
+        *  @param [float] a_startAge - Start the pose with an age (i.e. a time offset)
         *         
         *********************************************************************************************/
         public void SetAsChosenWithPose(ref PoseData a_pose, float a_startAge = 0f)
         {
-            Weight = 0f; //This may be wrong, start blend weight of 0?
-            HighestWeight = 0f;
+            HighestWeight = Weight = 0f; //This may be wrong, start blend weight of 0?
             AnimType = a_pose.AnimType;
             AnimId = a_pose.AnimId;
             StartPoseId = a_pose.PoseId;
@@ -144,6 +144,27 @@ namespace MxM
             Age = a_startAge;
             DecayAge = 0f;
             BlendStatus = EBlendStatus.Chosen;
+        }
+        
+        //============================================================================================
+        /**
+        *  @brief Sets the status of the Playable State to chosen with the passed pose data. However,
+        * this version of the function assumes no blending 
+        *
+        *  @param [ref PoseData] a_pose - the pose to set as chosen
+        *  @param [float] a_startAge - Start the pose with an age (i.e. a time offset)
+        *
+        *********************************************************************************************/
+        public void SetAsChosenWithPoseNoBlend(ref PoseData a_pose, float a_startAge = 0f)
+        {
+            HighestWeight = Weight = 1.0f;
+            AnimType = a_pose.AnimType;
+            AnimId = a_pose.AnimId;
+            StartPoseId = a_pose.PoseId;
+            StartTime = a_pose.Time;
+            Age = a_startAge;
+            DecayAge = 0f;
+            BlendStatus = EBlendStatus.Dominant;
         }
 
     }//End of struct: MxMPlayableState

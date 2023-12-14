@@ -377,7 +377,7 @@ namespace MxMEditor
                     playableGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
 
                     var playableOutput = AnimationPlayableOutput.Create(playableGraph, "Animation", previewAnimator);
-                    AnimationMixerPlayable animationMixer = AnimationMixerPlayable.Create(playableGraph, 1, true);
+                    AnimationMixerPlayable animationMixer = AnimationMixerPlayable.Create(playableGraph, 1);
                     playableOutput.SetSourcePlayable(animationMixer);
                     var playableClip = AnimationClipPlayable.Create(playableGraph, PrimaryClip);
                     playableClip.SetApplyFootIK(true);

@@ -97,7 +97,7 @@ namespace MxMEditor
             PlayableGraph playableGraph = PlayableGraph.Create();
             playableGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             var playableOutput = AnimationPlayableOutput.Create(playableGraph, "Animation", animator);
-            var animationMixer = AnimationMixerPlayable.Create(playableGraph, 1, true);
+            var animationMixer = AnimationMixerPlayable.Create(playableGraph, 1);
             playableOutput.SetSourcePlayable(animationMixer);
             
             var clipPlayable = AnimationClipPlayable.Create(playableGraph, targetClip);

@@ -158,8 +158,8 @@ namespace MxM
                     extension.UpdatePhase1();
             }
 
-            if (m_debugCurrentPose)
-                ComputeCurrentPose();
+            //if (m_debugCurrentPose)
+            ComputeCurrentPose();
 
             GenerateGoalTrajectory(p_trajectoryGenerator.GetCurrentGoal());
 

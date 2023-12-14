@@ -198,16 +198,14 @@ namespace MxM
 
                     if (!m_strafe)
                     {
-                        //var displacementVector = Vector3.Lerp(to - from, next - to, 0.5f);
-                        //var displacementVector = to - from;
                         var displacementVector = next - to;
                         desiredOrientation = Vector3.SignedAngle(Vector3.forward, displacementVector, Vector3.up);
                     }
 
                     if (Vector3.SqrMagnitude(to - from) > 0.05f)
                     {
-                        float facingAngle = Mathf.LerpAngle(p_trajFacingAngles[i], desiredOrientation,
-                            1f - math.exp(-m_turnRate * percentage));
+                        float facingAngle = Mathf.LerpAngle(p_trajFacingAngles[i],
+                            desiredOrientation, 1f - math.exp(-m_turnRate * percentage));
 
                         p_trajFacingAngles[i] = facingAngle;
                     }

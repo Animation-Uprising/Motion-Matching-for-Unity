@@ -43,8 +43,7 @@ namespace MxM
                     1f - math.exp(-MoveRate * percentage));
 
                 NewTrajectoryPositions[i] = NewTrajectoryPositions[i - 1] + adjustedTrajectoryDisplacement;
-
-
+                
                 TrajectoryRotations[i] = math.degrees(LerpAngle(math.radians(TrajectoryRotations[i]), math.radians(DesiredOrientation),
                     1f - math.exp(-TurnRate * percentage)));
             }

@@ -414,8 +414,8 @@ namespace MxM
                 }
 
                 if(Strafing || (m_faceDirectionOnIdle && !m_hasInputThisFrame))
-                    desiredOrientation = (Mathf.Atan2(StrafeDirection.x, StrafeDirection.z) * Mathf.Rad2Deg);
-
+                    desiredOrientation = Vector3.SignedAngle(Vector3.forward, StrafeDirection, Vector3.up);
+                
                 //Rotation iteration
                 to = m_newTrajPositions[0];
                 for (int i = 1; i < m_newTrajPositions.Length; ++i)
@@ -431,19 +431,14 @@ namespace MxM
 
                     if (!Strafing)
                     {
-                        //var displacementVector = Vector3.Lerp(to - from, next - to, 0.5f);
-                        //var displacementVector = to - from;
                         var displacementVector = next - to;
                         desiredOrientation = Vector3.SignedAngle(Vector3.forward, displacementVector, Vector3.up);
                     }
 
                     if (Vector3.SqrMagnitude(to - from) > 0.05f)
                     {
-                        // float facingAngle = Mathf.LerpAngle(p_trajFacingAngles[i], desiredOrientation,
-                        //     1f - math.exp(-m_dirBias * percentage * Time.deltaTime));
-
-                        float facingAngle = math.degrees(Mathf.LerpAngle(math.radians(p_trajFacingAngles[i]),
-                            math.radians(desiredOrientation), 1f - math.exp(-m_posBias * percentage)));
+                        float facingAngle = Mathf.LerpAngle(p_trajFacingAngles[i],
+                            desiredOrientation, 1f - math.exp(-m_dirBias * percentage));
                         
                         p_trajFacingAngles[i] = facingAngle;
                       

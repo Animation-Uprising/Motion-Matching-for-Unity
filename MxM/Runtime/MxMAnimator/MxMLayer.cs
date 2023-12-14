@@ -189,7 +189,7 @@ namespace MxM
             ApplyHumanoidFootIK = a_applyFootIk;
             m_playbackSpeed = a_playbackSpeed;
 
-            Mixer = AnimationMixerPlayable.Create(m_playableGraph, a_maxClips, true);
+            Mixer = AnimationMixerPlayable.Create(m_playableGraph, a_maxClips);
             
             var clipPlayable = AnimationClipPlayable.Create(m_playableGraph, PrimaryClip);
             clipPlayable.SetApplyFootIK(ApplyHumanoidFootIK);
@@ -243,7 +243,7 @@ namespace MxM
             ApplyHumanoidFootIK = a_applyFootIk;
             m_playbackSpeed = a_playbackSpeed;
 
-            Mixer = AnimationMixerPlayable.Create(m_playableGraph, a_maxClips, true);
+            Mixer = AnimationMixerPlayable.Create(m_playableGraph, a_maxClips);
 
             m_layerMixer.ConnectInput(Id, Mixer, 0);
 

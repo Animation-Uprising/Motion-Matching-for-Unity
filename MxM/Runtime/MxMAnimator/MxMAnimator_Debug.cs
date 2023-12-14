@@ -26,7 +26,6 @@ namespace MxM
     public partial class MxMAnimator : MonoBehaviour
     {
 #if UNITY_EDITOR
-
         private bool m_updateThisFrame;
         private float m_lastChosenCost;
         private float m_lastPoseCost;
@@ -403,7 +402,7 @@ namespace MxM
                     MxMPlayableGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
 
                     var playableOutput = AnimationPlayableOutput.Create(MxMPlayableGraph, "Animation", p_animator);
-                    m_animationMixer = AnimationMixerPlayable.Create(MxMPlayableGraph, 1, true);
+                    m_animationMixer = AnimationMixerPlayable.Create(MxMPlayableGraph, 1);
                     playableOutput.SetSourcePlayable(m_animationMixer);
                     m_animationMixer.SetInputWeight(0, 1f);
 

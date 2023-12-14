@@ -26,7 +26,8 @@ namespace MxM
     public partial class MxMAnimator : MonoBehaviour
     {
         private List<int> m_activeSlots = null; //A list of inputs to the animation mixer that are active
-
+        private MxMPlayableState m_inertializationAnimState;
+        
         //============================================================================================
         /**
         *  @brief Sets up a pose in a specific input on the Motion Matching mixer playable
@@ -121,8 +122,13 @@ namespace MxM
         {
             for(int i = 0; i < m_activeSlots.Count; ++i)
             {
-                m_animationMixer.SetInputWeight(m_activeSlots[i], 0f);
+                int activeSlotId = m_activeSlots[i];
+
+               // m_animationMixer.GetInput(activeSlotId).Pause(); //Todo: Double check if this even helps
+                m_animationMixer.SetInputWeight(activeSlotId, 0f);
             }
+
+            m_activeSlots.Clear();
         }
         
         //============================================================================================
@@ -142,7 +148,7 @@ namespace MxM
             clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
             clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
             
-            float startTime = a_pose.Time + m_timeSinceMotionChosen + a_timeOffset;
+            float startTime = a_pose.Time + (m_timeSinceMotionChosen + a_timeOffset) * a_speedMod;
             clipPlayable.SetTime(startTime);
             clipPlayable.SetTime(startTime);
             
@@ -167,13 +173,20 @@ namespace MxM
         private void SetupIdleClip(ref PoseData a_pose, float a_speedMod = 1f, float a_timeOffset = 0f)
         {
             m_animationMixer.SetInputWeight(a_pose.PrimaryClipId, 1f);
-            var clipPlayable = m_animationMixer.GetInput(a_pose.PrimaryClipId);
-            clipPlayable.SetTime(a_pose.Time + a_timeOffset);
-            clipPlayable.SetTime(a_pose.Time + a_timeOffset);
+            var clipPlayable = (AnimationClipPlayable)m_animationMixer.GetInput(a_pose.PrimaryClipId);
+            clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
+            clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
             
+            float startTime = a_pose.Time + (a_timeOffset * a_speedMod);
+            clipPlayable.SetTime(startTime);
+            clipPlayable.SetTime(startTime);
             clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod);
+            //clipPlayable.Play();
 
             m_activeSlots.Add(a_pose.PrimaryClipId);
+            
+            m_inertializationAnimState.SetAsChosenWithPoseNoBlend(ref a_pose, m_timeSinceMotionChosen);
+            m_inertializationAnimState.TargetPlayable = clipPlayable;
         }
         
         //============================================================================================
@@ -193,12 +206,12 @@ namespace MxM
             clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
             clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
             
-            float startTime = a_pose.Time + m_timeSinceMotionChosen + a_timeOffset;
+            m_clipSpeedMod = CurrentAnimData.ClipsData[a_pose.AnimId].PlaybackSpeed;
+            float startTime = a_pose.Time + (m_timeSinceMotionChosen + a_timeOffset) * m_clipSpeedMod;
             clipPlayable.SetTime(startTime);
             clipPlayable.SetTime(startTime);
             
-            ref readonly ClipData clipData = ref CurrentAnimData.ClipsData[a_pose.AnimId];
-            clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * clipData.PlaybackSpeed);
+            clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * m_clipSpeedMod);
             
             //Todo: The weight here might be incorrect
             m_animationMixer.ConnectInput(a_slotId, clipPlayable, 0, p_currentDeltaTime + Mathf.Epsilon);
@@ -219,14 +232,23 @@ namespace MxM
         private void SetupClip(ref PoseData a_pose, float a_speedMod = 1f, float a_timeOffset = 0f)
         {
             m_animationMixer.SetInputWeight(a_pose.PrimaryClipId, 1f);
-            var clipPlayable = m_animationMixer.GetInput(a_pose.PrimaryClipId);
-            clipPlayable.SetTime(a_pose.Time + a_timeOffset);
-            clipPlayable.SetTime(a_pose.Time + a_timeOffset);
             
-            ref readonly ClipData clipData = ref CurrentAnimData.ClipsData[a_pose.AnimId];
-            clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * clipData.PlaybackSpeed);
+            var clipPlayable = (AnimationClipPlayable)m_animationMixer.GetInput(a_pose.PrimaryClipId);
+            clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
+            clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
+            
+            m_clipSpeedMod = CurrentAnimData.ClipsData[a_pose.AnimId].PlaybackSpeed;
+            float startTime = a_pose.Time + (a_timeOffset * a_speedMod * m_clipSpeedMod);
+            clipPlayable.SetTime(startTime);
+            clipPlayable.SetTime(startTime);
+            
+            clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * m_clipSpeedMod);
+            //clipPlayable.Play();
 
             m_activeSlots.Add(a_pose.PrimaryClipId);
+            
+            m_inertializationAnimState.SetAsChosenWithPoseNoBlend(ref a_pose, m_timeSinceMotionChosen);
+            m_inertializationAnimState.TargetPlayable = clipPlayable;
         }
 
         //============================================================================================
@@ -244,13 +266,14 @@ namespace MxM
             playableState.SetAsChosenWithPose(ref a_pose, m_timeSinceMotionChosen);
 
             ref readonly CompositeData composite = ref CurrentAnimData.Composites[a_pose.AnimId];
+            m_clipSpeedMod = composite.PlaybackSpeed;
 
             if (a_pose.Time < composite.ClipALength)
             {
                 AnimationClip clipA = CurrentAnimData.Clips[composite.ClipIdA];
                 AnimationClip clipB = CurrentAnimData.Clips[composite.ClipIdB];
 
-                playableState.TargetPlayable = AnimationMixerPlayable.Create(MxMPlayableGraph, 2, true);
+                playableState.TargetPlayable = AnimationMixerPlayable.Create(MxMPlayableGraph, 2);
                 var clipPlayableA = AnimationClipPlayable.Create(MxMPlayableGraph, clipA);
                 var clipPlayableB = AnimationClipPlayable.Create(MxMPlayableGraph, clipB);
                 clipPlayableA.SetApplyFootIK(m_applyHumanoidFootIK);
@@ -259,10 +282,10 @@ namespace MxM
                 clipPlayableB.SetApplyPlayableIK(m_applyPlayableIK);
                 
 
-                float startTime = a_pose.Time + m_timeSinceMotionChosen  + a_timeOffset;
+                float startTime = a_pose.Time + (m_timeSinceMotionChosen  + a_timeOffset) * a_speedMod * m_clipSpeedMod;
                 clipPlayableA.SetTime(startTime);
                 clipPlayableA.SetTime(startTime);
-                clipPlayableA.SetSpeed(m_playbackSpeed * a_speedMod * composite.PlaybackSpeed);
+                clipPlayableA.SetSpeed(m_playbackSpeed * a_speedMod * m_clipSpeedMod);
 
                 playableState.TargetPlayable.ConnectInput(0, clipPlayableA, 0, 1f);
                 playableState.TargetPlayable.ConnectInput(1, clipPlayableB, 0, 0f);
@@ -277,10 +300,10 @@ namespace MxM
                 clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
                 clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
                 
-                float startTime = a_pose.Time + m_timeSinceMotionChosen  + a_timeOffset;
+                float startTime = a_pose.Time + (m_timeSinceMotionChosen  + a_timeOffset) * a_speedMod * m_clipSpeedMod;
                 clipPlayable.SetTime(startTime - composite.ClipALength);
                 clipPlayable.SetTime(startTime - composite.ClipALength);
-                clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * composite.PlaybackSpeed);
+                clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * m_clipSpeedMod);
 
                 m_animationMixer.ConnectInput(a_slotId, clipPlayable, 0, p_currentDeltaTime + Mathf.Epsilon);
                 
@@ -298,27 +321,42 @@ namespace MxM
         *********************************************************************************************/
         private void SetupComposite(ref PoseData a_pose, float a_speedMod, float a_timeOffset = 0f)
         {
+            m_inertializationAnimState.SetAsChosenWithPoseNoBlend(ref a_pose, m_timeSinceMotionChosen);
+            
             ref readonly CompositeData composite = ref CurrentAnimData.Composites[a_pose.AnimId];
+            m_clipSpeedMod = composite.PlaybackSpeed;
 
             if (a_pose.Time < composite.ClipALength)
             {
                 m_animationMixer.SetInputWeight(composite.ClipIdA, 1f);
-                var clipPlayable = m_animationMixer.GetInput(composite.ClipIdA);
-                clipPlayable.SetTime(a_pose.Time  + a_timeOffset);
-                clipPlayable.SetTime(a_pose.Time  + a_timeOffset);
-                clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * composite.PlaybackSpeed);
-
+                var clipPlayable = (AnimationClipPlayable)m_animationMixer.GetInput(composite.ClipIdA);
+                clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
+                clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
+                
+                float startTime = a_pose.Time + (a_timeOffset * a_speedMod * m_clipSpeedMod);
+                clipPlayable.SetTime(startTime);
+                clipPlayable.SetTime(startTime);
+                clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * m_clipSpeedMod);
+                //clipPlayable.Play();
+                
                 m_activeSlots.Add(composite.ClipIdA);
+                m_inertializationAnimState.TargetPlayable = clipPlayable;
             }
             else
             {
                 m_animationMixer.SetInputWeight(composite.ClipIdB, 1f);
-                var clipPlayable = m_animationMixer.GetInput(composite.ClipIdB);
-                clipPlayable.SetTime(a_pose.Time  + a_timeOffset);
-                clipPlayable.SetTime(a_pose.Time + a_timeOffset);
-                clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * composite.PlaybackSpeed);
-
+                var clipPlayable = (AnimationClipPlayable)m_animationMixer.GetInput(composite.ClipIdB);
+                clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
+                clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
+                
+                float startTime = a_pose.Time + (a_timeOffset * a_speedMod * m_clipSpeedMod);
+                clipPlayable.SetTime(startTime);
+                clipPlayable.SetTime(startTime);
+                clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * m_clipSpeedMod);
+                //clipPlayable.Play();
+                
                 m_activeSlots.Add(composite.ClipIdB);
+                m_inertializationAnimState.TargetPlayable = clipPlayable;
             }
         }
 
@@ -343,8 +381,8 @@ namespace MxM
 
             float blendSpaceLength = CurrentAnimData.Clips[blendSpace.ClipIds[0]].length;
             float normalizedClipSpeed = 1f;
-
-            float unNormalizedPlaybackSpeed = m_playbackSpeed * a_speedMod * blendSpace.PlaybackSpeed;
+            m_clipSpeedMod = blendSpace.PlaybackSpeed;
+            
             for(int i = 0; i < blendSpace.ClipIds.Length; ++i)
             {
                 AnimationClip clip = CurrentAnimData.Clips[blendSpace.ClipIds[i]];
@@ -353,16 +391,16 @@ namespace MxM
                 {
                     normalizedClipSpeed = clip.length / blendSpaceLength;
                 }
-
+                
                 var blendClipPlayable = AnimationClipPlayable.Create(MxMPlayableGraph, clip);
                 blendClipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
                 blendClipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
 
-                float startTime = a_pose.Time + m_timeSinceMotionChosen  + a_timeOffset;
-                blendClipPlayable.SetTime(startTime * normalizedClipSpeed);
-                blendClipPlayable.SetTime(startTime * normalizedClipSpeed);
-                blendClipPlayable.SetSpeed(unNormalizedPlaybackSpeed * normalizedClipSpeed);
-
+                float startTime = a_pose.Time + (m_timeSinceMotionChosen  + a_timeOffset) * a_speedMod * normalizedClipSpeed * m_clipSpeedMod;
+                blendClipPlayable.SetTime(startTime);
+                blendClipPlayable.SetTime(startTime);
+                blendClipPlayable.SetSpeed(m_playbackSpeed * a_speedMod  * m_clipSpeedMod * normalizedClipSpeed);
+ 
                 playableState.TargetPlayable.ConnectInput(i, blendClipPlayable, 0, (i == 0 ? 1f : 0f));
             }
 
@@ -383,11 +421,14 @@ namespace MxM
         private void SetupBlendSpace(ref PoseData a_pose, float a_speedMod, float a_timeOffset = 0f)
         {
             ref readonly BlendSpaceData blendSpace = ref CurrentAnimData.BlendSpaces[a_pose.AnimId];
-
+            m_inertializationAnimState.SetAsChosenWithPoseNoBlend(ref a_pose, m_timeSinceMotionChosen);
+            
             float blendSpaceLength = CurrentAnimData.Clips[blendSpace.ClipIds[0]].length;
             float normalizedClipSpeed = 1f;
-
-            float unNormalizedPlaybackSpeed = m_playbackSpeed * a_speedMod * blendSpace.PlaybackSpeed;
+            m_clipSpeedMod = blendSpace.PlaybackSpeed;
+            
+            
+            
             for (int i = 0; i < blendSpace.ClipIds.Length; ++i)
             {
                 int clipId = blendSpace.ClipIds[i];
@@ -401,7 +442,9 @@ namespace MxM
                     m_animationMixer.SetInputWeight(clipId, 0f);
                 }
 
-                var clipPlayable = m_animationMixer.GetInput(clipId);
+                var clipPlayable = (AnimationClipPlayable)m_animationMixer.GetInput(clipId);
+                clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
+                clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
 
                 if (blendSpace.NormalizeTime)
                 {
@@ -409,11 +452,17 @@ namespace MxM
                     normalizedClipSpeed = clip.length / blendSpaceLength;
                 }
 
-                clipPlayable.SetTime((a_pose.Time  + a_timeOffset) * normalizedClipSpeed );
-                clipPlayable.SetTime((a_pose.Time  + a_timeOffset) * normalizedClipSpeed);
-                clipPlayable.SetSpeed(unNormalizedPlaybackSpeed * normalizedClipSpeed);
-
+                float startTime = a_pose.Time + (a_timeOffset * a_speedMod * normalizedClipSpeed * m_clipSpeedMod);
+                clipPlayable.SetTime(startTime);
+                clipPlayable.SetTime(startTime);
+                clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * normalizedClipSpeed * m_clipSpeedMod);
+                //clipPlayable.Play();
+                
                 m_activeSlots.Add(clipId);
+                if (i == 0)
+                {
+                    m_inertializationAnimState.TargetPlayable = clipPlayable;
+                }
             }
         }
 
@@ -432,6 +481,7 @@ namespace MxM
             playableState.SetAsChosenWithPose(ref a_pose, m_timeSinceMotionChosen);
 
             ref readonly BlendClipData blendClip = ref CurrentAnimData.BlendClips[a_pose.AnimId];
+            m_clipSpeedMod = blendClip.PlaybackSpeed;
             
             if (blendClip.ClipIds.Length == 1)
             {
@@ -441,10 +491,10 @@ namespace MxM
                 clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
                 clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
                 
-                float startTime = a_pose.Time + m_timeSinceMotionChosen  + a_timeOffset;
+                float startTime = a_pose.Time + (m_timeSinceMotionChosen  + a_timeOffset) * a_speedMod * m_clipSpeedMod;
                 clipPlayable.SetTime(startTime);
                 clipPlayable.SetTime(startTime);
-                clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod);
+                clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * m_clipSpeedMod);
 
                 playableState.TargetPlayable = clipPlayable;
             }
@@ -455,8 +505,7 @@ namespace MxM
                     MxMPlayableGraph, blendClip.ClipIds.Length);
                 
                 float normalizedClipSpeed = 1f;
-
-                float unNormalizedPlaybackSpeed = m_playbackSpeed * a_speedMod * blendClip.PlaybackSpeed;
+                
                 for (int i = 0; i < blendClip.ClipIds.Length; ++i)
                 {
                     AnimationClip clip = CurrentAnimData.Clips[blendClip.ClipIds[i]];
@@ -469,10 +518,10 @@ namespace MxM
                     var blendClipPlayable = AnimationClipPlayable.Create(MxMPlayableGraph, clip);
                     blendClipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
                     blendClipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
-                    float startTime = a_pose.Time + m_timeSinceMotionChosen  + a_timeOffset;
+                    float startTime = a_pose.Time + (m_timeSinceMotionChosen  + a_timeOffset) * m_playbackSpeed * a_speedMod * m_clipSpeedMod;
                     blendClipPlayable.SetTime(startTime * normalizedClipSpeed);
                     blendClipPlayable.SetTime(startTime * normalizedClipSpeed);
-                    blendClipPlayable.SetSpeed(unNormalizedPlaybackSpeed * normalizedClipSpeed);
+                    blendClipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * m_clipSpeedMod * normalizedClipSpeed);
 
                     playableState.TargetPlayable.ConnectInput(i, blendClipPlayable, 0, blendClip.Weightings[i]);
                 }
@@ -495,6 +544,7 @@ namespace MxM
         private void SetupBlendClip(ref PoseData a_pose, float a_speedMod = 1f, float a_timeOffset = 0f)
         {
             ref readonly BlendClipData blendClip = ref CurrentAnimData.BlendClips[a_pose.AnimId];
+            m_inertializationAnimState.SetAsChosenWithPoseNoBlend(ref a_pose, a_timeOffset);
 
             if (blendClip.ClipIds.Length == 1)
             {
@@ -502,12 +552,18 @@ namespace MxM
                 int clipId = blendClip.ClipIds[0];
                 
                 AnimationClip clip = CurrentAnimData.Clips[clipId];
-                var clipPlayable = m_animationMixer.GetInput(clipId);
+                var clipPlayable = (AnimationClipPlayable)m_animationMixer.GetInput(clipId);
+                clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
+                clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
                 
                 float startTime = a_pose.Time + m_timeSinceMotionChosen  + a_timeOffset;
                 clipPlayable.SetTime(startTime);
                 clipPlayable.SetTime(startTime);
                 clipPlayable.SetSpeed(m_playbackSpeed * a_speedMod * blendClip.PlaybackSpeed);
+               // clipPlayable.Play();
+
+                m_activeSlots.Add(clipId);
+                m_inertializationAnimState.TargetPlayable = clipPlayable;
             }
             else
             {
@@ -527,13 +583,18 @@ namespace MxM
 
                     m_animationMixer.SetInputWeight(clipId, blendClip.Weightings[i]);
                     
-                    var clipPlayable = m_animationMixer.GetInput(clipId);
+                    var clipPlayable = (AnimationClipPlayable)m_animationMixer.GetInput(clipId);
+                    clipPlayable.SetApplyFootIK(m_applyHumanoidFootIK);
+                    clipPlayable.SetApplyPlayableIK(m_applyPlayableIK);
+                    
                     float startTime = a_pose.Time + m_timeSinceMotionChosen + a_timeOffset;
                     clipPlayable.SetTime(startTime);
                     clipPlayable.SetTime(startTime);
                     clipPlayable.SetSpeed(unNormalizedPlaybackSpeed * normalizedClipSpeed);
+                    //clipPlayable.Play();
 
                     m_activeSlots.Add(clipId);
+                    m_inertializationAnimState.TargetPlayable = clipPlayable;
                 }
             }
         }

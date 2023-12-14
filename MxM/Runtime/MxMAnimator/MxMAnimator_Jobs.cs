@@ -31,6 +31,7 @@ namespace MxM
         private GeneratePoseJob m_poseJobDelegate;
         private JobHandle m_poseJobHandle;
         private JobHandle m_trajJobHandle;
+        private JobHandle m_minimaJobHandle;
         
         private const int k_scheduleBatchSize = 8; //Change this value to change how often MxMAnimator jobs are batched.
 
@@ -1973,6 +1974,184 @@ namespace MxM
 
                                 minimaJob.Run();
                                 return m_chosenPoseId[0];
+                            }
+                    }
+                }
+            }
+        }
+        
+        //============================================================================================
+        /**
+        *  @brief Generates the appropriate minima job
+        *  
+        *  @param [int] a_currentPoseId - the id of the current pose of the character
+        *  @param [bool] a_enforceClipChange - if the current clip must change
+        *  @param [int] a_numPoses - the number of poses to visit.
+        *  
+        *  @return JobHandle - a handle to the scheduled job
+        *         
+        *********************************************************************************************/
+        private void GenerateMinimaJob(int a_currentPoseId, bool a_enforceClipChange, int a_numPoses)
+        {
+            if (a_enforceClipChange)
+            {
+                if (m_favourCurrentPose)
+                {
+                    if (CurrentNativeAnimData.UsedPoseIdMap.TryGetValue(a_currentPoseId, out var usedPoseId))
+                    {
+                        m_poseCosts[usedPoseId] *= m_currentPoseFavour;
+                        m_trajCosts[usedPoseId] *= m_currentPoseFavour;
+                    }
+                }
+
+                if (FavourTags == ETags.None)
+                {
+                    var minimaJob = new FindMinima_EnforceClipChange()
+                    {
+                        PoseCosts = m_poseCosts,
+                        TrajCosts = m_trajCosts,
+                        PoseFavour = CurrentNativeAnimData.FavourPacked,
+                        PoseClipIds = CurrentNativeAnimData.ClipIdsPacked,
+                        CurrentClipId = m_chosenPose.PrimaryClipId,
+                        ChosenPoseId = m_chosenPoseId
+                    };
+
+                    m_minimaJobHandle = minimaJob.Schedule();
+
+                }
+                else
+                {
+                    switch (m_favourTagMethod)
+                    {
+                        default:
+                        case EFavourTagMethod.Exclusive:
+                            {
+                                var minimaJob = new FindMinima_FavourExclusive_EnforceClipChange()
+                                {
+                                    PoseCosts = m_poseCosts,
+                                    TrajCosts = m_trajCosts,
+                                    PoseFavour = CurrentNativeAnimData.FavourPacked,
+                                    PoseFavourTags = CurrentNativeAnimData.FavourTagsPacked,
+                                    PoseClipIds = CurrentNativeAnimData.ClipIdsPacked,
+                                    CurrentClipId = m_chosenPose.PrimaryClipId,
+                                    FavourTags = FavourTags,
+                                    FavourMultiplier = m_favourMultiplier,
+                                    ChosenPoseId = m_chosenPoseId
+                                };
+
+                                m_minimaJobHandle = minimaJob.Schedule();
+                                break;
+                            }
+                        case EFavourTagMethod.Inclusive:
+                            {
+                                var minimaJob = new FindMinima_FavourInclusive_EnforceClipChange()
+                                {
+                                    PoseCosts = m_poseCosts,
+                                    TrajCosts = m_trajCosts,
+                                    PoseFavour = CurrentNativeAnimData.FavourPacked,
+                                    PoseFavourTags = CurrentNativeAnimData.FavourTagsPacked,
+                                    PoseClipIds = CurrentNativeAnimData.ClipIdsPacked,
+                                    CurrentClipId = m_chosenPose.PrimaryClipId,
+                                    FavourTags = FavourTags,
+                                    FavourMultiplier = m_favourMultiplier,
+                                    ChosenPoseId = m_chosenPoseId
+                                };
+                                
+                                m_minimaJobHandle = minimaJob.Schedule();
+                                break;
+                            }
+                        case EFavourTagMethod.Stacking:
+                            {
+                                var minimaJob = new FindMinima_FavourExclusive_EnforceClipChange()
+                                {
+                                    PoseCosts = m_poseCosts,
+                                    TrajCosts = m_trajCosts,
+                                    PoseFavour = CurrentNativeAnimData.FavourPacked,
+                                    PoseFavourTags = CurrentNativeAnimData.FavourTagsPacked,
+                                    PoseClipIds = CurrentNativeAnimData.ClipIdsPacked,
+                                    CurrentClipId = m_chosenPose.PrimaryClipId,
+                                    FavourTags = FavourTags,
+                                    FavourMultiplier = m_favourMultiplier,
+                                    ChosenPoseId = m_chosenPoseId
+                                };
+                                
+                                m_minimaJobHandle = minimaJob.Schedule();
+                                break;
+                            }
+                    }
+                }
+            }
+            else
+            {
+                if (CurrentNativeAnimData.UsedPoseIdMap.TryGetValue(a_currentPoseId, out var usedPoseId))
+                {
+                    m_poseCosts[usedPoseId] *= m_currentPoseFavour;
+                }
+
+                if (FavourTags == 0)
+                {
+                    var minimaJob = new FindMinima()
+                    {
+                        PoseCosts = m_poseCosts,
+                        TrajCosts = m_trajCosts,
+                        PoseFavour = CurrentNativeAnimData.FavourPacked,
+                        ChosenPoseId = m_chosenPoseId
+                    };
+                    
+                    m_minimaJobHandle = minimaJob.Schedule();
+                }
+                else
+                {
+                    switch (m_favourTagMethod)
+                    {
+                        default:
+                        case EFavourTagMethod.Exclusive:
+                            {
+                                var minimaJob = new FindMinima_FavourExclusive()
+                                {
+                                    PoseCosts = m_poseCosts,
+                                    TrajCosts = m_trajCosts,
+                                    PoseFavour = CurrentNativeAnimData.FavourPacked,
+                                    PoseFavourTags = CurrentNativeAnimData.FavourTagsPacked,
+                                    FavourTags = FavourTags,
+                                    FavourMultiplier = m_favourMultiplier,
+                                    ChosenPoseId = m_chosenPoseId
+                                };
+
+                                m_minimaJobHandle = minimaJob.Schedule();
+                                break;
+                            }
+                        case EFavourTagMethod.Inclusive:
+                            {
+                                var minimaJob = new FindMinima_FavourInclusive()
+                                {
+                                    PoseCosts = m_poseCosts,
+                                    TrajCosts = m_trajCosts,
+                                    PoseFavour = CurrentNativeAnimData.FavourPacked,
+                                    PoseFavourTags = CurrentNativeAnimData.FavourTagsPacked,
+                                    FavourTags = FavourTags,
+                                    FavourMultiplier = m_favourMultiplier,
+                                    ChosenPoseId = m_chosenPoseId
+                                };
+
+                                m_minimaJobHandle = minimaJob.Schedule();
+                                break;
+                            }
+                        case EFavourTagMethod.Stacking:
+                            {
+                                var minimaJob = new FindMinima_FavourStacking()
+                                {
+                                    PoseCosts = m_poseCosts,
+                                    TrajCosts = m_trajCosts,
+                                    PoseFavour = CurrentNativeAnimData.FavourPacked,
+                                    PoseFavourTags = CurrentNativeAnimData.FavourTagsPacked,
+                                    FavourTags = FavourTags,
+                                    FavourMultiplier = m_favourMultiplier,
+                                    ChosenPoseId = m_chosenPoseId
+                                };
+
+                                m_minimaJobHandle = minimaJob.Schedule();
+                                break;
                             }
                     }
                 }

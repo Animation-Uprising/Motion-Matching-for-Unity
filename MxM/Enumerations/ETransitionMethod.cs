@@ -4,6 +4,7 @@
     {
         None,
         Blend,
+        Inertialization
 
     }//End of enum: ETransitionMethod
 }//End of namespace: MxM

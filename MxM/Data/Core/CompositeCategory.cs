@@ -47,6 +47,7 @@ namespace MxMEditor
                 MxMAnimationClipComposite newComposite = ScriptableObject.CreateInstance<MxMAnimationClipComposite>();
                 newComposite.CopyData(sourceComposite, a_mirrored);
                 newComposite.name = sourceComposite.name;
+                newComposite.CompositeName = sourceComposite.CompositeName;
                 newComposite.hideFlags = HideFlags.HideInHierarchy;
 
                 MxMPreProcessData targetPreProcess = a_parentObj as MxMPreProcessData;

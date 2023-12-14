@@ -323,6 +323,9 @@ namespace MxMEditor
 
                 if (m_soData != null)
                     m_soData.ApplyModifiedProperties();
+                
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.EndVertical();
             }
             else
             {

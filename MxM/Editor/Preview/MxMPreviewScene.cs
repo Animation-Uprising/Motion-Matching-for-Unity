@@ -125,7 +125,7 @@ namespace MxMEditor
             var playableOutput = AnimationPlayableOutput.Create(PlayableGraph,
                 "Animation", PreviewAnimator);
 
-            Mixer = AnimationMixerPlayable.Create(PlayableGraph, 1, true);
+            Mixer = AnimationMixerPlayable.Create(PlayableGraph, 1);
             playableOutput.SetSourcePlayable(Mixer);
             Mixer.SetInputWeight(0, 1f);
         }

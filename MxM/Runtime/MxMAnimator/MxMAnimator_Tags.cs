@@ -23,15 +23,15 @@ namespace MxM
 
         private ETags m_desireRequiredTags = ETags.None;
 
-        public EUserTags UserTags { get { return m_curInterpolatedPose.UserTags; } } //The user tags for the current pose.
+        public EUserTags UserTags => m_curInterpolatedPose.UserTags; //The user tags for the current pose.
         public ETags RequiredTags { get; private set; } //The current required tags. The MxMAniamtor will only ever choose poses with these tags
         public ETags FavourTags { get; private set; } //The current favour tags. Poses with these tags will have their cost multiplied by m_favourMultiplier
         public ETags IdleTraits { get; private set; } //The current traits required for idles
         
         public float FavourMultiplier
         {
-            get { return m_favourMultiplier; }
-            set { m_favourMultiplier = value; }
+            get => m_favourMultiplier;
+            set => m_favourMultiplier = value;
         } 
 
         //============================================================================================
@@ -63,6 +63,12 @@ namespace MxM
         *********************************************************************************************/
         private void UpdateFootSteps()
         {
+            //Todo: Fix this before merging
+            if (m_transitionMethod == ETransitionMethod.Inertialization)
+            {
+                return;
+            }
+            
             m_timeSinceLastLeftFootstep += Time.deltaTime;
             m_timeSinceLastRightFootstep += Time.deltaTime;
             
