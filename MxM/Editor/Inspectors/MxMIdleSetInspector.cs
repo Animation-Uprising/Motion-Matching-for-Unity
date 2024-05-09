@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
+using UnityEditor;
 using UnityEngine;
 
 namespace MxMEditor

@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
+using System;
 using UnityEngine;
 using UnityEditor;
 using MxM;

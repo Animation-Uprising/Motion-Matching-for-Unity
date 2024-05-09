@@ -1,19 +1,10 @@
-﻿// ================================================================================================
-// File: MxMAnimatorInspector.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2018-05-31: Created this file.
-// 
-//     Contains a part of the 'MxMEditor' namespace for 'Unity Engine 2018'.
-// 
-// Copyright (c) 2018 Kenneth Claassen. All rights reserved.
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
 
 using MxM;
-using UnityEngine.Scripting;
 
 namespace MxMEditor
 {
@@ -92,20 +83,15 @@ namespace MxMEditor
         private SerializedProperty m_spOnEventChangeStateCallback;
         private SerializedProperty m_spOnPoseChangedCallback;
 
-        private SerializedProperty m_spPriorityUpdate;
-        private SerializedProperty m_spMaxUpdateDelay;
-       
+        private MxMAnimData m_animData;
+        private MxMAnimator m_animator;
+
         private SerializedProperty m_spGeneralFoldout;
         private SerializedProperty m_spAnimDataFoldout;
         private SerializedProperty m_spOptionsFoldout;
         private SerializedProperty m_spWarpingFoldout;
-        private SerializedProperty m_spOptimisationFoldout;
         private SerializedProperty m_spCallbackFoldout;
         private SerializedProperty m_spDebugFoldout;
-        
-        private MxMAnimData m_animData;
-        private MxMAnimator m_animator;
-
 
         private ReorderableList m_animDataReorderableList;
 
@@ -184,17 +170,12 @@ namespace MxMEditor
             m_spOnEventChangeStateCallback = serializedObject.FindProperty("m_onEventStateChanged");
             m_spOnPoseChangedCallback = serializedObject.FindProperty("m_onPoseChanged");
 
-            m_spPriorityUpdate = serializedObject.FindProperty("m_priorityUpdate");
-            m_spMaxUpdateDelay = serializedObject.FindProperty("m_maxUpdateDelay");
-
             m_spGeneralFoldout = serializedObject.FindProperty("m_generalFoldout");
             m_spAnimDataFoldout = serializedObject.FindProperty("m_animDataFoldout");
             m_spOptionsFoldout = serializedObject.FindProperty("m_optionsFoldout");
             m_spWarpingFoldout = serializedObject.FindProperty("m_warpingFoldout");
-            m_spOptimisationFoldout = serializedObject.FindProperty("m_optimisationFoldout");
             m_spCallbackFoldout = serializedObject.FindProperty("m_debugFoldout");
             m_spDebugFoldout = serializedObject.FindProperty("m_callbackFoldout");
-            
 
             if (m_spAnimData.arraySize == 0)
                 m_spAnimData.InsertArrayElementAtIndex(0);
@@ -926,31 +907,6 @@ namespace MxMEditor
 
             curHeight += 30f;
             GUILayout.Space(2f);
-            
-            m_spOptimisationFoldout.boolValue = EditorUtil.EditorFunctions.DrawFoldout("Optimisation",
-                curHeight, EditorGUIUtility.currentViewWidth, m_spOptimisationFoldout.boolValue);
-            
-            if (m_spOptimisationFoldout.boolValue)
-            {
-                m_spPriorityUpdate.boolValue =
-                    EditorGUILayout.Toggle(new GUIContent("Priority Update", 
-                    "If checked, this MxM animator will be guaranteed to be updated as per it's update " +
-                    "interval. and never delayed"), m_spPriorityUpdate.boolValue);
-                
-                EditorGUI.BeginChangeCheck();
-                m_spMaxUpdateDelay.floatValue = EditorGUILayout.FloatField(new GUIContent("Max Update Delay (s)", 
-                        "The maximum amount of time that the update manager can delay an udpate for this animator"),
-                    m_spMaxUpdateDelay.floatValue);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    if (m_spMaxUpdateDelay.floatValue < 0f)
-                        m_spMaxUpdateDelay.floatValue = 0f;
-                }
-            }
-            
-            lastRect = GUILayoutUtility.GetLastRect();
-            curHeight = lastRect.y + lastRect.height + 5f;
-            GUILayout.Space(5f);
 
             m_spDebugFoldout.boolValue = EditorUtil.EditorFunctions.DrawFoldout("Debug",
                 curHeight, EditorGUIUtility.currentViewWidth, m_spDebugFoldout.boolValue);

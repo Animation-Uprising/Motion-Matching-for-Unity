@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
+using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 using Unity.Jobs;

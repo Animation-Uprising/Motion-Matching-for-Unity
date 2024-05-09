@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
+using System.Collections.Generic;
 using UnityEngine;
 using MxM;
 using UnityEditor;
-
 
 [CustomEditor(typeof(MxMAnimData))]
 public class MxMAnimDataInspector : Editor

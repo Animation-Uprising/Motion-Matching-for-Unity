@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
+using UnityEngine;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using MxM;

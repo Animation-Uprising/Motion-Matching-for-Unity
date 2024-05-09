@@ -1,4 +1,6 @@
-﻿using MxM;
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
+using MxM;
 using UnityEngine;
 
 public class MxMAnimatorPlaybackSync : MonoBehaviour, IMxMExtension

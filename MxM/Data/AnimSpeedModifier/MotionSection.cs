@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
+using UnityEngine;
 
 namespace MxMEditor
 {
@@ -114,7 +116,7 @@ namespace MxMEditor
 
         //============================================================================================
         /**
-        *  @brief 
+        *  @brief Constructor for a motion section that takes initial values
         *         
         *********************************************************************************************/
         public MotionSection(int a_id, int a_defId, EMotionModSmooth a_smoothType, float a_endTime)
@@ -127,7 +129,7 @@ namespace MxMEditor
 
         //============================================================================================
         /**
-        *  @brief 
+        *  @brief Constructor for a motion section that copies another motion section
         *         
         *********************************************************************************************/
         public MotionSection(int a_id, MotionSection a_copy, float a_endTime)
@@ -144,7 +146,7 @@ namespace MxMEditor
 
         //============================================================================================
         /**
-        *  @brief 
+        *  @brief Deselects the motion section
         *         
         *********************************************************************************************/
         public void Deselect()

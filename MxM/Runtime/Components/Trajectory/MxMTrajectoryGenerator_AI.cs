@@ -1,11 +1,5 @@
-﻿// ================================================================================================
-// File: MxMTrajectoryGenerator_AI.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     11-10-2019: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for 'Unity Engine'. 
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Assertions;

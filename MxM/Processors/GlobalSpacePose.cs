@@ -1,13 +1,4 @@
-﻿// ============================================================================================
-// File: MxMPreProcessor.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2019-02-17: Created this file.
-// 
-//     Contains a part of the 'MxMEditor' namespace for 'Unity Engine'.
-// 
-// Copyright (c) 2019 Kenneth Claassen. All rights reserved.
-// ============================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
 
 using System.Collections.Generic;
 using UnityEngine;

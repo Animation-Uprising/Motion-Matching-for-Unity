@@ -1,4 +1,6 @@
-﻿#if UNITY_EDITOR
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
+#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;

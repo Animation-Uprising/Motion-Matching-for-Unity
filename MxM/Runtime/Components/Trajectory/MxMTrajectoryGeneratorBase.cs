@@ -1,11 +1,5 @@
-﻿// ================================================================================================
-// File: MxMTrajectoryGeneratorBase.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2019-07-2019: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for 'Unity Engine'.
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -213,7 +207,7 @@ namespace MxM
                     ++pastPredictionCount;
             }
 
-            p_trajectoryIterations = Mathf.FloorToInt(p_timeHorizon * p_sampleRate);
+            p_trajectoryIterations = Mathf.FloorToInt(p_timeHorizon * p_sampleRate) + 1;
             InitializeNativeData();
 
             //Setup past recording
@@ -327,7 +321,7 @@ namespace MxM
 
             a_time = Mathf.Clamp(a_time, 0f, p_predictionTimes[p_predictionTimes.Count - 1]);
 
-            int startIndex = Mathf.FloorToInt(a_time / p_timeStep);
+            int startIndex = Mathf.FloorToInt(a_time / p_timeStep); //1second, 20 points
             int endIndex = Mathf.CeilToInt(a_time / p_timeStep);
 
             float lerp = (a_time - (startIndex * p_timeStep)) / p_timeStep;

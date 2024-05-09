@@ -1,4 +1,6 @@
-﻿using Unity.Mathematics;
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
+using Unity.Mathematics;
 
 namespace MxM
 {

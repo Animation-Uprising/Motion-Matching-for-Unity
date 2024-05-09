@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
+using System.Collections.Generic;
 using UnityEngine;
 
 #if UNITY_EDITOR

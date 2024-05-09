@@ -1,11 +1,5 @@
-﻿// ================================================================================================
-// File: MxMUtility.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2019-10-15: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for 'Unity Engine'.
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;    

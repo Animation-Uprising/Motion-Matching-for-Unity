@@ -1,4 +1,6 @@
-﻿using Unity.Collections;
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
+using Unity.Collections;
 using Unity.Burst;
 using Unity.Jobs;
 using Unity.Mathematics;

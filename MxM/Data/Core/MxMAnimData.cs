@@ -1,13 +1,4 @@
-﻿// ============================================================================================
-// File: AnimationData.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2017-09-16: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for 'Unity Engine 5'.
-// 
-// Copyright (c) 2017 Kenneth Claassen. All rights reserved.
-// ============================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
 using System.Collections.Generic;
 using UnityEngine;
 

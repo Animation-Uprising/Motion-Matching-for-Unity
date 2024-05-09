@@ -1,11 +1,5 @@
-﻿// ================================================================================================
-// File: MxMAnimator.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2018-11-03: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for 'Unity Engine'.
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -78,10 +72,6 @@ namespace MxM
         
         //Advanced Options
         [SerializeField] private ETagBlendMethod m_tagBlendMethod = ETagBlendMethod.HighestWeight; //How tags should be blended between digital poses. Highest weight? or combined?
-        
-        //Update Manager
-        [SerializeField] private bool m_priorityUpdate = true;
-        [SerializeField] private float m_maxUpdateDelay = 1f;
 
         //Trajectory Error Warping
         [SerializeField] private WarpModule m_overrideWarpSettings = null;                                                  //A settings module which overrides all warp settings
@@ -121,8 +111,7 @@ namespace MxM
         [SerializeField] private bool m_animDataFoldout = true;
         [SerializeField] private bool m_optionsFoldout = true;
         [SerializeField] private bool m_warpingFoldout = true;
-        [SerializeField] private bool m_optimisationFoldout = false;
-        [SerializeField] private bool m_debugFoldout = false;
+        [SerializeField] private bool m_debugFoldout = true;
         [SerializeField] private bool m_callbackFoldout = false;
 #endif
 
@@ -176,7 +165,6 @@ namespace MxM
         //Tracking
         private float m_timeSinceMotionUpdate;          //The time passed since the last motion updated
         private float m_timeSinceMotionChosen;          //The time passed since the last motion was chosen
-        private bool m_poseSearchThisFrame;
         private float m_poseInterpolationValue = 0f;    //The interpolation value used to calculate the last interpolated pose
         private int m_curChosenPoseId;                  //The id of the chosen pose in the animation database
         private int m_dominantBlendChannel = 0;         //The index of the dominant pose in m_curPoses. i.e. the id of the channel playig the animation with the highest weight
@@ -218,6 +206,11 @@ namespace MxM
         private TrajectoryPoint[] m_desiredGoal;        //The desired goal modified by trajectory blending
         private TrajectoryPoint[] m_desiredGoalBase;    //The un-modified desired goal taken directly from the Trajectory Generator
         private FSM m_fsm;                              //A state machine used to manage the internal states of the MxMAnimator
+
+        //Multi animator management
+        private static int s_mxmAnimatorCount;              //Static counter for the number of active MxMAnimator components in the scene. This is used to assist with batch scheduling jobs when all MxMAnimators are read.
+        private static int s_curMxMAnimatorId;              //Static id of the current MxMAnimator component being update. The jobs will be batch scheduled once this Id reaches s_mxmAnimatorCount
+        private static int s_mxmAnimatorStack;              //The number of MxMAnimator's currently waiting to be scheduled
 
         //Inertial Blending
         private InertialBlendModule m_inertialBlendModule;  //Experimental module for inertial blending
@@ -298,33 +291,16 @@ namespace MxM
 
         public float UpdateRate
         {
-            get => 1 / m_updateInterval;
-            set => m_updateInterval = Mathf.Clamp(1 / value, 0f, 3f);
+            get { return 1 / m_updateInterval; }
+            set { m_updateInterval = Mathf.Clamp(1 / value, 0f, 3f); }
         }
 
         //Used to modify the blend time for the general motion matching state. Blend time is clamped
         public float BlendTime
         {
-            get => m_matchBlendTime;
-            set => m_matchBlendTime = Mathf.Clamp(value, 0.0001f, 5f);
-        }
-
-        public bool PriorityUpdate
-        {
-            get => m_priorityUpdate;
-            set => m_priorityUpdate = value;
-        }
-
-        public float MaxUpdateDelay
-        {
-            get => m_maxUpdateDelay;
-            set => m_maxUpdateDelay = Mathf.Max(0f, value);
-        }
-        
-        
-
-        public AnimatorUpdateMode UpdateMode => p_animator ? p_animator.updateMode : AnimatorUpdateMode.Normal;
-        public bool CanUpdate => !IsPaused && m_animMixerConnected;
+            get { return m_matchBlendTime; }
+            set { m_matchBlendTime = Mathf.Clamp(value, 0.0001f, 5f); }
+        } 
 
         [Obsolete("MatchBlendTime is deprecated. Please use 'BlendTime' instead")]
         public float MatchBlendTime
@@ -462,14 +438,75 @@ namespace MxM
             //they will never be collected.
             StopJobs();
         }
-        
-#if UNITY_2019_1_OR_NEWER
-        public void CacheRiggingIntegration()
+
+        //============================================================================================
+        /**
+        *  @brief Updates the MxMAnimator during the physics animation loop. 
+        *  
+        *  Note: The logic in this function will only run if the Animator Update mode is set to 
+        *  Animate Physics.
+        *         
+        *********************************************************************************************/
+        protected virtual void FixedUpdate()
         {
-            if (p_riggingIntegration != null)
-                p_riggingIntegration.CacheTransforms();
+            if (CurrentAnimData == null)
+            {
+                return;
+            }
+            
+            if (p_animator.updateMode == AnimatorUpdateMode.AnimatePhysics)
+            {
+                p_currentDeltaTime = Time.fixedDeltaTime;
+
+                if (!IsPaused && m_animMixerConnected)
+                {
+#if UNITY_2019_1_OR_NEWER
+                    if (p_riggingIntegration != null)
+                        p_riggingIntegration.CacheTransforms();
+#endif
+                    //Run the first phase update for MxM which is responsible for scheduling jobs
+                    MxMUpdate_Phase1();
+
+                    //if (m_rootMotion != null)
+                    //    m_rootMotion.AnimatorDependentUpdate(p_currentDeltaTime);
+                }
+            }
         }
-#endif       
+
+        //============================================================================================
+        /**
+        *  @brief Updates the MxMAnimator during the regular update loop
+        *  
+        *  Note: The logic in this function will only run if the Animator Update mode is not set to 
+        *  Animate Physics.
+        *         
+        *********************************************************************************************/
+        protected virtual void Update()
+        {
+            if (CurrentAnimData == null)
+            {
+                return;
+            }
+            
+            if (p_animator.updateMode != AnimatorUpdateMode.AnimatePhysics)
+            {
+                p_currentDeltaTime = Time.deltaTime;
+
+                if (!IsPaused && m_animMixerConnected)
+                {
+#if UNITY_2019_1_OR_NEWER
+                    if (p_riggingIntegration != null)
+                        p_riggingIntegration.CacheTransforms();
+#endif
+                    //Run the first phase update for MxM which is responsible for scheduling jobs
+                    MxMUpdate_Phase1();
+
+                    //if (m_rootMotion != null)
+                    //    m_rootMotion.AnimatorDependentUpdate(p_currentDeltaTime);
+                }
+            }
+        }
+
         //=============================================================================================
         /**
         *  @brief Called when the MxMAnimator component is destroyed. Destroys the playable graph and 
@@ -848,6 +885,7 @@ namespace MxM
             }
 
             SetupExtensions();
+            ++s_mxmAnimatorCount;
 
             m_onSetupComplete.Invoke();
 
@@ -983,8 +1021,6 @@ namespace MxM
             if(p_riggingIntegration != null)
                 p_riggingIntegration.Initialize(MxMPlayableGraph, p_animator);
 #endif
-            
-            MxMSearchManager.Instance.RegisterMxMAnimator(this); //Todo: Also un-register
         }
 
         //============================================================================================
@@ -1120,17 +1156,15 @@ namespace MxM
         
         //============================================================================================
         /**
-         *   @brief This is the first phase update for the MxMAnimator. It is called by either of the 
-         *   MonoBehaviour FixedUpdate or Update method depending on the 'Animator' update mode. 
-         *   
-         *   Depending on the state of the MxMAnimator, this first phase update is responsible for 
-         *   scheduling the motion matching jobs. 
-         *          
-         * ********************************************************************************************/
-        public void MxMUpdate_Phase1(float a_deltaTime)
+        *  @brief This is the first phase update for the MxMAnimator. It is called by either of the 
+        *  MonoBehaviour FixedUpdate or Update method depending on the 'Animator' update mode. 
+        *  
+        *  Depending on the state of the MxMAnimator, this first phase update is responsible for 
+        *  scheduling the motion matching jobs. 
+        *         
+        *********************************************************************************************/
+        public void MxMUpdate_Phase1()
         {
-            p_currentDeltaTime = a_deltaTime;
-            
             if (m_phase1Extensions != null)
             {
                 foreach (IMxMExtension extension in m_phase1Extensions)
@@ -1149,6 +1183,26 @@ namespace MxM
 
             //Update the MxM internal state machine
             m_fsm.Update_Phase1();
+
+            //Since there may be multiple MxMAnimator's in the scene, don't batch schedule the jobs
+            //until they are all finished their schedule phase
+            ++s_curMxMAnimatorId;
+            ++s_mxmAnimatorStack;
+
+            if(s_mxmAnimatorStack == k_scheduleBatchSize)
+            {
+                s_mxmAnimatorStack = 0;
+                JobHandle.ScheduleBatchedJobs();
+
+                if (s_curMxMAnimatorId == s_mxmAnimatorCount)
+                    s_curMxMAnimatorId = 0;
+            }
+            else if (s_curMxMAnimatorId == s_mxmAnimatorCount)
+            {
+                s_mxmAnimatorStack = 0;
+                s_curMxMAnimatorId = 0;
+                JobHandle.ScheduleBatchedJobs();
+            }
         }
 
         //============================================================================================
@@ -1198,18 +1252,11 @@ namespace MxM
         *  @brief 
         *         
         *********************************************************************************************/
-        public void MxMLateUpdate()
+        public void LateUpdate()
         {
             if (CurrentAnimData == null)
             {
                 return;
-            }
-
-            if (m_fsm.CurrentStateId == (int)EMxMStates.Matching && m_poseSearchThisFrame)
-            {
-                m_minimaJobHandle.Complete();
-                FinalizePoseSearch(m_chosenPoseId[0]);
-                m_poseSearchThisFrame = false;
             }
             
             UpdateFootSteps();
@@ -1249,52 +1296,40 @@ namespace MxM
             AnimationClip curClip = CurrentAnimData.Clips[m_chosenPose.PrimaryClipId];
 
             //Determine if a clip change must be enforced
-            if (!curClip.isLooping) //Todo: Reintroduce this
-            {
-                 // float blendTime = 0f;
-                 //
-                 // if (m_blendOutEarly)
-                 // {
-                 //     blendTime = m_matchBlendTime * m_animationStates[m_primaryBlendChannel].Weight * m_playbackSpeed;
-                 // }
+             if (!curClip.isLooping) //Todo: Reintroduce this
+             {
+                 float blendTime = 0f;
+            
+                 if (m_blendOutEarly)
+                 {
+                     blendTime = m_matchBlendTime * m_animationStates[m_primaryBlendChannel].Weight * m_playbackSpeed;
+                 }
 
-                // if (m_chosenPose.AnimType == EMxMAnimtype.Composite)
-                // {
-                //     if (m_timeSinceMotionChosen + m_chosenPose.Time + blendTime > curClip.length + CurrentAnimData.PoseInterval * 5f)
-                //         m_enforcePoseSearch = true;
-                // }
-                // else
-                // {
-                //     if (m_timeSinceMotionChosen + m_chosenPose.Time + blendTime > curClip.length)
-                //         m_enforcePoseSearch = true;
-                // }
+                if (m_chosenPose.AnimType == EMxMAnimtype.Composite)
+                {
+                   /* if (m_timeSinceMotionChosen + m_chosenPose.Time + blendTime > curClip.length + CurrentAnimData.PoseInterval * 5f)
+                        m_enforcePoseSearch = true;*/
+                }
+                else
+                {
+                    if (m_timeSinceMotionChosen + m_chosenPose.Time + blendTime > curClip.length)
+                        m_enforcePoseSearch = true;
+                }
             }
-          
-            //Update blend spaces if the the dominant animation is a blend space
-            if (m_dominantPose.AnimType == EMxMAnimtype.BlendSpace)
+             
+             //Update blend spaces if the the dominant animation is a blend space
+             if (m_dominantPose.AnimType == EMxMAnimtype.BlendSpace)
                  UpdateBlendSpaces();
 
             if ((m_curInterpolatedPose.GenericTags & EGenericTags.DisableMatching) != EGenericTags.DisableMatching)
             {
                 ComputeCurrentPose();
-                if ((CurrentInterpolatedPose.Tags & ETags.DoNotUse) == ETags.DoNotUse)
-                {
-                    m_enforcePoseSearch = true;
-                }
-                
                 GenerateGoalTrajectory(p_trajectoryGenerator.GetCurrentGoal());
-
-                if (m_doNotSearch)
-                    return;
-
-                float searchDelay = m_timeSinceMotionChosen - m_updateInterval;
-                if (searchDelay > 0f || m_enforcePoseSearch)
+                
+                if (!m_doNotSearch && 
+                    (m_timeSinceMotionUpdate > m_updateInterval || m_enforcePoseSearch))
                 {
-                    if (MxMSearchManager.Instance.RequestPoseSearch(this, searchDelay, m_enforcePoseSearch))
-                    {
-                        m_poseSearchThisFrame = true;
-                        SchedulePoseSearch(); //Schedule the motion matching jobs
-                    }
+                    SchedulePoseSearch(); //Schedule the motion matching jobs
                 }
             }
             else
@@ -1303,6 +1338,8 @@ namespace MxM
                 ComputeCurrentPose();
                 GenerateGoalTrajectory(p_trajectoryGenerator.GetCurrentGoal());
             }
+
+           
         }
 
         //============================================================================================
@@ -1313,40 +1350,32 @@ namespace MxM
         *********************************************************************************************/
         private void UpdateMatching_Phase2()
         {
-            if (m_poseSearchThisFrame)
+            if (!m_doNotSearch)
             {
-               // m_timeSinceMotionUpdate = Mathf.Clamp(m_timeSinceMotionUpdate - m_updateInterval, 0f, m_updateInterval - p_currentDeltaTime);
-                m_timeSinceMotionUpdate = 0f; //Todo: what about pro-rata (see above)?
-                
-                //Complete the pose and trajectory jobs
-                m_poseJobHandle.Complete();
-                m_trajJobHandle.Complete();
-                
-                if (m_priorityUpdate) //For priority characters we update immediately
+                bool timedUpdate = m_timeSinceMotionUpdate > m_updateInterval;
+
+                if (timedUpdate || m_enforcePoseSearch)
                 {
-                    int chosenPoseId = ComputeMinimaJob(m_curInterpolatedPose.PoseId,
-                        m_enforcePoseSearch, CurrentNativeAnimData.UsedPoseIds.Length);
-                    
-                    FinalizePoseSearch(chosenPoseId);
-                    m_poseSearchThisFrame = false;
-                }
-                else //For non priority characters we run the minima jobs in parallel and collect them in late update.
-                {   //Todo: Batch these jobs to save on scheduling overhead
-                    GenerateMinimaJob(m_curInterpolatedPose.PoseId,
-                        m_enforcePoseSearch, CurrentNativeAnimData.UsedPoseIds.Length);
+                    if (timedUpdate)
+                    {
+                        m_timeSinceMotionUpdate = Mathf.Clamp(m_timeSinceMotionUpdate - m_updateInterval, 0f, m_updateInterval - p_currentDeltaTime);
+                        //m_timeSinceMotionUpdate = 0f;
+                    }
+
+                    FinalizePoseSearch();
+
+#if UNITY_EDITOR
+                    m_updateThisFrame = true;
+#endif
                 }
 #if UNITY_EDITOR
-                m_updateThisFrame = true;
+                else
+                {
+                    m_updateThisFrame = false;
+                }
 #endif
             }
-#if UNITY_EDITOR
-            else
-            {
-                m_updateThisFrame = false;
-            }
-#endif
-            
-            //Perform longitudinal error warping if it is enabled.
+
             if (m_longErrorWarpType > ELongitudinalErrorWarp.None)
             {
                 if ((m_curInterpolatedPose.GenericTags & EGenericTags.DisableWarp_TrajLong)
@@ -1381,7 +1410,6 @@ namespace MxM
                     if (NextPoseToleranceTest(ref nextPose))
                     {
                         m_timeSinceMotionUpdate = 0f;
-                        m_poseSearchThisFrame = false;
                         return;
                     }
                 }
@@ -1400,14 +1428,22 @@ namespace MxM
         *  costs and find the minima
         *         
         *********************************************************************************************/
-        private void FinalizePoseSearch(int a_chosenPoseId)
+        private void FinalizePoseSearch()
         {
+            //Complete the pose and trajectory jobs
+            m_poseJobHandle.Complete();
+            m_trajJobHandle.Complete();
+
+            //Schedule the minima job
+            int chosenPoseId = ComputeMinimaJob(m_curInterpolatedPose.PoseId,
+                m_enforcePoseSearch, CurrentNativeAnimData.UsedPoseIds.Length);
+            
 #if UNITY_EDITOR
-            m_lastPoseCost = m_poseCosts[a_chosenPoseId];
-            m_lastTrajectoryCost = m_trajCosts[a_chosenPoseId];
+            m_lastPoseCost = m_poseCosts[chosenPoseId];
+            m_lastTrajectoryCost = m_trajCosts[chosenPoseId];
             m_lastChosenCost = m_lastPoseCost + m_lastTrajectoryCost;
 #endif
-            int bestPoseId = CurrentNativeAnimData.UsedPoseIds[a_chosenPoseId];
+            int bestPoseId = CurrentNativeAnimData.UsedPoseIds[chosenPoseId];
 
             ref PoseData bestPose = ref CurrentAnimData.Poses[bestPoseId];
 
@@ -2969,6 +3005,11 @@ namespace MxM
 
                     state.TimeX2 = state.Time;
                 }
+
+                if (enabled)
+                {
+                    --s_mxmAnimatorCount;
+                }
             }
         }
 
@@ -3014,7 +3055,11 @@ namespace MxM
                 p_trajectoryGenerator.UnPause();
                 IsPaused = false;
                 m_animationMixer.Play();
-                
+
+                if (enabled)
+                {
+                    ++s_mxmAnimatorCount;
+                }
 #if UNITY_EDITOR
                 if (m_debugPreview)
                 {
@@ -3060,9 +3105,6 @@ namespace MxM
 
             if (m_warpingFoldout)
                 m_warpingFoldout = true;
-
-            if (m_optimisationFoldout)
-                m_optimisationFoldout = true;
 
             if (m_debugFoldout)
                 m_debugFoldout = true;

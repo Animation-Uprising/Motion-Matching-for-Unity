@@ -1,11 +1,5 @@
-﻿// ================================================================================================
-// File: MxMLayer.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2019-07-29: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for 'Unity Engine'.
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Animations;

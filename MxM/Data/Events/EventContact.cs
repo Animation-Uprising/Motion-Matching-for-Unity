@@ -1,11 +1,5 @@
-﻿// ================================================================================================
-// File: EventContact.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2019-01-07: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for 'Unity Engine'.
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using UnityEngine;
 
 namespace MxM

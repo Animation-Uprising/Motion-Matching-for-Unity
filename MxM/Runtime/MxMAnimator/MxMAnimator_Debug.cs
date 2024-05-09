@@ -1,11 +1,5 @@
-﻿// ================================================================================================
-// File: MxMAnimator_Debug.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2019-09-12: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for 'Unity Engine'.
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
@@ -26,6 +20,7 @@ namespace MxM
     public partial class MxMAnimator : MonoBehaviour
     {
 #if UNITY_EDITOR
+
         private bool m_updateThisFrame;
         private float m_lastChosenCost;
         private float m_lastPoseCost;

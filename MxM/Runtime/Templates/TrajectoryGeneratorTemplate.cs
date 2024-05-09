@@ -1,6 +1,7 @@
-﻿using UnityEngine;
-using MxM;
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
 
+using UnityEngine;
+using MxM;
 
 public class MxMTrajectoryGeneratorTemplate : MxMTrajectoryGeneratorBase
 {

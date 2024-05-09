@@ -1,13 +1,5 @@
-﻿// ============================================================================================
-// File: PoseProperty.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2018-05-19: Created this file.
-// 
-//     Contains a part of the 'MxMEditor' namespace for 'Unity Engine 2018.1'.
-// 
-// Copyright (c) 2017 Kenneth Claassen. All rights reserved.
-// ============================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using UnityEngine;
 
 namespace MxMEditor

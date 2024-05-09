@@ -1,4 +1,6 @@
-﻿using System.Numerics;
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
+using System.Numerics;
 using UnityEngine;
 using Vector3 = UnityEngine.Vector3;
 

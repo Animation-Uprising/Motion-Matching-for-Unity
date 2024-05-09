@@ -1,11 +1,5 @@
-﻿// ================================================================================================
-// File: MinimaJobs.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2019-5-03: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for 'Unity Engine'.
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using Unity.Collections;
 using Unity.Burst;
 using Unity.Jobs;

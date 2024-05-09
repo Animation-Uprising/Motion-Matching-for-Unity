@@ -1,11 +1,5 @@
-﻿// ================================================================================================
-// File: RootMotionApplicatorTemplate.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2019-10-10: Created this file.
-// 
-//     A template for 'Motion Matching for Unity'
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using UnityEngine;
 using MxM;
 

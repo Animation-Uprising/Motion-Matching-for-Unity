@@ -1,11 +1,5 @@
-﻿// ================================================================================================
-// File: MxMAnimator_Tags.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2019-10-10: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for 'Unity Engine'.
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using UnityEngine;
 
 namespace MxM
@@ -23,15 +17,15 @@ namespace MxM
 
         private ETags m_desireRequiredTags = ETags.None;
 
-        public EUserTags UserTags => m_curInterpolatedPose.UserTags; //The user tags for the current pose.
+        public EUserTags UserTags { get { return m_curInterpolatedPose.UserTags; } } //The user tags for the current pose.
         public ETags RequiredTags { get; private set; } //The current required tags. The MxMAniamtor will only ever choose poses with these tags
         public ETags FavourTags { get; private set; } //The current favour tags. Poses with these tags will have their cost multiplied by m_favourMultiplier
         public ETags IdleTraits { get; private set; } //The current traits required for idles
         
         public float FavourMultiplier
         {
-            get => m_favourMultiplier;
-            set => m_favourMultiplier = value;
+            get { return m_favourMultiplier; }
+            set { m_favourMultiplier = value; }
         } 
 
         //============================================================================================

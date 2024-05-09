@@ -1,13 +1,5 @@
-﻿// ============================================================================================
-// File: MxMPreProcessDataInspector.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2017-11-05: Created this file.
-// 
-//     Contains a part of the 'MxMEditor' namespace for 'Unity Engine 5'.
-// 
-// Copyright (c) 2019 Kenneth Claassen. All rights reserved.
-// ============================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using UnityEngine;
 using UnityEditor;
 using MxM;
@@ -19,7 +11,7 @@ namespace MxMEditor
 {
 //============================================================================================
 /**
-*  @brief
+*  @brief Editor inspector class for PreProcess Data
 *         
 *********************************************************************************************/ 
     [CustomEditor(typeof(MxMPreProcessData))]

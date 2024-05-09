@@ -1,11 +1,4 @@
-// ================================================================================================
-// File: FSMState.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2016-06-30: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for use with 'Unity Engine'.
-// ================================================================================================
+// Copyright © 2017-2024 Vault Break Studios Pty Ltd
 
 namespace MxM
 {

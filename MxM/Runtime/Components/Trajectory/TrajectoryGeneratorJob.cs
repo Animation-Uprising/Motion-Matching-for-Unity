@@ -1,11 +1,5 @@
-﻿// ================================================================================================
-// File: TrajectoryGeneratorJob.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     2019-11-05: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for 'Unity Engine'.
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
+
 using Unity.Jobs;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -43,7 +37,8 @@ namespace MxM
                     1f - math.exp(-MoveRate * percentage));
 
                 NewTrajectoryPositions[i] = NewTrajectoryPositions[i - 1] + adjustedTrajectoryDisplacement;
-                
+
+
                 TrajectoryRotations[i] = math.degrees(LerpAngle(math.radians(TrajectoryRotations[i]), math.radians(DesiredOrientation),
                     1f - math.exp(-TurnRate * percentage)));
             }

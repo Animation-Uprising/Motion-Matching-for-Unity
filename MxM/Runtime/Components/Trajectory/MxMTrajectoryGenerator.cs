@@ -1,11 +1,4 @@
-﻿// ================================================================================================
-// File: MxMTrajectoryGenerator.cs
-// 
-// Authors:  Kenneth Claassen
-// Date:     07-07-2019: Created this file.
-// 
-//     Contains a part of the 'MxM' namespace for 'Unity Engine'. 
-// ================================================================================================
+﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
 
 using System;
 using UnityEngine;
@@ -415,7 +408,7 @@ namespace MxM
 
                 if(Strafing || (m_faceDirectionOnIdle && !m_hasInputThisFrame))
                     desiredOrientation = Vector3.SignedAngle(Vector3.forward, StrafeDirection, Vector3.up);
-                
+
                 //Rotation iteration
                 to = m_newTrajPositions[0];
                 for (int i = 1; i < m_newTrajPositions.Length; ++i)
