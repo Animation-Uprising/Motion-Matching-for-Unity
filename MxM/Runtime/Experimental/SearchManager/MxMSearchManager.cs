@@ -10,10 +10,10 @@ namespace MxM
 {
     public class MxMSearchManager : MonoBehaviour
     {
-        [FormerlySerializedAs("m_maxUpdatesPerFrame")] [SerializeField] private int m_maxSearchesPerFrame;
-        [SerializeField] private float m_maxAllowableDelay;
-        [SerializeField] private int m_expectedAnimatorCount;
-        [SerializeField] private int m_expectedPhysicsAnimatorCount;
+        [FormerlySerializedAs("m_maxUpdatesPerFrame")] [SerializeField] private int m_maxSearchesPerFrame = 1;
+        [SerializeField] private float m_maxAllowableDelay = 1f;
+        [SerializeField] private int m_expectedAnimatorCount = 3;
+        [SerializeField] private int m_expectedPhysicsAnimatorCount = 0;
         
         public static MxMSearchManager Instance { get; private set; } = null;
 

@@ -464,7 +464,8 @@ namespace MxM
             if (p_riggingIntegration != null)
                 p_riggingIntegration.CacheTransforms();
         }
-#endif       
+#endif
+        
         //============================================================================================
         /**
         *  @brief Updates the MxMAnimator during the physics animation loop. 
@@ -572,6 +573,8 @@ namespace MxM
 
             if (m_inertialBlendModule != null)
                 m_inertialBlendModule.DisposeNativeData();
+            
+            MxMSearchManager.Instance.UnRegisterMxMAnimator(this);
         }
 
         //============================================================================================
