@@ -57,17 +57,15 @@ namespace MxM
         *********************************************************************************************/
         private void UpdateFootSteps()
         {
-            //Todo: Fix this before merging
+            //Todo: Update this for inertialization
             if (m_transitionMethod == ETransitionMethod.Inertialization)
-            {
                 return;
-            }
             
             m_timeSinceLastLeftFootstep += Time.deltaTime;
             m_timeSinceLastRightFootstep += Time.deltaTime;
             
             int trackId = m_dominantPose.TracksId;
-
+            
             if (trackId < 0)
                 return;
 
@@ -75,7 +73,7 @@ namespace MxM
                 return;
 
             ref MxMPlayableState dominantPlayableState = ref m_animationStates[m_dominantBlendChannel];
-            float animTime = m_dominantPose.Time + dominantPlayableState.Age;
+            float animTime = dominantPlayableState.Time;  //Actual time in the current animation including adjustments to playback speed
             AnimationClip clip = CurrentAnimData.Clips[m_dominantPose.PrimaryClipId];
             
             if (clip.isLooping && animTime > clip.length)
@@ -104,7 +102,6 @@ namespace MxM
             //Trigger Right Footstep?
             if (m_timeSinceLastRightFootstep >= m_minFootstepInterval)
             {
-
                 var rightFootStepTrack = CurrentAnimData.RightFootSteps[trackId];
 
                 int stepId = rightFootStepTrack.GetStepStart(range, ref m_cachedLastRightFootstepId);

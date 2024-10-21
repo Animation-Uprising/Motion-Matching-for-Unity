@@ -49,7 +49,8 @@ namespace MxM
                     a_cachedLastStep = i;
                     return -1;
                 }
-                else if(a_range.x <= start)
+                
+                if(a_range.x <= start)
                 {
                     a_cachedLastStep = i;
                     return i;
