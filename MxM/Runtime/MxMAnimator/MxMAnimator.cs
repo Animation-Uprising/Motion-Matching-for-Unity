@@ -231,6 +231,7 @@ namespace MxM
         public MxMAnimData[] AnimData { get { return m_animData; } set { m_animData = value; } }
         public Animator UnityAnimator { get { return p_animator; } }
         public bool IsPaused { get; private set; }
+        public bool IsInitialized { get; private set; } = false;
         public ref AnimationMixerPlayable MixerPlayable { get { return ref m_animationMixer; } }
         public ref AnimationLayerMixerPlayable LayerMixerPlayable { get { return ref m_animationLayerMixer; } }
         public bool BlendTrajectory { get { return m_applyTrajectoryBlending; } set { m_applyTrajectoryBlending = value; } }
@@ -319,7 +320,7 @@ namespace MxM
             set => m_maxUpdateDelay = Mathf.Max(0f, value);
         }
         public AnimatorUpdateMode UpdateMode => p_animator ? p_animator.updateMode : AnimatorUpdateMode.Normal;
-        public bool CanUpdate => !IsPaused && m_animMixerConnected;
+        public bool CanUpdate => !IsPaused && m_animMixerConnected && isActiveAndEnabled;
 
         [Obsolete("MatchBlendTime is deprecated. Please use 'BlendTime' instead")]
         public float MatchBlendTime
@@ -584,7 +585,7 @@ namespace MxM
         *  interface.
         *         
         *********************************************************************************************/
-        protected virtual void OnAnimatorMove()
+        public virtual void OnAnimatorMove()
         {
             if (!m_animMixerConnected/* || IsPaused*/) 
                 return;
@@ -916,6 +917,7 @@ namespace MxM
             SetupExtensions();
 
             m_onSetupComplete.Invoke();
+            IsInitialized = true;
 
 #if UNITY_EDITOR
             DebugData = new MxMDebugger(this, m_maxMixCount, CurrentAnimData.PosePredictionTimes.Length);

@@ -58,7 +58,6 @@ namespace MxM
 
             m_mxmAnimators = new List<MxMAnimator>(m_expectedAnimatorCount);
             m_fixedUpdateMxMAnimators = new List<MxMAnimator>(m_expectedPhysicsAnimatorCount);
-
         }
 
         // Update is called once per frame
@@ -67,19 +66,27 @@ namespace MxM
             if (m_mxmAnimators.Count == 0)
                 return;
             
-            //foreach (MxMAnimator mxmAnimator in m_mxmAnimators)
             int startIndex = m_animatorIndex;
             for(int i = 0; i < m_mxmAnimators.Count; ++i)
             {
                 int thisIndex = WrapIndex(startIndex + i, m_mxmAnimators.Count);
                 
                 MxMAnimator mxmAnimator = m_mxmAnimators[thisIndex];
-                if (mxmAnimator && mxmAnimator.CanUpdate)
+                if (mxmAnimator)
                 {
-#if UNITY_2019_1_OR_NEWER                    
-                    mxmAnimator.CacheRiggingIntegration();
-#endif                 
-                    mxmAnimator.MxMUpdate_Phase1(Time.deltaTime);
+                    if (mxmAnimator.CanUpdate)
+                    {
+#if UNITY_2019_1_OR_NEWER
+                        mxmAnimator.CacheRiggingIntegration();
+#endif
+                        mxmAnimator.MxMUpdate_Phase1(Time.deltaTime);
+                    }
+                }
+                else
+                {
+                    //Unregister any null mxmAnimators
+                    m_mxmAnimators.RemoveAt(thisIndex);
+                    --i;
                 }
             }
             
@@ -97,15 +104,26 @@ namespace MxM
             if (m_fixedUpdateMxMAnimators.Count == 0)
                 return;
             
+            int startIndex = m_fixedAnimatorIndex;
             for(int i = 0; i < m_fixedUpdateMxMAnimators.Count; ++i)
             {
-                MxMAnimator mxmAnimator = m_fixedUpdateMxMAnimators[m_fixedAnimatorIndex];
-                if (mxmAnimator && mxmAnimator.CanUpdate)
+                int thisIndex = WrapIndex(startIndex + i, m_fixedUpdateMxMAnimators.Count);
+                
+                MxMAnimator mxmAnimator = m_fixedUpdateMxMAnimators[thisIndex];
+                if (mxmAnimator)
                 {
-#if UNITY_2019_1_OR_NEWER                    
-                    mxmAnimator.CacheRiggingIntegration();
-#endif                 
-                    mxmAnimator.MxMUpdate_Phase1(Time.fixedDeltaTime);
+                    if ( mxmAnimator.CanUpdate)
+                    {
+#if UNITY_2019_1_OR_NEWER
+                        mxmAnimator.CacheRiggingIntegration();
+#endif
+                        mxmAnimator.MxMUpdate_Phase1(Time.fixedDeltaTime);
+                    }
+                }
+                else
+                {
+                    m_fixedUpdateMxMAnimators.RemoveAt(thisIndex);
+                    --i;
                 }
             }
             
@@ -122,16 +140,22 @@ namespace MxM
         {
             foreach (MxMAnimator mxmAnimator in m_mxmAnimators)
             {
-                mxmAnimator.MxMLateUpdate();
+                if (mxmAnimator && mxmAnimator.CanUpdate)
+                {
+                        mxmAnimator.MxMLateUpdate();
+                }
             }
 
             foreach (MxMAnimator mxmAnimator in m_fixedUpdateMxMAnimators)
             {
-                mxmAnimator.MxMLateUpdate();
+                if (mxmAnimator && mxmAnimator.CanUpdate)
+                {
+                    mxmAnimator.MxMLateUpdate();
+                }
             }
-
-
+            
             m_searchesThisFrame = 0;
+            
         }
 
         public void RegisterMxMAnimator(MxMAnimator a_mxmAnimator)
@@ -169,16 +193,25 @@ namespace MxM
             if (!a_mxmAnimator)
                 return false;
 
-            if (a_forceSearch                                       //Force Search If Requested
-                || a_mxmAnimator.PriorityUpdate                     //Force Search If Priority Animator
-                || m_searchesThisFrame < m_maxSearchesPerFrame      //Allow Search If max has not been reached
-                || a_searchDelay > Mathf.Min(m_maxAllowableDelay, a_mxmAnimator.MaxUpdateDelay)) //Allow search if max delay has been exceeded
+
+            if (a_forceSearch //Force Search If Requested
+                || a_mxmAnimator.PriorityUpdate //Force Search If Priority Animator
+                || m_searchesThisFrame < m_maxSearchesPerFrame //Allow Search If max has not been reached
+                || a_searchDelay > Mathf.Min(m_maxAllowableDelay,a_mxmAnimator.MaxUpdateDelay)) //Allow search if max delay has been exceeded
             {
-                IncrementAnimatorIndex();
+                if (a_mxmAnimator.UpdateMode == AnimatorUpdateMode.AnimatePhysics)
+                {
+                    IncrementFixedUpdateAnimatorIndex();
+                }
+                else
+                {
+                    IncrementAnimatorIndex();
+                }
+                
                 ++m_searchesThisFrame;
                 return true;
             }
-
+            
             return false;
         }
     }
