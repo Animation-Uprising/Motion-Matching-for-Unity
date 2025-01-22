@@ -75,7 +75,7 @@ namespace MxM
 
         //Update Manager
         [SerializeField] private bool m_priorityUpdate = true;
-        [SerializeField] private float m_maxUpdateDelay = 1f;    
+        [SerializeField] private float m_maxUpdateDelay = 0.5f;    
         
         //Trajectory Error Warping
         [SerializeField] private WarpModule m_overrideWarpSettings = null;                                                  //A settings module which overrides all warp settings
@@ -574,8 +574,11 @@ namespace MxM
 
             if (m_inertialBlendModule != null)
                 m_inertialBlendModule.DisposeNativeData();
-            
-            MxMSearchManager.Instance.UnRegisterMxMAnimator(this);
+
+            if (MxMSearchManager.DoesInstanceExist)
+            {
+                MxMSearchManager.Instance.UnRegisterMxMAnimator(this);
+            }
         }
 
         //============================================================================================

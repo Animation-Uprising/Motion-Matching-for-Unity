@@ -1,5 +1,6 @@
 ﻿// Copyright © 2017-2024 Vault Break Studios Pty Ltd
 
+using System;
 using System.Collections.Generic;
 using Unity.Jobs;
 using UnityEngine;
@@ -14,8 +15,40 @@ namespace MxM
         [SerializeField] private float m_maxAllowableDelay = 1f;
         [SerializeField] private int m_expectedAnimatorCount = 3;
         [SerializeField] private int m_expectedPhysicsAnimatorCount = 0;
-        
-        public static MxMSearchManager Instance { get; private set; } = null;
+
+        private static MxMSearchManager m_instance = null;
+        public static MxMSearchManager Instance
+        {
+            get
+            {
+                if (m_instance == null)
+                {
+                    m_instance = FindObjectOfType<MxMSearchManager>();
+
+                    if (m_instance == null)
+                    {
+                        GameObject singletonObject = new GameObject("MxMSearchManager");
+                        m_instance = singletonObject.AddComponent<MxMSearchManager>();
+                        
+                        Debug.Log("Could not find instance of MxMSearchManager in scene, instance created programmatically.");
+                    }
+
+                    if (m_instance)
+                    {
+                        m_instance.Initialize();
+                    }
+                }
+
+                return m_instance;
+            }
+            
+            private set { m_instance = value;  }
+        }
+
+        public static bool DoesInstanceExist
+        {
+            get { return m_instance; }
+        }
 
         private List<MxMAnimator> m_mxmAnimators;
         private List<MxMAnimator> m_fixedUpdateMxMAnimators;
@@ -42,22 +75,19 @@ namespace MxM
             }
         }
 
-        
-        // Start is called before the first frame update
-        void Awake()
+        void Initialize()
         {
-            if (Instance != null)
-            {
-                Debug.LogWarning(
-                    "Attempting to create an MxMSearchManager but one already exists and only one is allowed.");
-                Destroy(this);
-                return;
-            }
-
-            Instance = this;
-
             m_mxmAnimators = new List<MxMAnimator>(m_expectedAnimatorCount);
             m_fixedUpdateMxMAnimators = new List<MxMAnimator>(m_expectedPhysicsAnimatorCount);
+        }
+
+        private void Awake()
+        {
+            if (!m_instance)
+            {
+                m_instance = this;
+                Initialize();
+            }
         }
 
         // Update is called once per frame
