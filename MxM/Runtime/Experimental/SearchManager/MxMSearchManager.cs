@@ -96,10 +96,10 @@ namespace MxM
             if (m_mxmAnimators.Count == 0)
                 return;
             
-            int startIndex = m_animatorIndex;
+            int startIndex = Mathf.Clamp(m_animatorIndex, 0, m_mxmAnimators.Count);
             for(int i = 0; i < m_mxmAnimators.Count; ++i)
             {
-                int thisIndex = WrapIndex(startIndex + i, m_mxmAnimators.Count);
+                int thisIndex = (startIndex + i) % m_mxmAnimators.Count;
                 
                 MxMAnimator mxmAnimator = m_mxmAnimators[thisIndex];
                 if (mxmAnimator)
@@ -124,20 +124,15 @@ namespace MxM
             JobHandle.ScheduleBatchedJobs();
         }
 
-        int WrapIndex(int a_index, int a_maxIndex)
-        {
-            return a_index >= a_maxIndex ? a_index - a_maxIndex : a_index;
-        }
-        
         void FixedUpdate()
         {
             if (m_fixedUpdateMxMAnimators.Count == 0)
                 return;
             
-            int startIndex = m_fixedAnimatorIndex;
+            int startIndex = Mathf.Clamp(m_fixedAnimatorIndex, 0, m_fixedUpdateMxMAnimators.Count);
             for(int i = 0; i < m_fixedUpdateMxMAnimators.Count; ++i)
             {
-                int thisIndex = WrapIndex(startIndex + i, m_fixedUpdateMxMAnimators.Count);
+                int thisIndex = (startIndex + i) % m_fixedUpdateMxMAnimators.Count;
                 
                 MxMAnimator mxmAnimator = m_fixedUpdateMxMAnimators[thisIndex];
                 if (mxmAnimator)
@@ -211,10 +206,12 @@ namespace MxM
             if (a_mxmAnimator.UpdateMode == AnimatorUpdateMode.AnimatePhysics)
             {
                 m_fixedUpdateMxMAnimators.Remove(a_mxmAnimator);
+                m_fixedAnimatorIndex = Mathf.Clamp(m_animatorIndex, 0, m_fixedUpdateMxMAnimators.Count);
             }
             else
             {
                 m_mxmAnimators.Remove(a_mxmAnimator);
+                m_animatorIndex = Mathf.Clamp(m_animatorIndex, 0, m_mxmAnimators.Count);
             }
         }
 
@@ -222,8 +219,7 @@ namespace MxM
         {
             if (!a_mxmAnimator)
                 return false;
-
-
+            
             if (a_forceSearch //Force Search If Requested
                 || a_mxmAnimator.PriorityUpdate //Force Search If Priority Animator
                 || m_searchesThisFrame < m_maxSearchesPerFrame //Allow Search If max has not been reached

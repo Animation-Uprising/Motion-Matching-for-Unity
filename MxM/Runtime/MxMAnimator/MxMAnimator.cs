@@ -1372,8 +1372,6 @@ namespace MxM
                 ComputeCurrentPose();
                 GenerateGoalTrajectory(p_trajectoryGenerator.GetCurrentGoal());
             }
-
-           
         }
 
         //============================================================================================
