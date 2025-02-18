@@ -96,7 +96,7 @@ namespace MxM
             if (m_mxmAnimators.Count == 0)
                 return;
             
-            int startIndex = Mathf.Clamp(m_animatorIndex, 0, m_mxmAnimators.Count);
+            int startIndex = Mathf.Clamp(m_animatorIndex, 0, Mathf.Max(0, m_mxmAnimators.Count-1));
             for(int i = 0; i < m_mxmAnimators.Count; ++i)
             {
                 int thisIndex = (startIndex + i) % m_mxmAnimators.Count;
@@ -129,7 +129,7 @@ namespace MxM
             if (m_fixedUpdateMxMAnimators.Count == 0)
                 return;
             
-            int startIndex = Mathf.Clamp(m_fixedAnimatorIndex, 0, m_fixedUpdateMxMAnimators.Count);
+            int startIndex = Mathf.Clamp(m_fixedAnimatorIndex, 0, Mathf.Max(0, m_fixedUpdateMxMAnimators.Count-1));
             for(int i = 0; i < m_fixedUpdateMxMAnimators.Count; ++i)
             {
                 int thisIndex = (startIndex + i) % m_fixedUpdateMxMAnimators.Count;
@@ -206,12 +206,12 @@ namespace MxM
             if (a_mxmAnimator.UpdateMode == AnimatorUpdateMode.AnimatePhysics)
             {
                 m_fixedUpdateMxMAnimators.Remove(a_mxmAnimator);
-                m_fixedAnimatorIndex = Mathf.Clamp(m_animatorIndex, 0, m_fixedUpdateMxMAnimators.Count);
+                m_fixedAnimatorIndex = Mathf.Clamp(m_animatorIndex, 0, Mathf.Max(0,m_fixedUpdateMxMAnimators.Count-1));
             }
             else
             {
                 m_mxmAnimators.Remove(a_mxmAnimator);
-                m_animatorIndex = Mathf.Clamp(m_animatorIndex, 0, m_mxmAnimators.Count);
+                m_animatorIndex = Mathf.Clamp(m_animatorIndex, 0, Mathf.Max(0, m_mxmAnimators.Count-1));
             }
         }
 
