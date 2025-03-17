@@ -26,8 +26,6 @@ namespace MxM
         private JobHandle m_poseJobHandle;
         private JobHandle m_trajJobHandle;
         private JobHandle m_minimaJobHandle;
-        
-        private const int k_scheduleBatchSize = 8; //Change this value to change how often MxMAnimator jobs are batched.
 
         //============================================================================================
         /**
@@ -130,7 +128,7 @@ namespace MxM
                 GoalCosts = m_trajCosts
             };
 
-            return computeTrajJob.ScheduleBatch(a_numPoses, 64, m_trajJobHandle);
+            return computeTrajJob.Schedule(a_numPoses, 64, m_trajJobHandle);
         }
 
         //============================================================================================
@@ -166,7 +164,7 @@ namespace MxM
                 GoalCosts = m_trajCosts
             };
 
-            return computeTrajJob.ScheduleBatch(a_numPoses, 64, m_trajJobHandle);
+            return computeTrajJob.Schedule(a_numPoses, 64, m_trajJobHandle);
         }
 
         //============================================================================================
@@ -204,7 +202,7 @@ namespace MxM
                 GoalCosts = m_trajCosts
             };
 
-            return computeTrajJob.ScheduleBatch(a_numPoses, 64, m_trajJobHandle);
+            return computeTrajJob.Schedule(a_numPoses, 64, m_trajJobHandle);
         }
 
         //============================================================================================
@@ -244,7 +242,7 @@ namespace MxM
                 GoalCosts = m_trajCosts
             };
 
-            return computeTrajJob.ScheduleBatch(a_numPoses, 64, m_trajJobHandle);
+            return computeTrajJob.Schedule(a_numPoses, 64, m_trajJobHandle);
         }
 
         //============================================================================================
@@ -291,7 +289,7 @@ namespace MxM
                 GoalCosts = m_trajCosts
             };
 
-            return computeTrajJob.ScheduleBatch(a_numPoses, 64, m_trajJobHandle);
+            return computeTrajJob.Schedule(a_numPoses, 64, m_trajJobHandle);
         }
 
         //============================================================================================
@@ -340,7 +338,7 @@ namespace MxM
                 GoalCosts = m_trajCosts
             };
 
-            return computeTrajJob.ScheduleBatch(a_numPoses, 64, m_trajJobHandle);
+            return computeTrajJob.Schedule(a_numPoses, 64, m_trajJobHandle);
         }
 
         //============================================================================================
@@ -391,7 +389,7 @@ namespace MxM
                 GoalCosts = m_trajCosts
             };
 
-            return computeTrajJob.ScheduleBatch(a_numPoses, 64, m_trajJobHandle);
+            return computeTrajJob.Schedule(a_numPoses, 64, m_trajJobHandle);
         }
 
         //============================================================================================
@@ -444,7 +442,7 @@ namespace MxM
                 GoalCosts = m_trajCosts
             };
 
-            return computeTrajJob.ScheduleBatch(a_numPoses, 64, m_trajJobHandle);
+            return computeTrajJob.Schedule(a_numPoses, 64, m_trajJobHandle);
         }
 
         //============================================================================================
@@ -504,7 +502,7 @@ namespace MxM
                 GoalCosts = m_trajCosts
             };
 
-            return computeTrajJob.ScheduleBatch(a_numPoses, 64, m_trajJobHandle);
+            return computeTrajJob.Schedule(a_numPoses, 64, m_trajJobHandle);
         }
 
         //============================================================================================
@@ -566,7 +564,7 @@ namespace MxM
                 GoalCosts = m_trajCosts
             };
 
-            return computeTrajJob.ScheduleBatch(a_numPoses, 64, m_trajJobHandle);
+            return computeTrajJob.Schedule(a_numPoses, 64, m_trajJobHandle);
         }
 
         //============================================================================================
@@ -630,7 +628,7 @@ namespace MxM
                 GoalCosts = m_trajCosts
             };
 
-            return computeTrajJob.ScheduleBatch(a_numPoses, 64, m_trajJobHandle);
+            return computeTrajJob.Schedule(a_numPoses, 64, m_trajJobHandle);
         }
 
         //============================================================================================
@@ -696,7 +694,7 @@ namespace MxM
                 GoalCosts = m_trajCosts
             };
 
-            return computeTrajJob.ScheduleBatch(a_numPoses, 64, m_trajJobHandle);
+            return computeTrajJob.Schedule(a_numPoses, 64, m_trajJobHandle);
         }
 
         //============================================================================================
@@ -737,7 +735,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -787,7 +785,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -842,7 +840,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -906,7 +904,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -980,7 +978,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -1061,7 +1059,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -1145,7 +1143,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -1237,7 +1235,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -1278,7 +1276,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -1330,7 +1328,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -1387,7 +1385,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -1453,7 +1451,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -1529,7 +1527,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -1612,7 +1610,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -1698,7 +1696,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================
@@ -1792,7 +1790,7 @@ namespace MxM
                 GoalCosts = m_poseCosts
             };
 
-            return computePoseJob.ScheduleBatch(a_numPoses, 64, m_poseJobHandle);
+            return computePoseJob.Schedule(a_numPoses, 64, m_poseJobHandle);
         }
 
         //============================================================================================

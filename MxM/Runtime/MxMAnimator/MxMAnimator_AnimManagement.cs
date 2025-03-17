@@ -96,13 +96,13 @@ namespace MxM
             
             var playable = m_animationMixer.GetInput(a_slotId);
 
-            if(playable.IsValid())
+            if (playable.IsValid())
             {
-                //m_animationMixer.DisconnectInput(a_slotId);
+               // m_animationMixer.DisconnectInput(a_slotId);
                 PlayableUtils.DestroyPlayableRecursive(ref playable);
             }
         }
-
+        
         //============================================================================================
         /**
         *  @brief Clears the weights of all input to the motion matching mixer to zero.

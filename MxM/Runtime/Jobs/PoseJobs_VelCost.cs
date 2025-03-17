@@ -13,7 +13,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct ComputePose01Costs_VelCost : IJobParallelForBatch
+    public struct ComputePose01Costs_VelCost : IJobParallelFor
     {
         //Animation Pose Database
         [ReadOnly]
@@ -37,28 +37,25 @@ namespace MxM
         [WriteOnly]
         public NativeArray<float> GoalCosts;
 
-        public void Execute(int startIndex, int count)
+        public void Execute(int index)
         {
-            for (int i = startIndex; i < startIndex + count; ++i)
-            {
+            //Calculate Cost of Pose Joint Positions
+            float3x3 jointDiff = InputPoses[index] - DesiredPose;
 
-                //Calculate Cost of Pose Joint Positions
-                float3x3 jointDiff = InputPoses[i] - DesiredPose;
+            float3 jointDist = math.sqrt((jointDiff.c0 * jointDiff.c0) +
+                                         (jointDiff.c1 * jointDiff.c1) +
+                                         (jointDiff.c2 * jointDiff.c2)) * Weights;
 
-                float3 jointDist = math.sqrt((jointDiff.c0 * jointDiff.c0) +
-                                     (jointDiff.c1 * jointDiff.c1) +
-                                     (jointDiff.c2 * jointDiff.c2)) * Weights;
+            //Calculate resultsant pose
+            float3 jointResultVel = jointDiff.c0 / PoseInterval;
+            float3 jointResultVelDiff = InputPoses[index].c1 - jointResultVel;
 
-                //Calculate resultsant pose
-                float3 jointResultVel = jointDiff.c0 / PoseInterval;
-                float3 jointResultVelDiff = InputPoses[i].c1 - jointResultVel;
+            float jointResultVelDist = math.sqrt((jointResultVelDiff.x * jointResultVelDiff.x) +
+                                                 (jointResultVelDiff.y * jointResultVelDiff.y) +
+                                                 (jointResultVelDiff.z * jointResultVelDiff.z)) *
+                                       (Weights.y * ResultantVelocityWeight);
 
-                float jointResultVelDist = math.sqrt((jointResultVelDiff.x * jointResultVelDiff.x) +
-                                      (jointResultVelDiff.y * jointResultVelDiff.y) +
-                                      (jointResultVelDiff.z * jointResultVelDiff.z)) * (Weights.y * ResultantVelocityWeight);
-
-                GoalCosts[i] = jointDist.x + jointDist.y + jointDist.z + jointResultVelDist;
-            }
+            GoalCosts[index] = jointDist.x + jointDist.y + jointDist.z + jointResultVelDist;
         }
     }//End of struct: ComputePose03Costs
 
@@ -68,7 +65,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct ComputePose02Costs_VelCost : IJobParallelForBatch
+    public struct ComputePose02Costs_VelCost : IJobParallelFor
     {
         //Animation Pose Database
         [ReadOnly]
@@ -95,44 +92,43 @@ namespace MxM
         [WriteOnly]
         public NativeArray<float> GoalCosts;
 
-        public void Execute(int startIndex, int count)
+        public void Execute(int index)
         {
-            for (int i = startIndex; i < startIndex + count; ++i)
-            {
 
-                //Calculate Cost of Pose Joint Positions
-                float2x3 jointPosDiff = InputPoses[i].JointPositions - DesiredPose.JointPositions;
 
-                float2 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
-                                      (jointPosDiff.c1 * jointPosDiff.c1) +
-                                      (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeights;
+            //Calculate Cost of Pose Joint Positions
+            float2x3 jointPosDiff = InputPoses[index].JointPositions - DesiredPose.JointPositions;
 
-                float3x3 jointVelocities = InputPoses[i].JointVelocities;
+            float2 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
+                                            (jointPosDiff.c1 * jointPosDiff.c1) +
+                                            (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeights;
 
-                //Calculate Cost of Pose Velocity & Joints Velocity
-                float3x3 jointVelDiff = jointVelocities - DesiredPose.JointVelocities;
+            float3x3 jointVelocities = InputPoses[index].JointVelocities;
 
-                float3 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
-                                      (jointVelDiff.c1 * jointVelDiff.c1) +
-                                      (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeights;
+            //Calculate Cost of Pose Velocity & Joints Velocity
+            float3x3 jointVelDiff = jointVelocities - DesiredPose.JointVelocities;
 
-                //Calculate resultsant pose
-                float3x3 jointResultVel = new float3x3(new float3(jointPosDiff.c0, 0f),
-                                                          new float3(jointPosDiff.c1, 0f),
-                                                          new float3(jointPosDiff.c2, 0f)) / PoseInterval;
+            float3 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
+                                            (jointVelDiff.c1 * jointVelDiff.c1) +
+                                            (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeights;
 
-                float3x3 jointResultVelDiff = jointVelocities - jointResultVel;
+            //Calculate resultsant pose
+            float3x3 jointResultVel = new float3x3(new float3(jointPosDiff.c0, 0f),
+                new float3(jointPosDiff.c1, 0f),
+                new float3(jointPosDiff.c2, 0f)) / PoseInterval;
 
-                float3 jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
-                                      (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
-                                      (jointResultVelDiff.c2 * jointResultVelDiff.c2)) * (JointVelocityWeights * ResultantVelocityWeight);
+            float3x3 jointResultVelDiff = jointVelocities - jointResultVel;
 
-                //Calculate final total cost of the pose
-                GoalCosts[i] = jointVelDist.x + jointVelDist.y + jointVelDist.z
-                                + jointPosDist.x + jointPosDist.y
-                                + jointResultVelDist.x + jointResultVelDist.y + jointResultVelDist.z;
+            float3 jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
+                                                  (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
+                                                  (jointResultVelDiff.c2 * jointResultVelDiff.c2)) *
+                                        (JointVelocityWeights * ResultantVelocityWeight);
 
-            }
+            //Calculate final total cost of the pose
+            GoalCosts[index] = jointVelDist.x + jointVelDist.y + jointVelDist.z
+                               + jointPosDist.x + jointPosDist.y
+                               + jointResultVelDist.x + jointResultVelDist.y + jointResultVelDist.z;
+
         }
     }//End of struct: ComputePose02Costs
 
@@ -142,7 +138,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct ComputePose03Costs_VelCost : IJobParallelForBatch
+    public struct ComputePose03Costs_VelCost : IJobParallelFor
     {
         //Animation Pose Database
         [ReadOnly]
@@ -170,45 +166,44 @@ namespace MxM
         public NativeArray<float> GoalCosts;
 
 
-        public void Execute(int startIndex, int count)
+        public void Execute(int index)
         {
-            for (int i = startIndex; i < startIndex + count; ++i)
-            {
-
-                //Calculate Cost of Pose Joint Positions
-                float3x3 jointPosDiff = InputPoses[i].JointPositions - DesiredPose.JointPositions;
-
-                float3 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
-                                      (jointPosDiff.c1 * jointPosDiff.c1) +
-                                      (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeights;
 
 
-                float4x3 jointVelocities = InputPoses[i].JointVelocities;
+            //Calculate Cost of Pose Joint Positions
+            float3x3 jointPosDiff = InputPoses[index].JointPositions - DesiredPose.JointPositions;
 
-                //Calculate Cost of Pose Velocity & Joints Velocity
-                float4x3 jointVelDiff = jointVelocities - DesiredPose.JointVelocities;
-
-                float4 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
-                                      (jointVelDiff.c1 * jointVelDiff.c1) +
-                                      (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeights;
+            float3 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
+                                            (jointPosDiff.c1 * jointPosDiff.c1) +
+                                            (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeights;
 
 
-                //Calculate resultsant pose
-                float4x3 jointResultVel = new float4x3(new float4(jointPosDiff.c0, 0f),
-                                                          new float4(jointPosDiff.c1, 0f),
-                                                          new float4(jointPosDiff.c2, 0f)) / PoseInterval;
+            float4x3 jointVelocities = InputPoses[index].JointVelocities;
 
-                float4x3 jointResultVelDiff = jointVelocities - jointResultVel;
+            //Calculate Cost of Pose Velocity & Joints Velocity
+            float4x3 jointVelDiff = jointVelocities - DesiredPose.JointVelocities;
 
-                float4 jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
-                                      (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
-                                      (jointResultVelDiff.c2 * jointResultVelDiff.c2)) * (JointVelocityWeights * ResultantVelocityWeight);
+            float4 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
+                                            (jointVelDiff.c1 * jointVelDiff.c1) +
+                                            (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeights;
 
-                //Calculate final total cost of the pose
-                GoalCosts[i] = jointVelDist.x + jointVelDist.y + jointVelDist.z + jointVelDist.w
-                                + jointPosDist.x + jointPosDist.y + jointPosDist.z +
-                                jointResultVelDist.x + jointResultVelDist.y + jointResultVelDist.z;
-            }
+
+            //Calculate resultsant pose
+            float4x3 jointResultVel = new float4x3(new float4(jointPosDiff.c0, 0f),
+                new float4(jointPosDiff.c1, 0f),
+                new float4(jointPosDiff.c2, 0f)) / PoseInterval;
+
+            float4x3 jointResultVelDiff = jointVelocities - jointResultVel;
+
+            float4 jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
+                                                  (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
+                                                  (jointResultVelDiff.c2 * jointResultVelDiff.c2)) *
+                                        (JointVelocityWeights * ResultantVelocityWeight);
+
+            //Calculate final total cost of the pose
+            GoalCosts[index] = jointVelDist.x + jointVelDist.y + jointVelDist.z + jointVelDist.w
+                               + jointPosDist.x + jointPosDist.y + jointPosDist.z +
+                               jointResultVelDist.x + jointResultVelDist.y + jointResultVelDist.z;
         }
     }//End of struct: ComputePose03Costs
 
@@ -218,7 +213,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct ComputePose04Costs_VelCost : IJobParallelForBatch
+    public struct ComputePose04Costs_VelCost : IJobParallelFor
     {
         //Animation Pose Database
         [ReadOnly]
@@ -248,45 +243,45 @@ namespace MxM
         [WriteOnly]
         public NativeArray<float> GoalCosts;
 
-        public void Execute(int startIndex, int count)
+        public void Execute(int index)
         {
-            for (int i = startIndex; i < startIndex + count; ++i)
-            {
-
-                //Calculate Cost of Pose Joint Positions
-                float4x3 jointPosDiff = InputPoses[i].JointPositions - DesiredPose.JointPositions;
-
-                float4 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
-                                      (jointPosDiff.c1 * jointPosDiff.c1) +
-                                      (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeights;
-
-                float4x3 jointVelocities = InputPoses[i].JointVelocities;
-
-                //Calculate Cost of Pose Velocity & Joints Velocity
-                float4x3 jointVelDiff = jointVelocities - DesiredPose.JointVelocities;
-
-                float4 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
-                                      (jointVelDiff.c1 * jointVelDiff.c1) +
-                                      (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeights;
-
-                float3 bodyVel = (InputPoses[i].BodyVelocity - DesiredPose.BodyVelocity);
-                float bodyVelDist = ((bodyVel.x * bodyVel.x) +
-                                              (bodyVel.y * bodyVel.y) +
-                                              (bodyVel.z * bodyVel.z)) * BodyVelocityWeight;
-
-                //Calculate resultsant pose
-                float4x3 jointResultVel = jointPosDiff / PoseInterval;
-                float4x3 jointResultVelDiff = jointVelocities - jointResultVel;
-
-                float4 jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
-                                      (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
-                                      (jointResultVelDiff.c2 * jointResultVelDiff.c2)) * (JointVelocityWeights * ResultantVelocityWeight);
 
 
-                GoalCosts[i] = jointVelDist.x + jointVelDist.y + jointVelDist.z + jointVelDist.w
-                                + jointPosDist.x + jointPosDist.y + jointPosDist.z + bodyVelDist
-                                + jointResultVelDist.x + jointResultVelDist.y + jointResultVelDist.z + jointResultVelDist.w;
-            }
+            //Calculate Cost of Pose Joint Positions
+            float4x3 jointPosDiff = InputPoses[index].JointPositions - DesiredPose.JointPositions;
+
+            float4 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
+                                            (jointPosDiff.c1 * jointPosDiff.c1) +
+                                            (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeights;
+
+            float4x3 jointVelocities = InputPoses[index].JointVelocities;
+
+            //Calculate Cost of Pose Velocity & Joints Velocity
+            float4x3 jointVelDiff = jointVelocities - DesiredPose.JointVelocities;
+
+            float4 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
+                                            (jointVelDiff.c1 * jointVelDiff.c1) +
+                                            (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeights;
+
+            float3 bodyVel = (InputPoses[index].BodyVelocity - DesiredPose.BodyVelocity);
+            float bodyVelDist = ((bodyVel.x * bodyVel.x) +
+                                 (bodyVel.y * bodyVel.y) +
+                                 (bodyVel.z * bodyVel.z)) * BodyVelocityWeight;
+
+            //Calculate resultsant pose
+            float4x3 jointResultVel = jointPosDiff / PoseInterval;
+            float4x3 jointResultVelDiff = jointVelocities - jointResultVel;
+
+            float4 jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
+                                                  (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
+                                                  (jointResultVelDiff.c2 * jointResultVelDiff.c2)) *
+                                        (JointVelocityWeights * ResultantVelocityWeight);
+
+
+            GoalCosts[index] = jointVelDist.x + jointVelDist.y + jointVelDist.z + jointVelDist.w
+                               + jointPosDist.x + jointPosDist.y + jointPosDist.z + bodyVelDist
+                               + jointResultVelDist.x + jointResultVelDist.y + jointResultVelDist.z +
+                               jointResultVelDist.w;
         }
     }//End of struct: ComputePose04Job
 
@@ -296,7 +291,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct ComputePose05Costs_VelCost : IJobParallelForBatch
+    public struct ComputePose05Costs_VelCost : IJobParallelFor
     {
         //Animation Pose Database
         [ReadOnly]
@@ -328,68 +323,68 @@ namespace MxM
         //Output
         public NativeArray<float> GoalCosts;
 
-        public void Execute(int startIndex, int count)
+        public void Execute(int index)
         {
-            for (int i = startIndex; i < startIndex + count; ++i)
-            {
 
-                //Calculate Cost of Pose Joint Positions
-                float3x3 jointPosDiff = InputPoses[i].JointPositionsA - DesiredPose.JointPositionsA;
 
-                float3 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
-                                      (jointPosDiff.c1 * jointPosDiff.c1) +
-                                      (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeightsA;
+            //Calculate Cost of Pose Joint Positions
+            float3x3 jointPosDiff = InputPoses[index].JointPositionsA - DesiredPose.JointPositionsA;
 
-                float3x3 jointVelocitiesA = InputPoses[i].JointVelocitiesA;
+            float3 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
+                                            (jointPosDiff.c1 * jointPosDiff.c1) +
+                                            (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeightsA;
 
-                //Calculate Cost of Pose Velocity & Joints Velocity
-                float3x3 jointVelDiff = jointVelocitiesA - DesiredPose.JointVelocitiesA;
+            float3x3 jointVelocitiesA = InputPoses[index].JointVelocitiesA;
 
-                float3 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
-                                      (jointVelDiff.c1 * jointVelDiff.c1) +
-                                      (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsA;
+            //Calculate Cost of Pose Velocity & Joints Velocity
+            float3x3 jointVelDiff = jointVelocitiesA - DesiredPose.JointVelocitiesA;
 
-                //Calculate resultsant pose A
-                float3x3 jointResultVelA = jointPosDiff / PoseInterval;
-                float3x3 jointResultVelDiffA = jointVelocitiesA - jointResultVelA;
+            float3 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
+                                            (jointVelDiff.c1 * jointVelDiff.c1) +
+                                            (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsA;
 
-                float3 jointResultVelDistA = math.sqrt((jointResultVelDiffA.c0 * jointResultVelDiffA.c0) +
-                                      (jointResultVelDiffA.c1 * jointResultVelDiffA.c1) +
-                                      (jointResultVelDiffA.c2 * jointResultVelDiffA.c2)) * (JointVelocityWeightsB * ResultantVelocityWeight);
+            //Calculate resultsant pose A
+            float3x3 jointResultVelA = jointPosDiff / PoseInterval;
+            float3x3 jointResultVelDiffA = jointVelocitiesA - jointResultVelA;
 
-                GoalCosts[i] = jointVelDist.x + jointVelDist.y + jointVelDist.z
-                                + jointPosDist.x + jointPosDist.y + jointPosDist.z
-                                + jointResultVelDistA.x + jointResultVelDistA.y + jointResultVelDistA.z;
+            float3 jointResultVelDistA = math.sqrt((jointResultVelDiffA.c0 * jointResultVelDiffA.c0) +
+                                                   (jointResultVelDiffA.c1 * jointResultVelDiffA.c1) +
+                                                   (jointResultVelDiffA.c2 * jointResultVelDiffA.c2)) *
+                                         (JointVelocityWeightsB * ResultantVelocityWeight);
 
-                float2x3 jointPosDiffB = InputPoses[i].JointPositionsB - DesiredPose.JointPositionsB;
+            GoalCosts[index] = jointVelDist.x + jointVelDist.y + jointVelDist.z
+                               + jointPosDist.x + jointPosDist.y + jointPosDist.z
+                               + jointResultVelDistA.x + jointResultVelDistA.y + jointResultVelDistA.z;
 
-                float2 jointPosDistB = math.sqrt((jointPosDiffB.c0 * jointPosDiffB.c0) +
-                                      (jointPosDiffB.c1 * jointPosDiffB.c1) +
-                                      (jointPosDiffB.c2 * jointPosDiffB.c2)) * JointPositionWeightsB;
+            float2x3 jointPosDiffB = InputPoses[index].JointPositionsB - DesiredPose.JointPositionsB;
 
-                float3x3 jointVelocitiesB = InputPoses[i].JointVelocitiesB;
+            float2 jointPosDistB = math.sqrt((jointPosDiffB.c0 * jointPosDiffB.c0) +
+                                             (jointPosDiffB.c1 * jointPosDiffB.c1) +
+                                             (jointPosDiffB.c2 * jointPosDiffB.c2)) * JointPositionWeightsB;
 
-                jointVelDiff = jointVelocitiesB - DesiredPose.JointVelocitiesB;
+            float3x3 jointVelocitiesB = InputPoses[index].JointVelocitiesB;
 
-                jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
-                                      (jointVelDiff.c1 * jointVelDiff.c1) +
-                                      (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsB;
+            jointVelDiff = jointVelocitiesB - DesiredPose.JointVelocitiesB;
 
-                //Calculate resultant pose B
-                float3x3 jointResultVelB = new float3x3(new float3(jointPosDiffB.c0, 0f),
-                                                        new float3(jointPosDiffB.c1, 0f),
-                                                        new float3(jointPosDiffB.c2, 0f));
+            jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
+                                     (jointVelDiff.c1 * jointVelDiff.c1) +
+                                     (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsB;
 
-                float3x3 jointResultVelDiffB = jointVelocitiesB - jointResultVelB;
+            //Calculate resultant pose B
+            float3x3 jointResultVelB = new float3x3(new float3(jointPosDiffB.c0, 0f),
+                new float3(jointPosDiffB.c1, 0f),
+                new float3(jointPosDiffB.c2, 0f));
 
-                float3 jointResultVelDistB = math.sqrt((jointResultVelDiffB.c0 * jointResultVelDiffB.c0) +
-                                      (jointResultVelDiffB.c1 * jointResultVelDiffB.c1) +
-                                      (jointResultVelDiffB.c2 * jointResultVelDiffB.c2)) * (JointVelocityWeightsB * ResultantVelocityWeight);
+            float3x3 jointResultVelDiffB = jointVelocitiesB - jointResultVelB;
 
-                GoalCosts[i] += jointVelDist.x + jointVelDist.y + jointVelDist.z
+            float3 jointResultVelDistB = math.sqrt((jointResultVelDiffB.c0 * jointResultVelDiffB.c0) +
+                                                   (jointResultVelDiffB.c1 * jointResultVelDiffB.c1) +
+                                                   (jointResultVelDiffB.c2 * jointResultVelDiffB.c2)) *
+                                         (JointVelocityWeightsB * ResultantVelocityWeight);
+
+            GoalCosts[index] += jointVelDist.x + jointVelDist.y + jointVelDist.z
                                 + jointPosDistB.x + jointPosDistB.y
                                 + jointResultVelDistB.x + jointResultVelDistB.y;
-            }
         }
     }//End of struct: ComputePose06Costs
 
@@ -399,7 +394,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct ComputePose06Costs_VelCost : IJobParallelForBatch
+    public struct ComputePose06Costs_VelCost : IJobParallelFor
     {
         //Animation Pose Database
         [ReadOnly]
@@ -434,73 +429,73 @@ namespace MxM
         [ReadOnly]
         public float PoseInterval;
 
-        public void Execute(int startIndex, int count)
+        public void Execute(int index)
         {
-            for (int i = startIndex; i < startIndex + count; ++i)
-            {
 
-                //Calculate Cost of Pose Joint Positions
-                float3x3 jointPosDiff = InputPoses[i].JointPositionsA - DesiredPose.JointPositionsA;
 
-                float3 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
-                                      (jointPosDiff.c1 * jointPosDiff.c1) +
-                                      (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeightsA;
+            //Calculate Cost of Pose Joint Positions
+            float3x3 jointPosDiff = InputPoses[index].JointPositionsA - DesiredPose.JointPositionsA;
 
-                float3x3 jointVelocities = InputPoses[i].JointVelocitiesA;
+            float3 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
+                                            (jointPosDiff.c1 * jointPosDiff.c1) +
+                                            (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeightsA;
 
-                //Calculate Cost of Pose Velocity & Joints Velocity
-                float3x3 jointVelDiff = jointVelocities - DesiredPose.JointVelocitiesA;
+            float3x3 jointVelocities = InputPoses[index].JointVelocitiesA;
 
-                float3 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
-                                      (jointVelDiff.c1 * jointVelDiff.c1) +
-                                      (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsA;
+            //Calculate Cost of Pose Velocity & Joints Velocity
+            float3x3 jointVelDiff = jointVelocities - DesiredPose.JointVelocitiesA;
 
-                float3 bodyVel = (InputPoses[i].BodyVelocity - DesiredPose.BodyVelocity);
-                float bodyVelDist = ((bodyVel.x * bodyVel.x) +
-                                              (bodyVel.y * bodyVel.y) +
-                                              (bodyVel.z * bodyVel.z)) * BodyVelocityWeight;
+            float3 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
+                                            (jointVelDiff.c1 * jointVelDiff.c1) +
+                                            (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsA;
 
-                //Calculate resultant pose A
-                float3x3 jointResultVel = jointPosDiff / PoseInterval;
-                float3x3 jointResultVelDiff = jointVelocities - jointResultVel;
+            float3 bodyVel = (InputPoses[index].BodyVelocity - DesiredPose.BodyVelocity);
+            float bodyVelDist = ((bodyVel.x * bodyVel.x) +
+                                 (bodyVel.y * bodyVel.y) +
+                                 (bodyVel.z * bodyVel.z)) * BodyVelocityWeight;
 
-                float3 jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
-                                      (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
-                                      (jointResultVelDiff.c2 * jointResultVelDiff.c2)) * (JointVelocityWeightsB * ResultantVelocityWeight);
+            //Calculate resultant pose A
+            float3x3 jointResultVel = jointPosDiff / PoseInterval;
+            float3x3 jointResultVelDiff = jointVelocities - jointResultVel;
 
-                GoalCosts[i] = jointVelDist.x + jointVelDist.y + jointVelDist.z
-                                + jointPosDist.x + jointPosDist.y + jointPosDist.z
-                                + jointResultVelDist.x + jointResultVelDist.y + jointResultVelDist.z +
-                                +bodyVelDist;
+            float3 jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
+                                                  (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
+                                                  (jointResultVelDiff.c2 * jointResultVelDiff.c2)) *
+                                        (JointVelocityWeightsB * ResultantVelocityWeight);
 
-                //Calcualte positions B
-                jointVelocities = InputPoses[i].JointPositionsB;
+            GoalCosts[index] = jointVelDist.x + jointVelDist.y + jointVelDist.z
+                               + jointPosDist.x + jointPosDist.y + jointPosDist.z
+                               + jointResultVelDist.x + jointResultVelDist.y + jointResultVelDist.z +
+                               +bodyVelDist;
 
-                jointPosDiff = jointVelocities - DesiredPose.JointPositionsB;
+            //Calcualte positions B
+            jointVelocities = InputPoses[index].JointPositionsB;
 
-                jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
-                                      (jointPosDiff.c1 * jointPosDiff.c1) +
-                                      (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeightsB;
+            jointPosDiff = jointVelocities - DesiredPose.JointPositionsB;
 
-                //Calculate velocities B
-                jointVelDiff = jointVelocities - DesiredPose.JointVelocitiesB;
+            jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
+                                     (jointPosDiff.c1 * jointPosDiff.c1) +
+                                     (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeightsB;
 
-                jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
-                                      (jointVelDiff.c1 * jointVelDiff.c1) +
-                                      (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsB;
+            //Calculate velocities B
+            jointVelDiff = jointVelocities - DesiredPose.JointVelocitiesB;
 
-                //Calculate resultsant pose B
-                jointResultVel = jointPosDiff / PoseInterval;
-                jointResultVelDiff = jointVelocities - jointResultVel;
+            jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
+                                     (jointVelDiff.c1 * jointVelDiff.c1) +
+                                     (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsB;
 
-                jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
-                                      (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
-                                      (jointResultVelDiff.c2 * jointResultVelDiff.c2)) * (JointVelocityWeightsB * ResultantVelocityWeight);
+            //Calculate resultsant pose B
+            jointResultVel = jointPosDiff / PoseInterval;
+            jointResultVelDiff = jointVelocities - jointResultVel;
 
-                GoalCosts[i] += jointVelDist.x + jointVelDist.y + jointVelDist.z
+            jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
+                                           (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
+                                           (jointResultVelDiff.c2 * jointResultVelDiff.c2)) *
+                                 (JointVelocityWeightsB * ResultantVelocityWeight);
+
+            GoalCosts[index] += jointVelDist.x + jointVelDist.y + jointVelDist.z
                                 + jointPosDist.x + jointPosDist.y + jointPosDist.z
                                 + jointResultVelDist.x + jointResultVelDist.y + jointResultVelDist.z;
-            }
         }
     }//End of struct: ComputePose06Costs
 
@@ -510,7 +505,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct ComputePose07Costs_VelCost : IJobParallelForBatch
+    public struct ComputePose07Costs_VelCost : IJobParallelFor
     {
         //Animation Pose Database
         [ReadOnly]
@@ -542,70 +537,71 @@ namespace MxM
         //Output
         public NativeArray<float> GoalCosts;
 
-        public void Execute(int startIndex, int count)
+        public void Execute(int index)
         {
-            for (int i = startIndex; i < startIndex + count; ++i)
-            {
-
-                //Calculate Cost of Pose Joint Positions
-                float4x3 jointPosDiff = InputPoses[i].JointPositionsA - DesiredPose.JointPositionsA;
-
-                float4 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
-                                      (jointPosDiff.c1 * jointPosDiff.c1) +
-                                      (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeightsA;
-
-                float4x3 jointVelocities = InputPoses[i].JointVelocitiesA;
-
-                //Calculate Cost of Pose Velocity & Joints Velocity
-                float4x3 jointVelDiff = jointVelocities - DesiredPose.JointVelocitiesA;
-
-                float4 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
-                                      (jointVelDiff.c1 * jointVelDiff.c1) +
-                                      (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsA;
-
-                //Calculate resultant pose
-                float4x3 jointResultVelA = jointPosDiff / PoseInterval;
-                float4x3 jointResultVelDiffA = jointVelocities - jointResultVelA;
-
-                float4 jointResultVelDistA = math.sqrt((jointResultVelDiffA.c0 * jointResultVelDiffA.c0) +
-                                      (jointResultVelDiffA.c1 * jointResultVelDiffA.c1) +
-                                      (jointResultVelDiffA.c2 * jointResultVelDiffA.c2)) * (JointVelocityWeightsA * ResultantVelocityWeight);
-
-                GoalCosts[i] = jointVelDist.x + jointVelDist.y + jointVelDist.z + jointVelDist.w
-                                + jointPosDist.x + jointPosDist.y + jointPosDist.z + jointPosDist.w
-                                + jointResultVelDistA.x + jointResultVelDistA.y + jointResultVelDistA.z + jointResultVelDistA.w;
-
-                float3x3 jointPosDiffB = InputPoses[i].JointPositionsB - DesiredPose.JointPositionsB;
-
-                float3 jointPosDistB = math.sqrt((jointPosDiffB.c0 * jointPosDiffB.c0) +
-                                      (jointPosDiffB.c1 * jointPosDiffB.c1) +
-                                      (jointPosDiffB.c2 * jointPosDiffB.c2)) * JointPositionWeightsB;
-
-                jointVelocities = InputPoses[i].JointVelocitiesB;
-
-                jointVelDiff = jointVelocities - DesiredPose.JointVelocitiesB;
-
-                jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
-                                      (jointVelDiff.c1 * jointVelDiff.c1) +
-                                      (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsB;
-
-                //Calculate resultant poses
-                float4x3 jointResultVel = new float4x3(new float4(jointPosDiffB.c0, 0f),
-                                                          new float4(jointPosDiffB.c1, 0f),
-                                                          new float4(jointPosDiffB.c2, 0f)) / PoseInterval;
-
-                float4x3 jointResultVelDiff = jointVelocities - jointResultVel;
-
-                float4 jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
-                                      (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
-                                      (jointResultVelDiff.c2 * jointResultVelDiff.c2)) * (JointVelocityWeightsB * ResultantVelocityWeight);
 
 
-                GoalCosts[i] += jointVelDist.x + jointVelDist.y + jointVelDist.z + jointVelDist.w
+            //Calculate Cost of Pose Joint Positions
+            float4x3 jointPosDiff = InputPoses[index].JointPositionsA - DesiredPose.JointPositionsA;
+
+            float4 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
+                                            (jointPosDiff.c1 * jointPosDiff.c1) +
+                                            (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeightsA;
+
+            float4x3 jointVelocities = InputPoses[index].JointVelocitiesA;
+
+            //Calculate Cost of Pose Velocity & Joints Velocity
+            float4x3 jointVelDiff = jointVelocities - DesiredPose.JointVelocitiesA;
+
+            float4 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
+                                            (jointVelDiff.c1 * jointVelDiff.c1) +
+                                            (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsA;
+
+            //Calculate resultant pose
+            float4x3 jointResultVelA = jointPosDiff / PoseInterval;
+            float4x3 jointResultVelDiffA = jointVelocities - jointResultVelA;
+
+            float4 jointResultVelDistA = math.sqrt((jointResultVelDiffA.c0 * jointResultVelDiffA.c0) +
+                                                   (jointResultVelDiffA.c1 * jointResultVelDiffA.c1) +
+                                                   (jointResultVelDiffA.c2 * jointResultVelDiffA.c2)) *
+                                         (JointVelocityWeightsA * ResultantVelocityWeight);
+
+            GoalCosts[index] = jointVelDist.x + jointVelDist.y + jointVelDist.z + jointVelDist.w
+                               + jointPosDist.x + jointPosDist.y + jointPosDist.z + jointPosDist.w
+                               + jointResultVelDistA.x + jointResultVelDistA.y + jointResultVelDistA.z +
+                               jointResultVelDistA.w;
+
+            float3x3 jointPosDiffB = InputPoses[index].JointPositionsB - DesiredPose.JointPositionsB;
+
+            float3 jointPosDistB = math.sqrt((jointPosDiffB.c0 * jointPosDiffB.c0) +
+                                             (jointPosDiffB.c1 * jointPosDiffB.c1) +
+                                             (jointPosDiffB.c2 * jointPosDiffB.c2)) * JointPositionWeightsB;
+
+            jointVelocities = InputPoses[index].JointVelocitiesB;
+
+            jointVelDiff = jointVelocities - DesiredPose.JointVelocitiesB;
+
+            jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
+                                     (jointVelDiff.c1 * jointVelDiff.c1) +
+                                     (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsB;
+
+            //Calculate resultant poses
+            float4x3 jointResultVel = new float4x3(new float4(jointPosDiffB.c0, 0f),
+                new float4(jointPosDiffB.c1, 0f),
+                new float4(jointPosDiffB.c2, 0f)) / PoseInterval;
+
+            float4x3 jointResultVelDiff = jointVelocities - jointResultVel;
+
+            float4 jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
+                                                  (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
+                                                  (jointResultVelDiff.c2 * jointResultVelDiff.c2)) *
+                                        (JointVelocityWeightsB * ResultantVelocityWeight);
+
+
+            GoalCosts[index] += jointVelDist.x + jointVelDist.y + jointVelDist.z + jointVelDist.w
                                 + jointPosDistB.x + jointPosDistB.y + jointPosDistB.z
                                 + jointResultVelDist.x + jointResultVelDist.y + jointResultVelDist.z;
 
-            }
         }
     }//End of struct: ComputePose07Costs
 
@@ -615,7 +611,7 @@ namespace MxM
     *         
     *********************************************************************************************/
     [BurstCompile(CompileSynchronously = true)]
-    public struct ComputePose08Costs_VelCost : IJobParallelForBatch
+    public struct ComputePose08Costs_VelCost : IJobParallelFor
     {
         //Animation Pose Database
         [ReadOnly]
@@ -651,71 +647,71 @@ namespace MxM
         [WriteOnly]
         public NativeArray<float> GoalCosts;
 
-        public void Execute(int startIndex, int count)
+        public void Execute(int index)
         {
-            for (int i = startIndex; i < startIndex + count; ++i)
-            {
-
-                //Calculate Cost of Pose Joint Positions
-                float4x3 jointPosDiff = InputPoses[i].JointPositionsA - DesiredPose.JointPositionsA;
-
-                float4 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
-                                      (jointPosDiff.c1 * jointPosDiff.c1) +
-                                      (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeightsA;
-
-                float4x3 jointVelocities = InputPoses[i].JointVelocitiesA;
-
-                //Calculate Cost of Pose Velocity & Joints Velocity
-                float4x3 jointVelDiff = jointVelocities - DesiredPose.JointVelocitiesA;
-
-                float4 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
-                                      (jointVelDiff.c1 * jointVelDiff.c1) +
-                                      (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsA;
-
-                float3 bodyVel = (InputPoses[i].BodyVelocity - DesiredPose.BodyVelocity);
-                float bodyVelDist = ((bodyVel.x * bodyVel.x) +
-                                              (bodyVel.y * bodyVel.y) +
-                                              (bodyVel.z * bodyVel.z)) * BodyVelocityWeight;
-
-                //Calculate resultant poses
-                float4x3 jointResultVel = jointPosDiff / PoseInterval;
-                float4x3 jointResultVelDiff = jointVelocities - jointResultVel;
-
-                float4 jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
-                                      (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
-                                      (jointResultVelDiff.c2 * jointResultVelDiff.c2)) * (JointVelocityWeightsA * ResultantVelocityWeight);
-
-                float4 localCost = jointVelDist + jointPosDist + jointResultVelDist;
-
-                //Calculate Cost of Pose Joint Positions
-                jointPosDiff = InputPoses[i].JointPositionsB - DesiredPose.JointPositionsB;
-
-                jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
-                                      (jointPosDiff.c1 * jointPosDiff.c1) +
-                                      (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeightsB;
-
-                jointVelocities = InputPoses[i].JointPositionsB;
-
-                //Calculate Cost of Pose Velocity & Joints Velocity
-                jointVelDiff = jointVelocities - DesiredPose.JointVelocitiesB;
-
-                jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
-                                      (jointVelDiff.c1 * jointVelDiff.c1) +
-                                      (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsB;
-
-                //Calculate resultant poses
-                jointResultVel = jointPosDiff / PoseInterval;
-                jointResultVelDiff = jointVelocities - jointResultVel;
-
-                jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
-                                      (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
-                                      (jointResultVelDiff.c2 * jointResultVelDiff.c2)) * (JointVelocityWeightsA * ResultantVelocityWeight);
 
 
-                localCost += jointVelDist + jointPosDist + jointResultVelDist;
+            //Calculate Cost of Pose Joint Positions
+            float4x3 jointPosDiff = InputPoses[index].JointPositionsA - DesiredPose.JointPositionsA;
 
-                GoalCosts[i] = localCost.x + localCost.y + localCost.z + localCost.w + bodyVelDist;
-            }
+            float4 jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
+                                            (jointPosDiff.c1 * jointPosDiff.c1) +
+                                            (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeightsA;
+
+            float4x3 jointVelocities = InputPoses[index].JointVelocitiesA;
+
+            //Calculate Cost of Pose Velocity & Joints Velocity
+            float4x3 jointVelDiff = jointVelocities - DesiredPose.JointVelocitiesA;
+
+            float4 jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
+                                            (jointVelDiff.c1 * jointVelDiff.c1) +
+                                            (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsA;
+
+            float3 bodyVel = (InputPoses[index].BodyVelocity - DesiredPose.BodyVelocity);
+            float bodyVelDist = ((bodyVel.x * bodyVel.x) +
+                                 (bodyVel.y * bodyVel.y) +
+                                 (bodyVel.z * bodyVel.z)) * BodyVelocityWeight;
+
+            //Calculate resultant poses
+            float4x3 jointResultVel = jointPosDiff / PoseInterval;
+            float4x3 jointResultVelDiff = jointVelocities - jointResultVel;
+
+            float4 jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
+                                                  (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
+                                                  (jointResultVelDiff.c2 * jointResultVelDiff.c2)) *
+                                        (JointVelocityWeightsA * ResultantVelocityWeight);
+
+            float4 localCost = jointVelDist + jointPosDist + jointResultVelDist;
+
+            //Calculate Cost of Pose Joint Positions
+            jointPosDiff = InputPoses[index].JointPositionsB - DesiredPose.JointPositionsB;
+
+            jointPosDist = math.sqrt((jointPosDiff.c0 * jointPosDiff.c0) +
+                                     (jointPosDiff.c1 * jointPosDiff.c1) +
+                                     (jointPosDiff.c2 * jointPosDiff.c2)) * JointPositionWeightsB;
+
+            jointVelocities = InputPoses[index].JointPositionsB;
+
+            //Calculate Cost of Pose Velocity & Joints Velocity
+            jointVelDiff = jointVelocities - DesiredPose.JointVelocitiesB;
+
+            jointVelDist = math.sqrt((jointVelDiff.c0 * jointVelDiff.c0) +
+                                     (jointVelDiff.c1 * jointVelDiff.c1) +
+                                     (jointVelDiff.c2 * jointVelDiff.c2)) * JointVelocityWeightsB;
+
+            //Calculate resultant poses
+            jointResultVel = jointPosDiff / PoseInterval;
+            jointResultVelDiff = jointVelocities - jointResultVel;
+
+            jointResultVelDist = math.sqrt((jointResultVelDiff.c0 * jointResultVelDiff.c0) +
+                                           (jointResultVelDiff.c1 * jointResultVelDiff.c1) +
+                                           (jointResultVelDiff.c2 * jointResultVelDiff.c2)) *
+                                 (JointVelocityWeightsA * ResultantVelocityWeight);
+
+
+            localCost += jointVelDist + jointPosDist + jointResultVelDist;
+
+            GoalCosts[index] = localCost.x + localCost.y + localCost.z + localCost.w + bodyVelDist;
         }
     }//End of struct: ComputePose08Job_VelCost
 }//End of namespace: MxM
